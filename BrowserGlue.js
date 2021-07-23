@@ -7,7 +7,7 @@ const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework
 
 let exampleSims = new jtree.TreeNode()
 
-class BrowserLauncher extends AbstractTreeComponent {
+class BrowserGlue extends AbstractTreeComponent {
   async fetchAndLoadSimCodeFromUrlCommand(url) {
     const { willowBrowser } = this
     const simCode = await willowBrowser.httpGetUrl(url)
@@ -39,13 +39,18 @@ class BrowserLauncher extends AbstractTreeComponent {
     return exampleSims.has(id) ? exampleSims.getNode(id).childrenToString() : `comment Example '${id}' not found.`
   }
 
-  async fetchAndInit() {
+  async fetchSimGrammarAndExamplesAndInit() {
     const grammar = await fetch("simoji.grammar")
-    const text = await grammar.text()
-    window.simojiCompiler = new jtree.HandGrammarProgram(text).compileAndReturnRootConstructor()
+    const grammarCode = await grammar.text()
 
     const result = await fetch("examples")
-    exampleSims = new jtree.TreeNode(await result.text())
+    return this.init(grammarCode, await result.text())
+  }
+
+  async init(grammarCode, theExamples) {
+    window.simojiCompiler = new jtree.HandGrammarProgram(grammarCode).compileAndReturnRootConstructor()
+    exampleSims = new jtree.TreeNode(theExamples)
+
     const simCode = await this.fetchSimCode()
 
     window.app = SimojiApp.setupApp(simCode, jQuery(window).width(), jQuery(window).height())
@@ -54,4 +59,4 @@ class BrowserLauncher extends AbstractTreeComponent {
   }
 }
 
-module.exports = { BrowserLauncher }
+module.exports = { BrowserGlue }

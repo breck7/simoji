@@ -4,27 +4,12 @@
     <meta charset="utf-8"></meta>
     <title>Simoji</title>
     <link rel="stylesheet" href="simoji.css">
-    <script src="node_modules/jtree/sandbox/lib/jquery.min.js"></script>
-    <script src="node_modules/jtree/products/jtree.browser.js"></script>
-    <script src="node_modules/jtree/products/stump.browser.js"></script>
-    <script src="node_modules/jtree/products/hakon.browser.js"></script>
-    <script src="node_modules/jtree/products/TreeComponentFramework.browser.js"></script>
-    <script src="node_modules/jtree/treeComponentFramework/sweepercraft/lib/mousetrap.min.js"></script>
-    <script src="./yodash.js"></script>
-    <script src="./components/Board.js"></script>
-    <script src="./components/Examples.js"></script>
-    <script src="./components/Grid.js"></script>
-    <script src="./components/HelpModal.js"></script>
-    <script src="./components/ObjectPalette.js"></script>
-    <script src="./components/PlayButton.js"></script>
-    <script src="./components/Share.js"></script>
-    <script src="./components/SimEditor.js"></script>
-    <script src="./components/Agent.js"></script>
-    <script src="./components/SimojiApp.js"></script>
-    <script src="./components/TopBar.js"></script>
-    <script src="./BrowserLauncher.js"></script>
+    <script src="./dist/libs.js"></script>
+    <script src="./dist/simoji.js"></script>
+    <script src="./dist/constants.js"></script>
     <script>
-      new BrowserLauncher().fetchAndInit()
+      jQuery(() => new BrowserGlue().init(SimConstants.grammar, SimConstants.examples))
+      
     </script>
   </head>
   <body></body>
