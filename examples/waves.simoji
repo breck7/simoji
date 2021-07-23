@@ -1,0 +1,9 @@
+🌊
+ speed 1
+ angle South
+ spin 0
+size 25
+rectangle 🌊 100 1 0
+rectangle 🌊 100 1 0 6
+rectangle 🌊 100 1 0 11
+stepTime 200

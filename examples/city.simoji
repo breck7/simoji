@@ -1,0 +1,37 @@
+⛪️
+ comment church
+🏟
+ comment stadium
+🏥
+ comment hospital
+🏭
+ comment factory
+🏦
+ comment bank
+🏛
+ comment courthouse
+🏫
+ comment school
+🏡
+ comment house
+🏘
+ comment houses
+🎡
+ comment park
+🏪
+ comment store
+🚗
+ speed 2
+ spin 0
+ angle West
+🚓
+ speed 2
+ spin 0
+ angle West
+🚋
+ comment subway
+ speed 3
+ spin 0
+ angle West
+street
+size 20

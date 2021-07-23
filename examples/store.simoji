@@ -1,0 +1,12 @@
+🚶🏻
+ speed 1
+ angle North
+🛒
+🚪
+ spawns 🚶🏻 .1
+🪵
+ solid
+rectangle 🪵 30 15 3 3
+paste
+ 🚪 16⬇️ 17➡️
+size 25

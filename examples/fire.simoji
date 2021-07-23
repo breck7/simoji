@@ -1,0 +1,13 @@
+🔥
+ health 100
+🌲
+ ifHits
+  ⚡️
+   replaceWith 🔥
+ ifTouches
+  🔥
+   replaceWith 🔥
+⚡️
+ health 10
+insert 2000 🌲
+spawns ⚡️ .6

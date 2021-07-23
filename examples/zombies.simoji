@@ -1,0 +1,18 @@
+🧱
+ solid
+🔫
+🪦
+ comment Dead zombie
+🧟‍♂️
+ speed 1
+ ifHits
+  🔫
+   replaceWith 🪦
+  👨‍👩‍👧‍👦
+   end TheyGotYou!
+👨‍👩‍👧‍👦
+insert 50 🧟‍♂️
+size 30
+stepTime 100
+paste
+ 👨‍👩‍👧‍👦 12⬇️ 11➡️

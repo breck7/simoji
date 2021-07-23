@@ -1,0 +1,8 @@
+🐜
+ speed 1
+ ifHits
+  🥖
+   pickItUp
+🥖
+insert 100 🐜
+insert 10 🥖

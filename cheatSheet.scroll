@@ -1,0 +1,62 @@
+title Simoji Quickstart Guide
+skipIndexPage
+header
+footer
+
+paragraph
+ Simoji is a tool for anyone to build quick useful shareable simulations. You write your simulations in a simple language using mostly Emojis and then click play.
+
+code
+ 🐜
+  speed 1
+  ifHits
+   🥖
+    pickItUp
+ 🥖
+ insert 100 🐜
+ insert 10 🥖
+
+section Concepts
+
+subsection Agents
+
+list
+ - Attributes
+ - Decision Trees
+
+subsection Events
+
+subsection Commands
+
+subsection Simulation
+
+list
+ - Speed
+ - Scale
+
+section Tree Notation
+
+
+section Keyboard shortcuts
+
+pipeTable
+ Combo|Command
+ ?|Toggle Help
+ Spacebar|Play/Pause
+
+
+
+
+section Sharing Your Simulations
+
+
+
+
+section Getting Involved
+
+
+
+section Printable Version
+
+paragraph
+ This cheat sheet is also available as a printable🔗./cheatSheet.pdf version.

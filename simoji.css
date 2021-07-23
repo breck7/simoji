@@ -1,0 +1,118 @@
+html {
+	height: 100%;
+	width: 100%;
+}
+
+body {
+	padding: 0;
+	margin: 0;
+	height: 100%;
+	width: 100%;
+	font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.SimojiApp {
+	height: 100%;
+	width: 100%;
+}
+
+.SimEditorComponent {
+	white-space: nowrap;
+}
+
+.LogoComponent {
+	cursor: pointer;
+}
+
+.helpIframe {
+	border: 0;
+	height: 100%;
+	min-height: 600px;
+	min-width: 800px;
+	width: 100%;
+}
+
+.GridComponent {
+	position: absolute;
+	left: 0;
+	top: 0;
+	background: transparent;
+	z-index: 0;
+	width: 100%;
+	height: 100%;
+}
+
+.SimEditorComponent {
+	position: absolute;
+	top: 28px;
+	border-top: 0;
+	left: 0px;
+	width: 280px;
+	height: calc(100% - 33px);
+}
+
+.block {
+	position: absolute;
+	cursor: pointer;
+	/*outline: 1px solid blue;*/
+}
+
+.block:active {
+	background: rgba(0, 0, 0, 0.1);
+	border-radius: 3px;
+}
+
+.BoardComponent {
+	position: relative;
+	left: 287px;
+	width: calc(100% - 287px);
+	height: calc(100% - 28px);
+}
+
+.selected {
+	outline: 1px solid rgba(0, 0, 200, 0.3);
+	border-radius: 5px;
+}
+
+.ObjectPaletteComponent {
+	display: inline-block;
+}
+
+.ObjectPaletteComponent span {
+	padding: 0 5px;
+	cursor: pointer;
+	opacity: 0.7;
+}
+
+.ObjectPaletteComponent span:hover,
+.ObjectPaletteComponent .ActiveObject {
+	opacity: 1;
+}
+
+.TopBarComponent {
+	background-color: rgba(47, 47, 51);
+	color: white;
+	font-size: 14px;
+	line-height: 28px;
+	height: 28px;
+	padding-left: 5px;
+}
+.TopBarComponent input {
+	background: transparent;
+	color: white;
+	border: 0;
+}
+.PlayButtonComponent {
+	cursor: pointer;
+	user-select: none;
+}
+
+.Agent {
+	position: absolute;
+}
+.ExamplesComponent a {
+	color: white;
+}
+.ExamplesComponent {
+	display: inline-block;
+}

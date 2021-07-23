@@ -1,0 +1,33 @@
+{
+  "name": "simoji",
+  "version": "1.1.0",
+  "description": "Design your own simulations using Emojis",
+  "main": "Simoji.js",
+  "directories": {
+    "example": "examples"
+  },
+  "prettier": {
+    "printWidth": 120,
+    "semi": false
+  },
+  "dependencies": {
+    "jtree": "^52.1.0"
+  },
+  "devDependencies": {
+    "tap": "^15.0.9"
+  },
+  "scripts": {
+    "buildCoverageReport": "tap Simoji.test.node.js",
+    "buildCoverageHtmlReport": "tap Simoji.test.node.js --coverage-report=lcov",
+    "test": "node Simoji.test.node.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/publicdomaincompany/simoji.git"
+  },
+  "author": "",
+  "bugs": {
+    "url": "https://github.com/publicdomaincompany/simoji/issues"
+  },
+  "homepage": "https://github.com/publicdomaincompany/simoji#readme"
+}

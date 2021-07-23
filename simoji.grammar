@@ -1,0 +1,206 @@
+anyCell
+cssCell
+emojiCell
+ highlightScope string
+blankCell
+codeCell
+ highlightScope comment
+commentCell
+ highlightScope comment
+keywordCell
+ highlightScope keyword
+textCell
+ highlightScope string
+integerCell
+ highlightScope constant.numeric
+angleCell
+ enum North South East West NorthWest NorthEast SouthWest SouthEast
+ highlightScope constant.numeric
+spinCell
+ highlightScope constant.numeric
+errorNode
+ baseNodeType errorNode
+simojiNode
+ extensions simoji
+ description A Tree Language that compiles to a TreeComponentFramework app.
+ root
+ inScope blankLineNode commentNode abstractSetupNumberNode abstractDrawNode styleNode spawnRoutineNode
+ catchAllNodeType objectNode
+ compilesTo javascript
+ javascript
+  compileObjectClassDeclarationsAndMap() {
+    const clone = this.clone()
+    clone.filter(node => node.getNodeTypeId() !== "objectNode").forEach(node => node.destroy())
+    clone.objectClassCount = 0
+    const compiled = clone.compile()
+    const agentMap = clone.objectTypes.map((node, index) => `"${node.getWord(0)}":simObject${index}`).join(",")
+    return `${compiled}
+    const map = {GridComponent,BoardStyleComponent,${agentMap}};
+    map;`
+  }
+  compileSetup(rows, cols) {
+    const clone = this.clone()
+    clone.filter(node => node.getNodeTypeId() === "objectNode").forEach(node => node.destroy())
+    clone.positionSet = new Set()
+    clone.rows = rows
+    clone.cols = cols
+    return clone.compile()
+  }
+  get objectTypes() {
+    return this.filter(node => node.getNodeTypeId() === "objectNode")
+  }
+abstractDrawNode
+insertNode
+ extends abstractDrawNode
+ cells keywordCell integerCell emojiCell
+ crux insert
+ javascript
+  compile() {
+    const {rows, cols, positionSet} = this.getParent()
+    let objects = parseInt(this.getWord(1))
+     let startBoard = []
+     let char = this.getWord(2)
+     while (objects) {
+       startBoard.push(`${char} ${yodash.getRandomLocation(rows, cols, positionSet)}`)
+       objects--
+     }
+     return startBoard.join("\n")
+  }
+rectangleDrawNode
+ extends abstractDrawNode
+ cells keywordCell emojiCell integerCell integerCell
+ catchAllCellType integerCell
+ crux rectangle
+ javascript
+  compile() {
+    return yodash.makeRectangle(...yodash.parseInts(this.getWords().slice(1), 1))
+  }
+pasteDrawNode
+ extends abstractDrawNode
+ cells keywordCell
+ crux paste
+ catchAllNodeType pasteLineNode
+ javascript
+  compile() {
+    return this.childrenToString()
+  }
+pasteLineNode
+ catchAllCellType anyCell
+ catchAllNodeType pasteLineNode
+objectNode
+ inScope commentNode ifHitsNode abstractTraitNode abstractAttributeNode abstractRoutineNode
+ cells keywordCell
+ javascript
+  compile() {
+    const root = this.getRootNode()
+    const name = `simObject` + root.objectClassCount
+    root.objectClassCount++
+    return `class ${name} extends Agent {
+    }`
+  }
+abstractThenCommandNode
+abstractRoutineNode
+ cells keywordCell
+spawnRoutineNode
+ crux spawns
+ extends abstractRoutineNode
+ cells keywordCell emojiCell integerCell
+abstractTraitNode
+ cells keywordCell
+solidTraitNode
+ extends abstractTraitNode
+ crux solid
+bouncyTraitNode
+ extends abstractTraitNode
+ crux bouncy
+abstractAttributeNode
+ cells keywordCell integerCell
+healthNode
+ extends abstractAttributeNode
+ crux health
+speedNode
+ extends abstractAttributeNode
+ crux speed
+forceNode
+ extends abstractAttributeNode
+ crux force
+massNode
+ extends abstractAttributeNode
+ crux mass
+spinNode
+ extends abstractAttributeNode
+ cells keywordCell spinCell
+ crux spin
+angleNode
+ extends abstractAttributeNode
+ cells keywordCell angleCell
+ crux angle
+abstractSetupNumberNode
+ cells keywordCell integerCell
+ javascript
+  compile() {
+   return ""
+  }
+sizeNode
+ description Size of the sim squares in pixels. Min is 10. Max is 200.
+ extends abstractSetupNumberNode
+ crux size
+stepTimeNode
+ description Time in milliseconds of one step.
+ extends abstractSetupNumberNode
+ crux stepTime
+styleNode
+ description Optional CSS to load in BoardStyleComponent
+ cells keywordCell
+ crux style
+ catchAllNodeType styleLineNode
+ compiler
+  stringTemplate 
+styleLineNode
+ catchAllCellType cssCell
+ catchAllNodeType styleLineNode
+targetEmojiNode
+ inScope abstractThenCommandNode
+ cells emojiCell
+ifHitsNode
+ catchAllNodeType targetEmojiNode
+ cells keywordCell
+ crux ifHits
+replaceWithCommandNode
+ extends abstractThenCommandNode
+ crux replaceWith
+ cells keywordCell emojiCell
+kickItCommandNode
+ extends abstractThenCommandNode
+ crux kickIt
+ cells keywordCell
+pickItUpCommandNode
+ extends abstractThenCommandNode
+ crux pickItUp
+ cells keywordCell
+endCommandNode
+ extends abstractThenCommandNode
+ crux end
+ cells keywordCell
+ catchAllCellType anyCell
+commentNode
+ description Will not appear in the compiled HTML.
+ catchAllCellType commentCell
+ crux comment
+ javascript
+  compile() {
+   return ""
+  }
+ catchAllNodeType commentLineNode
+iconNode
+ crux icon
+ cells keywordCell emojiCell
+blankLineNode
+ description Blank lines compile do nothing.
+ cells blankCell
+ compiler
+  stringTemplate 
+ pattern ^$
+ tags doNotSynthesize
+commentLineNode
+ catchAllCellType commentCell
