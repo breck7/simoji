@@ -17,7 +17,7 @@ body {
 }
 
 .SimEditorComponent {
-	white-space: nowrap;
+	white-space: pre-wrap;
 }
 
 .LogoComponent {
