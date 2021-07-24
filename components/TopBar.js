@@ -7,8 +7,7 @@ class TopBarComponent extends AbstractTreeComponent {
       LogoComponent,
       ShareComponent,
       PlayButtonComponent,
-      ExamplesComponent,
-      ObjectPaletteComponent
+      ExamplesComponent
     })
   }
 }

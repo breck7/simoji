@@ -9,7 +9,9 @@ class SimojiApp extends AbstractTreeComponent {
       SimEditorComponent,
       HelpModalComponent,
       BoardComponent,
-      TreeComponentFrameworkDebuggerComponent
+      TreeComponentFrameworkDebuggerComponent,
+      BottomBarComponent,
+      RightBarComponent
     })
   }
 
@@ -262,6 +264,8 @@ SimojiApp.setupApp = (simojiCode, windowWidth = 1000, windowHeight = 1000) => {
  ShareComponent
  PlayButtonComponent
  ExamplesComponent
+BottomBarComponent
+RightBarComponent
  ObjectPaletteComponent
 SimEditorComponent
  value

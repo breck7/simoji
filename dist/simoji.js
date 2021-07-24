@@ -417,6 +417,26 @@ window.BoardComponent = BoardComponent
 
 
 
+
+class BottomBarComponent extends AbstractTreeComponent {
+  createParser() {
+    return new jtree.TreeNode.Parser(undefined, {
+      StatusBarComponent
+    })
+  }
+}
+
+class StatusBarComponent extends AbstractTreeComponent {
+  toStumpCode() {
+    return `span Running`
+  }
+}
+
+window.BottomBarComponent = BottomBarComponent
+
+
+
+
 class ExamplesComponent extends AbstractTreeComponent {
   loadExampleCommand(name) {
     app.loadNewSim(exampleSims.getNode(name).childrenToString())
@@ -564,7 +584,7 @@ class ObjectPaletteComponent extends AbstractTreeComponent {
     const items = root.simojiProgram.objectTypes
       .map(item => item.getWord(0))
       .map(
-        word => ` span ${word}
+        word => ` div ${word}
   class ${activeObject === word ? "ActiveObject" : ""}
   clickCommand changeAgentBrushCommand ${word}`
       )
@@ -606,6 +626,20 @@ class PlayButtonComponent extends AbstractTreeComponent {
 }
 
 window.PlayButtonComponent = PlayButtonComponent
+
+
+
+
+
+class RightBarComponent extends AbstractTreeComponent {
+	createParser() {
+		return new jtree.TreeNode.Parser(undefined, {
+			ObjectPaletteComponent
+		})
+	}
+}
+
+window.RightBarComponent = RightBarComponent
 
 
 
@@ -684,7 +718,9 @@ class SimojiApp extends AbstractTreeComponent {
       SimEditorComponent,
       HelpModalComponent,
       BoardComponent,
-      TreeComponentFrameworkDebuggerComponent
+      TreeComponentFrameworkDebuggerComponent,
+      BottomBarComponent,
+      RightBarComponent
     })
   }
 
@@ -937,6 +973,8 @@ SimojiApp.setupApp = (simojiCode, windowWidth = 1000, windowHeight = 1000) => {
  ShareComponent
  PlayButtonComponent
  ExamplesComponent
+BottomBarComponent
+RightBarComponent
  ObjectPaletteComponent
 SimEditorComponent
  value
@@ -961,8 +999,7 @@ class TopBarComponent extends AbstractTreeComponent {
       LogoComponent,
       ShareComponent,
       PlayButtonComponent,
-      ExamplesComponent,
-      ObjectPaletteComponent
+      ExamplesComponent
     })
   }
 }

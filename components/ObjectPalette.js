@@ -7,7 +7,7 @@ class ObjectPaletteComponent extends AbstractTreeComponent {
     const items = root.simojiProgram.objectTypes
       .map(item => item.getWord(0))
       .map(
-        word => ` span ${word}
+        word => ` div ${word}
   class ${activeObject === word ? "ActiveObject" : ""}
   clickCommand changeAgentBrushCommand ${word}`
       )
