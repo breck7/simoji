@@ -193,6 +193,7 @@ class Agent extends AbstractTreeComponent {
   }
 
   set top(value) {
+    if (value > this.maxDown) value = this.maxDown
     if (value < 0) value = 0
     this.position = {
       down: value,
@@ -213,7 +214,21 @@ class Agent extends AbstractTreeComponent {
     return this.setLine(newLine)
   }
 
+  get board() {
+    return this.getParent()
+  }
+
+  get maxRight() {
+    return this.board.cols
+  }
+
+  get maxDown() {
+    return this.board.rows
+  }
+
   set left(value) {
+    if (value > this.maxRight) value = this.maxRight
+
     if (value < 0) value = 0
     this.position = {
       down: this.top,
