@@ -93,11 +93,11 @@ body {
 	border-radius: 5px;
 }
 
-.ObjectPaletteComponent {
+.AgentPaletteComponent {
 	text-align: center;
 }
 
-.ObjectPaletteComponent div {
+.AgentPaletteComponent div {
 	padding-top: 5px;
 	padding-bottom: 5px;
 	cursor: pointer;
@@ -106,8 +106,8 @@ body {
 	height: 20px;
 }
 
-.ObjectPaletteComponent div:hover,
-.ObjectPaletteComponent .ActiveObject {
+.AgentPaletteComponent div:hover,
+.AgentPaletteComponent .ActiveObject {
 	opacity: 1;
 }
 

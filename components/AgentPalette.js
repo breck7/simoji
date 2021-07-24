@@ -1,6 +1,6 @@
 const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework.node.js")
 
-class ObjectPaletteComponent extends AbstractTreeComponent {
+class AgentPaletteComponent extends AbstractTreeComponent {
   toStumpCode() {
     const root = this.getRootNode()
     const activeObject = root.agentToInsert
@@ -13,7 +13,7 @@ class ObjectPaletteComponent extends AbstractTreeComponent {
       )
       .join("\n")
     return `div
- class ObjectPaletteComponent
+ class AgentPaletteComponent
 ${items}`
   }
 
@@ -27,4 +27,4 @@ ${items}`
   }
 }
 
-module.exports = { ObjectPaletteComponent }
+module.exports = { AgentPaletteComponent }

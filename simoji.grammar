@@ -88,7 +88,7 @@ pasteLineNode
  catchAllCellType anyCell
  catchAllNodeType pasteLineNode
 objectNode
- inScope commentNode ifHitsNode abstractTraitNode abstractAttributeNode abstractRoutineNode
+ inScope commentNode abstractEventNode abstractTraitNode abstractAttributeNode abstractRoutineNode
  cells keywordCell
  javascript
   compile() {
@@ -98,7 +98,7 @@ objectNode
     return `class ${name} extends Agent {
     }`
   }
-abstractThenCommandNode
+abstractCommandNode
 abstractRoutineNode
  cells keywordCell
 spawnRoutineNode
@@ -106,6 +106,7 @@ spawnRoutineNode
  extends abstractRoutineNode
  cells keywordCell emojiCell integerCell
 abstractTraitNode
+ description A boolean attribute.
  cells keywordCell
 solidTraitNode
  extends abstractTraitNode
@@ -160,26 +161,35 @@ styleLineNode
  catchAllCellType cssCell
  catchAllNodeType styleLineNode
 targetEmojiNode
- inScope abstractThenCommandNode
+ inScope abstractCommandNode
  cells emojiCell
-ifHitsNode
- catchAllNodeType targetEmojiNode
+abstractEventNode
  cells keywordCell
+ catchAllNodeType targetEmojiNode
+ifHitsNode
+ extends abstractEventNode
  crux ifHits
+ifTouchesNode
+ extends abstractEventNode
+ crux ifTouches
+ifDiesNode
+ extends abstractEventNode
+ crux ifDies
+ inScope abstractCommandNode
 replaceWithCommandNode
- extends abstractThenCommandNode
+ extends abstractCommandNode
  crux replaceWith
  cells keywordCell emojiCell
 kickItCommandNode
- extends abstractThenCommandNode
+ extends abstractCommandNode
  crux kickIt
  cells keywordCell
 pickItUpCommandNode
- extends abstractThenCommandNode
+ extends abstractCommandNode
  crux pickItUp
  cells keywordCell
 endCommandNode
- extends abstractThenCommandNode
+ extends abstractCommandNode
  crux end
  cells keywordCell
  catchAllCellType anyCell

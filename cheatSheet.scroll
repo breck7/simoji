@@ -18,24 +18,71 @@ code
 
 section Concepts
 
+subsection Board
+
+paragraph
+ The Board is the rectangle on which your simulation takes place. It has a width and height and is divided into a grid.
+
 subsection Agents
 
+paragraph
+ Agents are the key concept in Simoji. Everything your see on your board is an agent. A person emoji would be an agent, and a rock emoji would be an agent.
+
+subsection Attributes
+
+paragraph
+ Agents can have attributes.
+
 list
- - Attributes
- - Decision Trees
+ - speed
+ - spin
+ - force
+ - health
+ - angle
+
+paragraph
+ Some attributes are booleans with only 2 states.
+
+list
+ - solid
+ - bouncy
 
 subsection Events
 
-subsection Commands
-
-subsection Simulation
+paragraph
+ Events are things that can happen to agents.
 
 list
- - Speed
- - Scale
+ - ifHits
+ - ifTouches
+ - ifDies
+
+subsection Commands
+
+list
+ - kickIt
+ - replaceWith
+ - spawn
+
+section Board Setup
+
+paragraph
+ You can setup your board with the following commands.
+
+list
+ - insert
+ - paste
+ - speed
+
+section Agent Palette
+
+paragraph
+ You can drop new Agents onto your board using the Agent Palette on the right side of your screen.
 
 section Tree Notation
 
+paragraph
+ Simoji the language is a TreeLanguage🔗treenotation.org. There are no visible syntax characters. Indentation is used for parent/child relationships.
 
 section Keyboard shortcuts
 
@@ -44,17 +91,15 @@ pipeTable
  ?|Toggle Help
  Spacebar|Play/Pause
 
-
-
-
 section Sharing Your Simulations
 
-
-
+paragraph
+ At the top of the page you should see a link that you can copy and paste to share your sim. When you update your simulation code that link will update.
 
 section Getting Involved
 
-
+paragraph
+ The source code for Simoji and all development happens on Github🔗github.com/publicdomaincompany/simoji.
 
 section Printable Version
 

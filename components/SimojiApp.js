@@ -266,7 +266,7 @@ SimojiApp.setupApp = (simojiCode, windowWidth = 1000, windowHeight = 1000) => {
  ExamplesComponent
 BottomBarComponent
 RightBarComponent
- ObjectPaletteComponent
+ AgentPaletteComponent
 SimEditorComponent
  value
   ${simojiCode.replace(/\n/g, "\n  ")}`)

@@ -2,27 +2,27 @@ const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework
 
 class Agent extends AbstractTreeComponent {
   get solid() {
-    return this.objectDefinition.has("solid")
+    return this.agentDefinition.has("solid")
   }
 
   get bouncy() {
-    return this.objectDefinition.has("bouncy")
+    return this.agentDefinition.has("bouncy")
   }
 
   get hasRoutines() {
-    return this.objectDefinition.has("spawns")
+    return this.agentDefinition.has("spawns")
   }
 
   get icon() {
-    return this.objectDefinition.getWord(0)
+    return this.agentDefinition.getWord(0)
   }
 
   get mass() {
-    return this.objectDefinition.get("mass") ?? 1
+    return this.agentDefinition.get("mass") ?? 1
   }
 
   get spin() {
-    return this._spin ?? this.objectDefinition.get("spin") ?? "random"
+    return this._spin ?? this.agentDefinition.get("spin") ?? "random"
   }
 
   set spin(value) {
@@ -31,7 +31,7 @@ class Agent extends AbstractTreeComponent {
 
   get force() {
     if (this._force !== undefined) return this._force
-    return this.objectDefinition.get("force") ?? 0
+    return this.agentDefinition.get("force") ?? 0
   }
 
   set force(value) {
@@ -44,7 +44,7 @@ class Agent extends AbstractTreeComponent {
 
   get speed() {
     if (this._speed !== undefined) return this._speed
-    const speed = this.objectDefinition.get("speed")
+    const speed = this.agentDefinition.get("speed")
     return speed ? parseInt(speed) : 0
   }
 
@@ -53,11 +53,11 @@ class Agent extends AbstractTreeComponent {
   }
 
   get diameter() {
-    return this.objectDefinition.get("diameter") ?? 1
+    return this.agentDefinition.get("diameter") ?? 1
   }
 
   get angle() {
-    return this._angle ?? this.objectDefinition.get("angle") ?? "South"
+    return this._angle ?? this.agentDefinition.get("angle") ?? "South"
   }
 
   set angle(value) {
@@ -66,7 +66,7 @@ class Agent extends AbstractTreeComponent {
 
   get health() {
     if (this._health !== undefined) return this._health
-    const health = this.objectDefinition.get("health")
+    const health = this.agentDefinition.get("health")
     return health ? parseInt(health) : Infinity
   }
 
@@ -74,7 +74,7 @@ class Agent extends AbstractTreeComponent {
     this._health = value
   }
 
-  get objectDefinition() {
+  get agentDefinition() {
     return this.getRootNode().simojiProgram.getNode(this.getWord(0))
   }
 
@@ -106,11 +106,11 @@ class Agent extends AbstractTreeComponent {
   }
 
   get touchMap() {
-    return this.objectDefinition.getNode("ifTouches")
+    return this.agentDefinition.getNode("ifTouches")
   }
 
   handleCollisions(targets) {
-    const commandMap = this.objectDefinition.getNode("ifHits")
+    const commandMap = this.agentDefinition.getNode("ifHits")
     if (!commandMap) return
 
     return yodash.applyCommandMap(commandMap, targets, this)
@@ -142,7 +142,7 @@ class Agent extends AbstractTreeComponent {
   }
 
   spawnCommand() {
-    yodash.spawnFunction(this.objectDefinition.getNode("spawns"), this.getParent(), this.positionHash)
+    yodash.spawnFunction(this.agentDefinition.getNode("spawns"), this.getParent(), this.positionHash)
   }
 
   applyForceCommand() {

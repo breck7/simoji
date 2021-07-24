@@ -206,7 +206,7 @@ html {
 </style>
 </head>
  <body>
-  <div class="scrollArticlePageComponent" style="column-count:2;max-width:80ch;"><h1 class="scrollTitleComponent"><a href="cheatSheet.html">Simoji Quickstart Guide</a></h1>
+  <div class="scrollArticlePageComponent" style=""><h1 class="scrollTitleComponent"><a href="cheatSheet.html">Simoji Quickstart Guide</a></h1>
 
 
 
@@ -224,26 +224,65 @@ insert 10 🥖</code>
 
 <h3 class="scrollSectionComponent">Concepts</h3>
 
+<h4 class="scrollSubsectionComponent">Board</h4>
+
+<p class="scrollParagraphComponent">The Board is the rectangle on which your simulation takes place. It has a width and height and is divided into a grid.</p>
+
 <h4 class="scrollSubsectionComponent">Agents</h4>
 
+<p class="scrollParagraphComponent">Agents are the key concept in Simoji. Everything your see on your board is an agent. A person emoji would be an agent, and a rock emoji would be an agent.</p>
+
+<h4 class="scrollSubsectionComponent">Attributes</h4>
+
+<p class="scrollParagraphComponent">Agents can have attributes.</p>
+
 <ul class="scrollUnorderedListComponent">
-<li>Attributes</li>
-<li>Decision Trees</li>
+<li>speed</li>
+<li>spin</li>
+<li>force</li>
+<li>health</li>
+<li>angle</li>
+</ul>
+
+<p class="scrollParagraphComponent">Some attributes are booleans with only 2 states.</p>
+
+<ul class="scrollUnorderedListComponent">
+<li>solid</li>
+<li>bouncy</li>
 </ul>
 
 <h4 class="scrollSubsectionComponent">Events</h4>
 
-<h4 class="scrollSubsectionComponent">Commands</h4>
-
-<h4 class="scrollSubsectionComponent">Simulation</h4>
+<p class="scrollParagraphComponent">Events are things that can happen to agents.</p>
 
 <ul class="scrollUnorderedListComponent">
-<li>Speed</li>
-<li>Scale</li>
+<li>ifHits</li>
+<li>ifTouches</li>
+<li>ifDies</li>
 </ul>
+
+<h4 class="scrollSubsectionComponent">Commands</h4>
+
+<ul class="scrollUnorderedListComponent">
+<li>kickIt</li>
+<li>replaceWith</li>
+<li>spawn</li>
+</ul>
+
+<h3 class="scrollSectionComponent">Board Setup</h3>
+
+<p class="scrollParagraphComponent">You can setup your board with the following commands.</p>
+
+<ul class="scrollUnorderedListComponent">
+<li>insert</li>
+<li>paste</li>
+<li>speed</li>
+</ul>
+
 
 <h3 class="scrollSectionComponent">Tree Notation</h3>
 
+<p class="scrollParagraphComponent">Simoji the language is a <a href="https://treenotation.org">TreeLanguage</a>. There are no visible syntax characters. Indentation is used for parent/child relationships.</p>
 
 <h3 class="scrollSectionComponent">Keyboard shortcuts</h3>
 
@@ -258,17 +297,13 @@ insert 10 🥖</code>
 <td>Play/Pause</td>
 </tr></tbody></table>
 
-
-
-
 <h3 class="scrollSectionComponent">Sharing Your Simulations</h3>
 
-
-
+<p class="scrollParagraphComponent">At the top of the page you should see a link that you can copy and paste to share your sim. When you update your simulation code that link will update.</p>
 
 <h3 class="scrollSectionComponent">Getting Involved</h3>
 
-
+<p class="scrollParagraphComponent">The source code for Simoji and all development happens on <a href="https://github.com/publicdomaincompany/simoji">Github</a>.</p>
 
 <h3 class="scrollSectionComponent">Printable Version</h3>
 
