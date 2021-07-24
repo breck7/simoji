@@ -1,12 +1,20 @@
 🧱
  solid
 🔫
+ spawns 🪃 .1
+🪃
+ speed 1
+ spin 0
+ angle West
+💣
 🪦
  comment Dead zombie
 🧟‍♂️
  speed 1
  ifHits
-  🔫
+  🪃
+   replaceWith 🪦
+  💣
    replaceWith 🪦
   👨‍👩‍👧‍👦
    end TheyGotYou!
