@@ -726,6 +726,10 @@ window.SimEditorComponent = SimEditorComponent
 
 
 
+const boardMargin = 20
+const chromeHeight = 48 + boardMargin
+const chromeWidth = 230 + boardMargin
+
 class SimojiApp extends AbstractTreeComponent {
   createParser() {
     return new jtree.TreeNode.Parser(undefined, {
@@ -751,8 +755,8 @@ class SimojiApp extends AbstractTreeComponent {
     const { simojiProgram, windowWidth, windowHeight } = this
     const setSize = simojiProgram.get("size")
     const gridSize = Math.min(Math.max(setSize ? parseInt(setSize) : 20, 10), 200)
-    const cols = Math.floor((windowWidth - 287) / gridSize) - 1
-    const rows = Math.floor(windowHeight / gridSize) - 10
+    const cols = Math.floor((windowWidth - chromeWidth) / gridSize) - 1
+    const rows = Math.floor((windowHeight - chromeHeight) / gridSize) - 1
 
     const compiledStartState = simojiProgram.compileSetup(rows, cols).trim()
     const styleNode = simojiProgram.getNode("style") ?? undefined
