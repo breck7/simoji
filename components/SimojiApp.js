@@ -1,6 +1,19 @@
-const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework.node.js")
+// prettier-ignore
+/*NODE_JS_ONLY*/ const { AbstractTreeComponent, TreeComponentFrameworkDebuggerComponent } = require("jtree/products/TreeComponentFramework.node.js")
+
 const { jtree } = require("jtree")
 const { yodash } = require("../yodash")
+
+const { TopBarComponent } = require("./TopBar.js")
+const { SimEditorComponent } = require("./SimEditor.js")
+const { HelpModalComponent } = require("./HelpModal.js")
+const { BoardComponent, BoardStyleComponent } = require("./Board.js")
+const { GridComponent } = require("./Grid.js")
+const { BottomBarComponent } = require("./BottomBar.js")
+const { RightBarComponent } = require("./RightBar.js")
+
+// prettier-ignore
+/*NODE_JS_ONLY*/ const simojiCompiler = jtree.compileGrammarFileAtPathAndReturnRootConstructor(   __dirname + "/../simoji.grammar")
 
 const boardMargin = 20
 const chromeHeight = 48 + boardMargin
@@ -22,7 +35,7 @@ class SimojiApp extends AbstractTreeComponent {
   get agentMap() {
     if (!this._agentMap) {
       this.compiledCode = this.simojiProgram.compileObjectClassDeclarationsAndMap()
-      this._agentMap = eval(this.compiledCode)
+      this._agentMap = { ...eval(this.compiledCode), GridComponent, BoardStyleComponent }
     }
     return this._agentMap
   }

@@ -17,9 +17,9 @@
     "tap": "^15.0.9"
   },
   "scripts": {
-    "buildCoverageReport": "tap Simoji.test.node.js",
-    "buildCoverageHtmlReport": "tap Simoji.test.node.js --coverage-report=lcov",
-    "test": "node Simoji.test.node.js"
+    "buildCoverageReport": "tap testAll.js",
+    "buildCoverageHtmlReport": "tap testAll.js --coverage-report=lcov",
+    "test": "node testAll.js"
   },
   "repository": {
     "type": "git",

@@ -2,9 +2,6 @@ const DEFAULT_SIM = "soccer"
 const { jtree } = require("jtree")
 const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework.node.js")
 
-// prettier-ignore
-/*NODE_JS_ONLY*/ const simojiCompiler = jtree.compileGrammarFileAtPathAndReturnRootConstructor(   __dirname + "/simoji.grammar")
-
 let exampleSims = new jtree.TreeNode()
 
 class BrowserGlue extends AbstractTreeComponent {

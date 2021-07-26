@@ -35,7 +35,7 @@ simojiNode
     const compiled = clone.compile()
     const agentMap = clone.objectTypes.map((node, index) => `"${node.getWord(0)}":simObject${index}`).join(",")
     return `${compiled}
-    const map = {GridComponent,BoardStyleComponent,${agentMap}};
+    const map = {${agentMap}};
     map;`
   }
   compileSetup(rows, cols) {
@@ -122,6 +122,9 @@ healthNode
 speedNode
  extends abstractAttributeNode
  crux speed
+diameterNode
+ extends abstractAttributeNode
+ crux diameter
 forceNode
  extends abstractAttributeNode
  crux force

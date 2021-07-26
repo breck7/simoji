@@ -724,6 +724,7 @@ window.PlayButtonComponent = PlayButtonComponent
 
 
 
+
 class RightBarComponent extends AbstractTreeComponent {
 	createParser() {
 		return new jtree.TreeNode.Parser(undefined, {
@@ -761,6 +762,9 @@ window.ShareComponent = ShareComponent
 
 
 
+
+
+// prettier-ignore
 
 class SimEditorComponent extends AbstractTreeComponent {
   toStumpCode() {
@@ -861,13 +865,24 @@ class SimEditorComponent extends AbstractTreeComponent {
 window.SimEditorComponent = SimEditorComponent
 
 
+// prettier-ignore
 
 
 
+
+
+
+
+
+
+
+
+
+// prettier-ignore
 
 const boardMargin = 20
 const chromeHeight = 48 + boardMargin
-const chromeWidth = 230 + boardMargin
+const chromeWidth = 280 + boardMargin
 
 class SimojiApp extends AbstractTreeComponent {
   createParser() {
@@ -885,7 +900,7 @@ class SimojiApp extends AbstractTreeComponent {
   get agentMap() {
     if (!this._agentMap) {
       this.compiledCode = this.simojiProgram.compileObjectClassDeclarationsAndMap()
-      this._agentMap = eval(this.compiledCode)
+      this._agentMap = { ...eval(this.compiledCode), GridComponent, BoardStyleComponent }
     }
     return this._agentMap
   }
@@ -1145,6 +1160,9 @@ window.SimojiApp = SimojiApp
 
 
 
+
+
+
 class TopBarComponent extends AbstractTreeComponent {
   createParser() {
     return new jtree.TreeNode.Parser(undefined, {
@@ -1183,8 +1201,6 @@ window.TopBarComponent = TopBarComponent
 const DEFAULT_SIM = "soccer"
 
 
-
-// prettier-ignore
 
 let exampleSims = new jtree.TreeNode()
 

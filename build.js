@@ -18,7 +18,7 @@ const libCode = libPaths.map(path => Disk.read(__dirname + "/" + path)).join("\n
 
 Disk.write(__dirname + "/dist/libs.js", libCode)
 
-const ourPaths = Disk.getFiles(__dirname + "/components")
+const ourPaths = Disk.getFiles(__dirname + "/components").filter(path => !path.includes(".test"))
 ourPaths.unshift(__dirname + "/yodash.js")
 ourPaths.push(__dirname + "/BrowserGlue.js")
 
