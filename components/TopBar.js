@@ -23,7 +23,7 @@ class AnalyzeDataButtonComponent extends AbstractTreeComponent {
 
 class LogoComponent extends AbstractTreeComponent {
   toStumpCode() {
-    return `span Start📗
+    return `span Simoji
  class LogoComponent
  clickCommand toggleHelpCommand`
   }

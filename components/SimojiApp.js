@@ -146,6 +146,12 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     this.willowBrowser.openUrl(this.ohayoLink)
   }
 
+  get urlHash() {
+    const tree = new jtree.TreeNode()
+    tree.appendLineAndChildren("simoji", this.simojiProgram?.childrenToString() ?? "")
+    return "#" + encodeURIComponent(tree.toString())
+  }
+
   get ohayoLink() {
     const program = `data.inline
  roughjs.line
