@@ -48,22 +48,40 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     return this.getNode("SimEditorComponent")
   }
 
-  loadNewSim(simCode) {
+  loadExampleCommand(name) {
     const restart = this.isRunning
+    const simCode = exampleSims.getNode(name).childrenToString()
+    this.editor.setCodeMirrorValue(simCode)
+    this.loadNewSim(simCode)
+    if (restart) this.startInterval()
+    location.hash = ""
+  }
+
+  get simCode() {
+    return this.editor.simCode
+  }
+
+  loadNewSim(simCode) {
     this.stopInterval()
     delete this._agentMap
     delete this._simojiProgram
     delete this.compiledCode
     TreeNode._parsers.delete(BoardComponent) // clear parser
-    this.editor.getNode("value").setChildren(simCode)
-    this.editor.setWord(1, Date.now())
 
     this.board.unmountAndDestroy()
     this.appendBoard()
-    if (restart) this.startInterval()
     this.renderAndGetRenderReport(this.willowBrowser.getBodyStumpNode())
+    this.updateLocalStorage(simCode)
+  }
+
+  updateLocalStorage(simCode) {
     localStorage.setItem("simoji", simCode)
     console.log("Local storage updated...")
+  }
+
+  dumpErrorsCommand() {
+    const errs = this._simojiProgram.getAllErrors()
+    console.log(new jtree.TreeNode(errs.map(err => err.toObject())).toFormattedTable(200))
   }
 
   get board() {
@@ -71,8 +89,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
   }
 
   get simojiProgram() {
-    if (!this._simojiProgram)
-      this._simojiProgram = new simojiCompiler(this.getNode("SimEditorComponent value").childrenToString())
+    if (!this._simojiProgram) this._simojiProgram = new simojiCompiler(this.simCode)
     return this._simojiProgram
   }
 
@@ -172,6 +189,13 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
   togglePlayCommand() {
     this.isRunning ? this.stopInterval() : this.startInterval()
     this.updatePlayButtonComponentHack()
+  }
+
+  pauseCommand() {
+    if (this.isRunning) {
+      this.stopInterval()
+      this.updatePlayButtonComponentHack()
+    }
   }
 
   changeAgentBrushCommand(agent) {

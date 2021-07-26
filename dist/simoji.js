@@ -557,16 +557,12 @@ window.BoardComponent = BoardComponent
 
 
 class BottomBarComponent extends AbstractTreeComponent {
-  createParser() {
-    return new jtree.TreeNode.Parser(undefined, {
-      StatusBarComponent
-    })
-  }
-}
-
-class StatusBarComponent extends AbstractTreeComponent {
   toStumpCode() {
-    return `span Running`
+    return `div
+ class BottomBarComponent
+ span
+  clickCommand dumpErrorsCommand
+  id codeErrorsConsole`
   }
 }
 
@@ -576,11 +572,6 @@ window.BottomBarComponent = BottomBarComponent
 
 
 class ExamplesComponent extends AbstractTreeComponent {
-  loadExampleCommand(name) {
-    app.loadNewSim(exampleSims.getNode(name).childrenToString())
-    location.hash = ""
-  }
-
   toStumpCode() {
     const sims = exampleSims
       .getFirstWords()
@@ -773,13 +764,10 @@ window.ShareComponent = ShareComponent
 
 class SimEditorComponent extends AbstractTreeComponent {
   toStumpCode() {
-    return `textarea
+    return `div
  class SimEditorComponent
- changeCommand reloadSimCommand`
-  }
-
-  reloadSimCommand() {
-    app.loadNewSim(this.el.val())
+ textarea
+  id EditorTextarea`
   }
 
   createParser() {
@@ -788,18 +776,85 @@ class SimEditorComponent extends AbstractTreeComponent {
     })
   }
 
-  get el() {
-    return jQuery(".SimEditorComponent")
+  get codeMirrorValue() {
+    return this.codeMirrorInstance.getValue()
+  }
+
+  codeWidgets = []
+
+  _onCodeKeyUp() {
+    const { willowBrowser } = this
+    const code = this.codeMirrorValue
+    const root = this.getRootNode()
+    root.pauseCommand()
+    // this._updateLocalStorage()
+
+    this.program = new simojiCompiler(code)
+    const errs = this.program.getAllErrors()
+
+    willowBrowser.setHtmlOfElementWithIdHack("codeErrorsConsole", `${errs.length} errors`)
+
+    const cursor = this.codeMirrorInstance.getCursor()
+
+    // todo: what if 2 errors?
+    this.codeMirrorInstance.operation(() => {
+      this.codeWidgets.forEach(widget => this.codeMirrorInstance.removeLineWidget(widget))
+      this.codeWidgets.length = 0
+
+      errs
+        .filter(err => !err.isBlankLineError())
+        .filter(err => !err.isCursorOnWord(cursor.line, cursor.ch))
+        .slice(0, 1) // Only show 1 error at a time. Otherwise UX is not fun.
+        .forEach(err => {
+          const el = err.getCodeMirrorLineWidgetElement(() => {
+            this.codeMirrorInstance.setValue(this.program.toString())
+            this._onCodeKeyUp()
+          })
+          this.codeWidgets.push(
+            this.codeMirrorInstance.addLineWidget(err.getLineNumber() - 1, el, { coverGutter: false, noHScroll: false })
+          )
+        })
+      const info = this.codeMirrorInstance.getScrollInfo()
+      const after = this.codeMirrorInstance.charCoords({ line: cursor.line + 1, ch: 0 }, "local").top
+      if (info.top + info.clientHeight < after) this.codeMirrorInstance.scrollTo(null, after - info.clientHeight + 3)
+    })
+
+    root.loadNewSim(code)
+  }
+
+  get simCode() {
+    return this.codeMirrorInstance ? this.codeMirrorValue : this.getNode("value").childrenToString()
   }
 
   async treeComponentDidMount() {
-    this.el.val(this.getNode("value").childrenToString())
+    this.loadCodeMirror()
     super.treeComponentDidMount()
   }
 
   async treeComponentDidUpdate() {
-    this.el.val(this.getNode("value").childrenToString())
+    this.loadCodeMirror()
     super.treeComponentDidUpdate()
+  }
+
+  setCodeMirrorValue(value) {
+    this.codeMirrorInstance.setValue(value)
+  }
+
+  loadCodeMirror() {
+    this.codeMirrorInstance = new jtree.TreeNotationCodeMirrorMode(
+      "custom",
+      () => simojiCompiler,
+      undefined,
+      CodeMirror
+    )
+      .register()
+      .fromTextAreaWithAutocomplete(document.getElementById("EditorTextarea"), {
+        lineWrapping: false,
+        lineNumbers: false
+      })
+    this.setCodeMirrorValue(this.getNode("value").childrenToString())
+    this.codeMirrorInstance.on("keyup", () => this._onCodeKeyUp())
+    this.codeMirrorInstance.setSize(250, jQuery(window).height() - 68)
   }
 }
 
@@ -856,22 +911,40 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     return this.getNode("SimEditorComponent")
   }
 
-  loadNewSim(simCode) {
+  loadExampleCommand(name) {
     const restart = this.isRunning
+    const simCode = exampleSims.getNode(name).childrenToString()
+    this.editor.setCodeMirrorValue(simCode)
+    this.loadNewSim(simCode)
+    if (restart) this.startInterval()
+    location.hash = ""
+  }
+
+  get simCode() {
+    return this.editor.simCode
+  }
+
+  loadNewSim(simCode) {
     this.stopInterval()
     delete this._agentMap
     delete this._simojiProgram
     delete this.compiledCode
     TreeNode._parsers.delete(BoardComponent) // clear parser
-    this.editor.getNode("value").setChildren(simCode)
-    this.editor.setWord(1, Date.now())
 
     this.board.unmountAndDestroy()
     this.appendBoard()
-    if (restart) this.startInterval()
     this.renderAndGetRenderReport(this.willowBrowser.getBodyStumpNode())
+    this.updateLocalStorage(simCode)
+  }
+
+  updateLocalStorage(simCode) {
     localStorage.setItem("simoji", simCode)
     console.log("Local storage updated...")
+  }
+
+  dumpErrorsCommand() {
+    const errs = this._simojiProgram.getAllErrors()
+    console.log(new jtree.TreeNode(errs.map(err => err.toObject())).toFormattedTable(200))
   }
 
   get board() {
@@ -879,8 +952,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
   }
 
   get simojiProgram() {
-    if (!this._simojiProgram)
-      this._simojiProgram = new simojiCompiler(this.getNode("SimEditorComponent value").childrenToString())
+    if (!this._simojiProgram) this._simojiProgram = new simojiCompiler(this.simCode)
     return this._simojiProgram
   }
 
@@ -980,6 +1052,13 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
   togglePlayCommand() {
     this.isRunning ? this.stopInterval() : this.startInterval()
     this.updatePlayButtonComponentHack()
+  }
+
+  pauseCommand() {
+    if (this.isRunning) {
+      this.stopInterval()
+      this.updatePlayButtonComponentHack()
+    }
   }
 
   changeAgentBrushCommand(agent) {

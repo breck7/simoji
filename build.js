@@ -7,6 +7,8 @@ const { getExamples } = require("./examples")
 
 const libPaths = `node_modules/jtree/sandbox/lib/jquery.min.js
 node_modules/jtree/treeComponentFramework/sweepercraft/lib/mousetrap.min.js
+node_modules/jtree/sandbox/lib/codemirror.js
+node_modules/jtree/sandbox/lib/show-hint.js
 node_modules/jtree/products/jtree.browser.js
 node_modules/jtree/products/stump.browser.js
 node_modules/jtree/products/hakon.browser.js

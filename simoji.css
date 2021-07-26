@@ -24,16 +24,12 @@ body {
 	--topBarHeight: 28px;
 	--bottomBarHeight: 20px;
 	--chromeColor: rgb(47, 47, 51);
-	--editorWidth: 200px;
+	--editorWidth: 250px;
 }
 
 .SimojiApp {
 	height: 100%;
 	width: 100%;
-}
-
-.SimEditorComponent {
-	white-space: pre-wrap;
 }
 
 .LogoComponent {

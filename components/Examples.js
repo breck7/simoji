@@ -1,11 +1,6 @@
 const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework.node.js")
 
 class ExamplesComponent extends AbstractTreeComponent {
-  loadExampleCommand(name) {
-    app.loadNewSim(exampleSims.getNode(name).childrenToString())
-    location.hash = ""
-  }
-
   toStumpCode() {
     const sims = exampleSims
       .getFirstWords()
