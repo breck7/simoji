@@ -4,7 +4,7 @@ const { yodash } = require("../yodash")
 
 const boardMargin = 20
 const chromeHeight = 48 + boardMargin
-const chromeWidth = 230 + boardMargin
+const chromeWidth = 280 + boardMargin
 
 class SimojiApp extends AbstractTreeComponent {
   createParser() {
