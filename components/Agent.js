@@ -17,6 +17,10 @@ class Agent extends AbstractTreeComponent {
     return this.agentDefinition.getWord(0)
   }
 
+  get name() {
+    return this._name ?? this.icon
+  }
+
   get mass() {
     return this.agentDefinition.get("mass") ?? 1
   }
@@ -75,7 +79,7 @@ class Agent extends AbstractTreeComponent {
   }
 
   get agentDefinition() {
-    return this.getRootNode().simojiProgram.getNode(this.getWord(0))
+    return this.root.simojiProgram.getNode(this.getWord(0))
   }
 
   replaceWith(target, newObject) {
@@ -102,7 +106,7 @@ class Agent extends AbstractTreeComponent {
 
   end(target, message) {
     alert(message)
-    this.getRootNode().togglePlayCommand()
+    this.root.togglePlayCommand()
   }
 
   get touchMap() {
@@ -206,7 +210,7 @@ class Agent extends AbstractTreeComponent {
   }
 
   set position(value) {
-    if (this.root.isSolidAgent(value)) return this.bouncy ? this.bounce() : this
+    if (this.board.isSolidAgent(value)) return this.bouncy ? this.bounce() : this
     const newLine = this.getLine()
       .split(" ")
       .map(part => (part.includes("⬇️") ? value.down + "⬇️" : part.includes("➡️") ? value.right + "➡️" : part))

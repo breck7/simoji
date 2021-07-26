@@ -2,17 +2,13 @@ const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework
 
 class PlayButtonComponent extends AbstractTreeComponent {
   get isStarted() {
-    return this.getRootNode().isStarted
+    return this.getRootNode().isRunning
   }
 
   toStumpCode() {
     return `span ${this.isStarted ? "⏸" : "▶️"}
- class PlayButtonComponent
+ class TopBarComponentButton
  clickCommand togglePlayCommand`
-  }
-
-  togglePlayCommand() {
-    this.getRootNode().togglePlayCommand()
   }
 }
 

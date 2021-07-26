@@ -3,9 +3,9 @@ const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework
 class GridComponent extends AbstractTreeComponent {
   gridClickCommand(down, right) {
     const positionHash = down + " " + right
-    const parent = this.getParent()
-    const root = parent.getRootNode()
-    const existingObject = root.agentAt(positionHash)
+    const board = this.getParent()
+    const root = board.getRootNode()
+    const existingObject = board.agentAt(positionHash)
     if (existingObject) return root.toggleSelectCommand(existingObject)
     const { agentToInsert } = root
 
@@ -13,8 +13,8 @@ class GridComponent extends AbstractTreeComponent {
 
     //if (parent.findNodes(agentToInsert).length > MAX_ITEMS) return true
 
-    parent.prependLine(`${agentToInsert} ${positionHash}`)
-    parent.renderAndGetRenderReport(this.willowBrowser.getBodyStumpNode())
+    board.prependLine(`${agentToInsert} ${positionHash}`)
+    board.renderAndGetRenderReport(this.willowBrowser.getBodyStumpNode())
   }
 
   makeBlock(down, right, gridSize) {

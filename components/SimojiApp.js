@@ -49,18 +49,18 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
   }
 
   loadNewSim(simCode) {
-    clearInterval(this.interval)
+    const restart = this.isRunning
+    this.stopInterval()
     delete this._agentMap
     delete this._simojiProgram
     delete this.compiledCode
-    delete this._solidsSet
     TreeNode._parsers.delete(BoardComponent) // clear parser
     this.editor.getNode("value").setChildren(simCode)
     this.editor.setWord(1, Date.now())
 
     this.board.unmountAndDestroy()
     this.appendBoard()
-    this.startInterval()
+    if (restart) this.startInterval()
     this.renderAndGetRenderReport(this.willowBrowser.getBodyStumpNode())
     localStorage.setItem("simoji", simCode)
     console.log("Local storage updated...")
@@ -78,8 +78,17 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
 
   startInterval() {
     this.interval = setInterval(() => {
-      this.simLoop()
+      this.board.boardLoop()
     }, this.stepTime)
+  }
+
+  stopInterval() {
+    clearInterval(this.interval)
+    delete this.interval
+  }
+
+  get isRunning() {
+    return !!this.interval
   }
 
   async start() {
@@ -96,8 +105,6 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
         return false
       })
     })
-
-    this.startInterval()
   }
 
   interval = undefined
@@ -107,81 +114,9 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     return setTime ? parseInt(setTime) : 100
   }
 
-  isStarted = false
-  simLoop(running = this.isStarted) {
-    if (!running) return true
-
-    this.agents.filter(node => node.force).forEach(node => node.applyForceCommand())
-
-    this.agents.filter(node => node.speed).forEach(node => node.spinCommand().loopMove())
-    const { agentPositionMap } = this
-    agentPositionMap.forEach(nodes => {
-      if (nodes.length > 1) nodes.forEach(node => node.handleCollisions(nodes))
-    })
-    this.handleTouches()
-    this.agents.forEach(node => node.loopRoutine())
-
-    const spawnNode = this.simojiProgram.getNode("spawns")
-    if (spawnNode)
-      yodash.spawnFunction(spawnNode, this.board, yodash.getRandomLocation(this.board.rows, this.board.cols))
-
-    this.renderAndGetRenderReport(this.willowBrowser.getBodyStumpNode())
-  }
-
-  handleTouches() {
-    const agentPositionMap = this.agentPositionMap
-
-    this.agents.forEach(node => {
-      const { touchMap } = node
-      if (touchMap) {
-        const hits = yodash
-          .positionsAdjacentTo(node.position)
-          .map(pos => agentPositionMap.get(yodash.makePositionHash(pos)))
-          .map(items => items && items[0])
-          .filter(item => item)
-
-        yodash.applyCommandMap(touchMap, hits, node)
-      }
-    })
-  }
-
   ensureRender() {
-    if (this.isStarted) return this
+    if (this.interval) return this
     const renderReport = this.renderAndGetRenderReport(this.willowBrowser.getBodyStumpNode())
-  }
-
-  get agents() {
-    return this.board.getTopDownArray().filter(node => node instanceof Agent)
-  }
-
-  get agentPositionMap() {
-    const map = new Map()
-    this.agents.forEach(node => {
-      const { positionHash } = node
-      if (!map.has(positionHash)) map.set(positionHash, [])
-      map.get(positionHash).push(node)
-    })
-    return map
-  }
-
-  agentAt(position) {
-    const hits = this.agentPositionMap.get(position)
-    return hits ? hits[0] : undefined
-  }
-
-  isSolidAgent(position) {
-    if (!this._solidsSet) {
-      this._solidsSet = new Set()
-      this.getRootNode()
-        .getTopDownArray()
-        .filter(node => node.solid)
-        .forEach(item => {
-          this._solidsSet.add(item.positionHash)
-        })
-    }
-    const hash = yodash.makePositionHash(position)
-    if (this._solidsSet.has(hash)) return true
-    return false
   }
 
   toggleSelectCommand(object) {
@@ -197,23 +132,48 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     return this
   }
 
+  async downloadCsvCommand() {
+    let extension = "csv"
+    let type = "text/csv"
+    let str = this.board.populationCsv
+    const filename = "simoji"
+
+    console.log(str)
+    this.willowBrowser.downloadFile(str, filename + "." + extension, type)
+  }
+
+  async openInOhayoCommand() {
+    this.willowBrowser.openUrl(this.ohayoLink)
+  }
+
+  get ohayoLink() {
+    const program = `data.inline
+ roughjs.line
+ content
+  ${this.board.populationCsv.replace(/\n/g, "\n  ")}`
+
+    const link = this.willowBrowser.toPrettyDeepLink(program, {})
+    const parts = link.split("?")
+    return "https://ohayo.computer?filename=simoji.ohayo&" + parts[1]
+  }
+
   updatePlayButtonComponentHack() {
     this.getNode("TopBarComponent PlayButtonComponent")
-      .setContent(this.isStarted)
+      .setContent(this.interval)
       .renderAndGetRenderReport()
   }
 
   togglePlayCommand() {
-    this.isStarted = !this.isStarted
+    this.isRunning ? this.stopInterval() : this.startInterval()
     this.updatePlayButtonComponentHack()
   }
 
-  changeAgentBrushCommand(object) {
-    if (object === this._agentToInsert) {
+  changeAgentBrushCommand(agent) {
+    if (agent === this._agentToInsert) {
       this._agentToInsert = undefined
       return this
     }
-    this._agentToInsert = object
+    this._agentToInsert = agent
     return this
   }
 
@@ -252,6 +212,9 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
       d: () => {
         this.toggleTreeComponentFrameworkDebuggerCommand()
       },
+      c: () => {
+        this.exportDataCommand()
+      },
       up: () => this.moveSelection("North"),
       down: () => this.moveSelection("South"),
       right: () => this.moveSelection("East"),
@@ -267,6 +230,7 @@ SimojiApp.setupApp = (simojiCode, windowWidth = 1000, windowHeight = 1000) => {
  LogoComponent
  ShareComponent
  PlayButtonComponent
+ AnalyzeDataButtonComponent
  ExamplesComponent
 BottomBarComponent
 RightBarComponent

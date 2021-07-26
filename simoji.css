@@ -118,6 +118,7 @@ body {
 	line-height: var(--topBarHeight);
 	height: var(--topBarHeight);
 	padding-left: 5px;
+	white-space: nowrap;
 }
 .TopBarComponent input {
 	background: transparent;
@@ -138,21 +139,24 @@ body {
 	font-size: 12px;
 }
 
+.TopBarComponentButton {
+	cursor: pointer;
+	user-select: none;
+	width: 30px;
+	display: inline-block;
+}
+
 .RightBarComponent {
 	position: absolute;
 	width: var(--rightBarWidth);
 	top: var(--topBarHeight);
 	bottom: var(--bottomBarHeight);
 	right: 0;
+	padding-top: 20px;
 	background-color: var(--chromeColor);
 	color: white;
 	font-size: 12px;
 	z-index: 1;
-}
-
-.PlayButtonComponent {
-	cursor: pointer;
-	user-select: none;
 }
 
 .Agent {
@@ -162,5 +166,6 @@ body {
 	color: white;
 }
 .ExamplesComponent {
+	padding-left: 10px;
 	display: inline-block;
 }

@@ -7,8 +7,17 @@ class TopBarComponent extends AbstractTreeComponent {
       LogoComponent,
       ShareComponent,
       PlayButtonComponent,
+      AnalyzeDataButtonComponent,
       ExamplesComponent
     })
+  }
+}
+
+class AnalyzeDataButtonComponent extends AbstractTreeComponent {
+  toStumpCode() {
+    return `span 📈
+ class TopBarComponentButton
+ clickCommand openInOhayoCommand`
   }
 }
 
