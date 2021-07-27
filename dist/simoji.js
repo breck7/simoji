@@ -1,7 +1,6 @@
 const yodash = {}
 
-yodash.parseInts = (arr, start) =>
-	arr.map((item, index) => (index >= start ? parseInt(item) : item))
+yodash.parseInts = (arr, start) => arr.map((item, index) => (index >= start ? parseInt(item) : item))
 
 yodash.getRandomAngle = () => {
 	const r1 = Math.random()
@@ -10,7 +9,7 @@ yodash.getRandomAngle = () => {
 	return r2 > 0.5 ? "West" : "East"
 }
 
-yodash.flipAngle = (angle) => {
+yodash.flipAngle = angle => {
 	let newAngle = ""
 	if (angle.includes("North")) newAngle += "South"
 	else if (angle.includes("South")) newAngle += "North"
@@ -33,23 +32,23 @@ yodash.getRandomLocation = (rows, cols, positionSet) => {
 	const right = Math.round(Math.random() * maxRight)
 	const down = Math.round(Math.random() * maxBottom)
 	const hash = yodash.makePositionHash({ right, down })
-	if (positionSet && positionSet.has(hash))
-		return yodash.getRandomLocation(rows, cols, positionSet)
+	if (positionSet && positionSet.has(hash)) return yodash.getRandomLocation(rows, cols, positionSet)
 	return hash
 }
 
 yodash.applyCommandMap = (commandMap, targets, subject) => {
-	targets.forEach((target) => {
-		const keyword = target.getWord(0)
-		const hit = commandMap.getNode(keyword)
-		if (hit) {
-			const command = hit.nodeAt(0)
-			subject[command.getWord(0)](target, command.getWord(1))
+	targets.forEach(target => {
+		const targetId = target.getWord(0)
+		const instructions = commandMap.getNode(targetId)
+		if (instructions) {
+			instructions.forEach(instruction => {
+				subject[instruction.getWord(0)](target, instruction.getWord(1))
+			})
 		}
 	})
 }
 
-yodash.positionsAdjacentTo = (position) => {
+yodash.positionsAdjacentTo = position => {
 	let { right, down } = position
 	const positions = []
 	down--
@@ -73,16 +72,9 @@ yodash.positionsAdjacentTo = (position) => {
 	return positions
 }
 
-yodash.makePositionHash = (position) =>
-	`${position.down + "⬇️ " + position.right + "➡️"}`
+yodash.makePositionHash = position => `${position.down + "⬇️ " + position.right + "➡️"}`
 
-yodash.makeRectangle = (
-	character = "🧱",
-	width = 20,
-	height = 20,
-	startRight = 0,
-	startDown = 0
-) => {
+yodash.makeRectangle = (character = "🧱", width = 20, height = 20, startRight = 0, startDown = 0) => {
 	if (width < 1 || height < 1) {
 		return ""
 	}
@@ -91,16 +83,12 @@ yodash.makeRectangle = (
 	while (row < height) {
 		let col = 0
 		while (col < width) {
-			const isPerimeter =
-				row === 0 ||
-				row === height - 1 ||
-				col === 0 ||
-				col === width - 1
+			const isPerimeter = row === 0 || row === height - 1 || col === 0 || col === width - 1
 			if (isPerimeter)
 				cells.push(
 					`${character} ${yodash.makePositionHash({
 						down: startDown + row,
-						right: startRight + col,
+						right: startRight + col
 					})}`
 				)
 			col++
@@ -124,10 +112,6 @@ class Agent extends AbstractTreeComponent {
     return this.agentDefinition.has("bouncy")
   }
 
-  get hasRoutines() {
-    return this.agentDefinition.has("spawns")
-  }
-
   get icon() {
     return this.agentDefinition.getWord(0)
   }
@@ -140,12 +124,12 @@ class Agent extends AbstractTreeComponent {
     return this.agentDefinition.get("mass") ?? 1
   }
 
-  get spin() {
-    return this._spin ?? this.agentDefinition.get("spin") ?? "random"
+  get turnInstruction() {
+    return this._turnInstruction ?? this.agentDefinition.has("turnRandomly") ? "turnRandomly" : undefined
   }
 
-  set spin(value) {
-    this._spin = value
+  set turnInstruction(value) {
+    this._turnInstruction = value
   }
 
   get force() {
@@ -204,7 +188,7 @@ class Agent extends AbstractTreeComponent {
 
   kickIt(target) {
     target.speed = 1
-    target.spin = 0
+    target.turnInstruction = false
     target.angle = this.angle
     target.moveCommand()
   }
@@ -219,24 +203,31 @@ class Agent extends AbstractTreeComponent {
     this.angle = yodash.flipAngle(this.angle)
   }
 
-  end(target, message) {
+  alert(target, message) {
     alert(message)
-    this.root.togglePlayCommand()
+  }
+
+  log(target, message) {
+    console.log(message)
+  }
+
+  pause(target, message) {
+    this.root.pauseCommand()
   }
 
   get touchMap() {
-    return this.agentDefinition.getNode("ifTouches")
+    return this.agentDefinition.getNode("onTouch")
   }
 
   handleCollisions(targets) {
-    const commandMap = this.agentDefinition.getNode("ifHits")
+    const commandMap = this.agentDefinition.getNode("onHit")
     if (!commandMap) return
 
     return yodash.applyCommandMap(commandMap, targets, this)
   }
 
-  spinCommand() {
-    if (this.spin === "random") this.angle = yodash.getRandomAngle()
+  turnCommand() {
+    if (this.turnInstruction === "turnRandomly") this.angle = yodash.getRandomAngle()
     return this
   }
 
@@ -245,15 +236,27 @@ class Agent extends AbstractTreeComponent {
     return this.moveCommand()
   }
 
-  loopRoutine() {
-    if (this.hasRoutines) this.spawnCommand()
+  onTick() {
+    if (this.agentDefinition.has("spawn")) this.spawnCommand()
 
     if (this.health !== Infinity) {
       if (!this._startHealth) this._startHealth = this.health
       this.health--
       this.markDirty()
-      if (!this.health) this.unmountAndDestroy()
+      if (!this.health) this.onDeathCommand()
     }
+  }
+
+  onDeathCommand() {
+    const deathCommands = this.agentDefinition.getNode("onDeath")
+
+    if (deathCommands) {
+      deathCommands.forEach(instruction => {
+        this[instruction.getWord(0)](null, instruction.getWord(1))
+      })
+    }
+
+    this.unmountAndDestroy()
   }
 
   markDirty() {
@@ -261,7 +264,7 @@ class Agent extends AbstractTreeComponent {
   }
 
   spawnCommand() {
-    yodash.spawnFunction(this.agentDefinition.getNode("spawns"), this.getParent(), this.positionHash)
+    yodash.spawnFunction(this.agentDefinition.getNode("spawn"), this.getParent(), this.positionHash)
   }
 
   applyForceCommand() {
@@ -406,7 +409,7 @@ class AgentPaletteComponent extends AbstractTreeComponent {
   toStumpCode() {
     const root = this.getRootNode()
     const activeObject = root.agentToInsert
-    const items = root.simojiProgram.objectTypes
+    const items = root.simojiProgram.agentTypes
       .map(item => item.getWord(0))
       .map(
         word => ` div ${word}
@@ -472,15 +475,15 @@ class BoardComponent extends AbstractTreeComponent {
   boardLoop() {
     this.agents.filter(node => node.force).forEach(node => node.applyForceCommand())
 
-    this.agents.filter(node => node.speed).forEach(node => node.spinCommand().loopMove())
+    this.agents.filter(node => node.speed).forEach(node => node.turnCommand().loopMove())
     const { agentPositionMap } = this
     agentPositionMap.forEach(nodes => {
       if (nodes.length > 1) nodes.forEach(node => node.handleCollisions(nodes))
     })
     this.handleTouches()
-    this.agents.forEach(node => node.loopRoutine())
+    this.agents.forEach(node => node.onTick())
 
-    const spawnNode = this.getRootNode().simojiProgram.getNode("spawns")
+    const spawnNode = this.getRootNode().simojiProgram.getNode("spawn")
     if (spawnNode) yodash.spawnFunction(spawnNode, this, yodash.getRandomLocation(this.rows, this.cols))
 
     this.renderAndGetRenderReport(this.willowBrowser.getBodyStumpNode())
@@ -899,7 +902,7 @@ class SimojiApp extends AbstractTreeComponent {
 
   get agentMap() {
     if (!this._agentMap) {
-      this.compiledCode = this.simojiProgram.compileObjectClassDeclarationsAndMap()
+      this.compiledCode = this.simojiProgram.compileAgentClassDeclarationsAndMap()
       this._agentMap = { ...eval(this.compiledCode), GridComponent, BoardStyleComponent }
     }
     return this._agentMap
@@ -1097,7 +1100,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     selection.forEach(node => {
       const speed = node.speed
       node.angle = direction
-      node.spin = 0
+      node.turnInstruction = false
       node.speed = 1
       node.moveCommand()
       node.speed = speed
