@@ -23,7 +23,7 @@ ${items}`
   }
 
   getDependencies() {
-    return [this.getRootNode().editor]
+    return [this.getRootNode().board]
   }
 }
 
