@@ -36,6 +36,10 @@ body {
 	cursor: pointer;
 }
 
+.ExamplesComponent a {
+	padding-right: 5px;
+}
+
 .helpIframe {
 	border: 0;
 	height: 100%;
