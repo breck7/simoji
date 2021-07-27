@@ -97,6 +97,7 @@ agentNode
     }`
   }
 abstractCommandNode
+ cells keywordCell
 abstractRoutineNode
  cells keywordCell
 spawnRoutineNode
@@ -183,15 +184,12 @@ replaceWithCommandNode
 kickItCommandNode
  extends abstractCommandNode
  crux kickIt
- cells keywordCell
 pickItUpCommandNode
  extends abstractCommandNode
  crux pickItUp
- cells keywordCell
 alertCommandNode
  extends abstractCommandNode
  crux alert
- cells keywordCell
  catchAllCellType anyCell
 pauseCommandNode
  extends abstractCommandNode
