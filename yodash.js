@@ -38,11 +38,12 @@ yodash.getRandomLocation = (rows, cols, positionSet) => {
 
 yodash.applyCommandMap = (commandMap, targets, subject) => {
 	targets.forEach(target => {
-		const keyword = target.getWord(0)
-		const hit = commandMap.getNode(keyword)
-		if (hit) {
-			const command = hit.nodeAt(0)
-			subject[command.getWord(0)](target, command.getWord(1))
+		const targetId = target.getWord(0)
+		const instructions = commandMap.getNode(targetId)
+		if (instructions) {
+			instructions.forEach(instruction => {
+				subject[instruction.getWord(0)](target, instruction.getWord(1))
+			})
 		}
 	})
 }

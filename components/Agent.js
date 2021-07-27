@@ -104,9 +104,12 @@ class Agent extends AbstractTreeComponent {
     this.angle = yodash.flipAngle(this.angle)
   }
 
-  end(target, message) {
+  alert(target, message) {
     alert(message)
-    this.root.togglePlayCommand()
+  }
+
+  pause(target, message) {
+    this.root.pauseCommand()
   }
 
   get touchMap() {

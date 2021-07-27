@@ -1,23 +1,29 @@
 🏀
  ifHits
   🥅
-   end GOAAAAAAAAALLLL!
+   pause
+   alert GOAAAAAAAAALLLL!
  bouncy
+
 ⛹️‍♂️
  turnRandomly
  speed 1
  ifHits
   🏀
    pickItUp
+
 ⛹️‍♀️
  turnRandomly
  speed 1
  ifHits
   🏀
    pickItUp
+
 🥅
+
 🪵
  solid
+
 rectangle 🪵 30 15 5 5
 paste
  🥅 13⬇️ 6➡️

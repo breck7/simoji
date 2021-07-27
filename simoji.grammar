@@ -188,11 +188,14 @@ pickItUpCommandNode
  extends abstractCommandNode
  crux pickItUp
  cells keywordCell
-endCommandNode
+alertCommandNode
  extends abstractCommandNode
- crux end
+ crux alert
  cells keywordCell
  catchAllCellType anyCell
+pauseCommandNode
+ extends abstractCommandNode
+ crux pause
 commentNode
  description Will not appear in the compiled HTML.
  catchAllCellType commentCell
