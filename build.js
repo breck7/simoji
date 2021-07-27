@@ -5,8 +5,7 @@ const { Disk } = require("jtree/products/Disk.node.js")
 const { TypeScriptRewriter } = require("jtree/products/TypeScriptRewriter.js")
 const { getExamples } = require("./examples")
 
-const libPaths = `node_modules/jtree/sandbox/lib/jquery.min.js
-node_modules/jtree/treeComponentFramework/sweepercraft/lib/mousetrap.min.js
+const libPaths = `node_modules/jtree/treeComponentFramework/sweepercraft/lib/mousetrap.min.js
 node_modules/jtree/sandbox/lib/codemirror.js
 node_modules/jtree/sandbox/lib/show-hint.js
 node_modules/jtree/products/jtree.browser.js

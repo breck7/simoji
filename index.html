@@ -10,8 +10,7 @@
     <script src="./dist/simoji.js"></script>
     <script src="./dist/constants.js"></script>
     <script>
-      jQuery(() => new BrowserGlue().init(SimConstants.grammar, SimConstants.examples))
-      
+      document.addEventListener('DOMContentLoaded', () =>  new BrowserGlue().init(SimConstants.grammar, SimConstants.examples))
     </script>
   </head>
   <body></body>

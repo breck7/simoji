@@ -96,7 +96,7 @@ class SimEditorComponent extends AbstractTreeComponent {
       })
     this.setCodeMirrorValue(this.getNode("value").childrenToString())
     this.codeMirrorInstance.on("keyup", () => this._onCodeKeyUp())
-    this.codeMirrorInstance.setSize(250, jQuery(window).height() - 68)
+    this.codeMirrorInstance.setSize(250, window.innerHeight - 68)
   }
 }
 

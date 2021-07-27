@@ -861,7 +861,7 @@ class SimEditorComponent extends AbstractTreeComponent {
       })
     this.setCodeMirrorValue(this.getNode("value").childrenToString())
     this.codeMirrorInstance.on("keyup", () => this._onCodeKeyUp())
-    this.codeMirrorInstance.setSize(250, jQuery(window).height() - 68)
+    this.codeMirrorInstance.setSize(250, window.innerHeight - 68)
   }
 }
 
@@ -1253,7 +1253,7 @@ class BrowserGlue extends AbstractTreeComponent {
 
     const simCode = await this.fetchSimCode()
 
-    window.app = SimojiApp.setupApp(simCode, jQuery(window).width(), jQuery(window).height())
+    window.app = SimojiApp.setupApp(simCode, window.innerWidth, window.innerHeight)
     window.app.start()
     return window.app
   }
