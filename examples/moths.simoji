@@ -7,7 +7,7 @@ comment
  emit
 insert 10 🦋
 insert 2 💡
-stepTime 100
+ticksPerSecond 10
 size 20
 style
  .BoardComponent {background:black;}

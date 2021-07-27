@@ -40,4 +40,4 @@ paste
  ⛹️‍♂️ 11⬇️ 24➡️
  ⛹️‍♂️ 8⬇️ 24➡️
 size 20
-stepTime 100
+ticksPerSecond 10

@@ -5,7 +5,7 @@
  turnRandomly
  speed 2
 size 50
-stepTime 500
+ticksPerSecond 2
 paste
  🚗 1⬇️ 1➡️
  🚓 5⬇️ 5➡️

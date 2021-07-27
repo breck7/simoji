@@ -977,7 +977,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
   startInterval() {
     this.interval = setInterval(() => {
       this.board.boardLoop()
-    }, this.stepTime)
+    }, 1000 / this.ticksPerSecond)
   }
 
   stopInterval() {
@@ -1007,9 +1007,9 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
 
   interval = undefined
 
-  get stepTime() {
-    const setTime = this.simojiProgram.get("stepTime")
-    return setTime ? parseInt(setTime) : 100
+  get ticksPerSecond() {
+    const setTime = this.simojiProgram.get("ticksPerSecond")
+    return setTime ? parseInt(setTime) : 10
   }
 
   ensureRender() {

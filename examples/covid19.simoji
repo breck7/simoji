@@ -30,5 +30,5 @@ insert 1 🧟
 💉
 
 size 20
-stepTime 100
+ticksPerSecond 10
 

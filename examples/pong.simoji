@@ -20,4 +20,4 @@ paste
  🏸 13⬇️ 33➡️
  🏐 13⬇️ 19➡️
 size 20
-stepTime 100
+ticksPerSecond 10

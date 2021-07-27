@@ -148,10 +148,10 @@ sizeNode
  description Size of the sim squares in pixels. Min is 10. Max is 200.
  extends abstractSetupNumberNode
  crux size
-stepTimeNode
+ticksPerSecondNode
  description Time in milliseconds of one step.
  extends abstractSetupNumberNode
- crux stepTime
+ crux ticksPerSecond
 styleNode
  description Optional CSS to load in BoardStyleComponent
  cells keywordCell

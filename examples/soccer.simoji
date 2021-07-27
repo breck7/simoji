@@ -47,4 +47,4 @@ paste
  ⛹️‍♀️ 17⬇️ 17➡️
  ⛹️‍♀️ 8⬇️ 17➡️
 size 20
-stepTime 100
+ticksPerSecond 10
