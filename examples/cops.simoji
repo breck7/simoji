@@ -1,6 +1,8 @@
 🚗
  speed 3
+ turnRandomly
 🚓
+ turnRandomly
  speed 2
 size 50
 stepTime 500

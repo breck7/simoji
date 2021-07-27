@@ -38,7 +38,7 @@ class BoardComponent extends AbstractTreeComponent {
   boardLoop() {
     this.agents.filter(node => node.force).forEach(node => node.applyForceCommand())
 
-    this.agents.filter(node => node.speed).forEach(node => node.spinCommand().loopMove())
+    this.agents.filter(node => node.speed).forEach(node => node.turnCommand().loopMove())
     const { agentPositionMap } = this
     agentPositionMap.forEach(nodes => {
       if (nodes.length > 1) nodes.forEach(node => node.handleCollisions(nodes))

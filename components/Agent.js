@@ -25,12 +25,12 @@ class Agent extends AbstractTreeComponent {
     return this.agentDefinition.get("mass") ?? 1
   }
 
-  get spin() {
-    return this._spin ?? this.agentDefinition.get("spin") ?? "random"
+  get turnInstruction() {
+    return this._turnInstruction ?? this.agentDefinition.has("turnRandomly") ? "turnRandomly" : undefined
   }
 
-  set spin(value) {
-    this._spin = value
+  set turnInstruction(value) {
+    this._turnInstruction = value
   }
 
   get force() {
@@ -89,7 +89,7 @@ class Agent extends AbstractTreeComponent {
 
   kickIt(target) {
     target.speed = 1
-    target.spin = 0
+    target.turnInstruction = false
     target.angle = this.angle
     target.moveCommand()
   }
@@ -120,8 +120,8 @@ class Agent extends AbstractTreeComponent {
     return yodash.applyCommandMap(commandMap, targets, this)
   }
 
-  spinCommand() {
-    if (this.spin === "random") this.angle = yodash.getRandomAngle()
+  turnCommand() {
+    if (this.turnInstruction === "turnRandomly") this.angle = yodash.getRandomAngle()
     return this
   }
 

@@ -4,7 +4,9 @@ comment
 🧟
  health 30
  speed 1
+ turnRandomly
 🙍
+ turnRandomly
  speed 2
  ifTouches
   🧟

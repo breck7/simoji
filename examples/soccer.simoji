@@ -5,10 +5,12 @@
  bouncy
 ⛹️‍♂️
  speed 1
+ turnRandomly
  ifHits
   ⚽️
    kickIt
 ⛹️‍♀️
+ turnRandomly
  speed 1
  ifHits
   ⚽️

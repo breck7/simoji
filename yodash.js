@@ -1,7 +1,6 @@
 const yodash = {}
 
-yodash.parseInts = (arr, start) =>
-	arr.map((item, index) => (index >= start ? parseInt(item) : item))
+yodash.parseInts = (arr, start) => arr.map((item, index) => (index >= start ? parseInt(item) : item))
 
 yodash.getRandomAngle = () => {
 	const r1 = Math.random()
@@ -10,7 +9,7 @@ yodash.getRandomAngle = () => {
 	return r2 > 0.5 ? "West" : "East"
 }
 
-yodash.flipAngle = (angle) => {
+yodash.flipAngle = angle => {
 	let newAngle = ""
 	if (angle.includes("North")) newAngle += "South"
 	else if (angle.includes("South")) newAngle += "North"
@@ -33,13 +32,12 @@ yodash.getRandomLocation = (rows, cols, positionSet) => {
 	const right = Math.round(Math.random() * maxRight)
 	const down = Math.round(Math.random() * maxBottom)
 	const hash = yodash.makePositionHash({ right, down })
-	if (positionSet && positionSet.has(hash))
-		return yodash.getRandomLocation(rows, cols, positionSet)
+	if (positionSet && positionSet.has(hash)) return yodash.getRandomLocation(rows, cols, positionSet)
 	return hash
 }
 
 yodash.applyCommandMap = (commandMap, targets, subject) => {
-	targets.forEach((target) => {
+	targets.forEach(target => {
 		const keyword = target.getWord(0)
 		const hit = commandMap.getNode(keyword)
 		if (hit) {
@@ -49,7 +47,7 @@ yodash.applyCommandMap = (commandMap, targets, subject) => {
 	})
 }
 
-yodash.positionsAdjacentTo = (position) => {
+yodash.positionsAdjacentTo = position => {
 	let { right, down } = position
 	const positions = []
 	down--
@@ -73,16 +71,9 @@ yodash.positionsAdjacentTo = (position) => {
 	return positions
 }
 
-yodash.makePositionHash = (position) =>
-	`${position.down + "⬇️ " + position.right + "➡️"}`
+yodash.makePositionHash = position => `${position.down + "⬇️ " + position.right + "➡️"}`
 
-yodash.makeRectangle = (
-	character = "🧱",
-	width = 20,
-	height = 20,
-	startRight = 0,
-	startDown = 0
-) => {
+yodash.makeRectangle = (character = "🧱", width = 20, height = 20, startRight = 0, startDown = 0) => {
 	if (width < 1 || height < 1) {
 		return ""
 	}
@@ -91,16 +82,12 @@ yodash.makeRectangle = (
 	while (row < height) {
 		let col = 0
 		while (col < width) {
-			const isPerimeter =
-				row === 0 ||
-				row === height - 1 ||
-				col === 0 ||
-				col === width - 1
+			const isPerimeter = row === 0 || row === height - 1 || col === 0 || col === width - 1
 			if (isPerimeter)
 				cells.push(
 					`${character} ${yodash.makePositionHash({
 						down: startDown + row,
-						right: startRight + col,
+						right: startRight + col
 					})}`
 				)
 			col++

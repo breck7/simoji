@@ -4,12 +4,12 @@
  spawns 🪃 .1
 🪃
  speed 1
- spin 0
  angle West
 💣
 🪦
  comment Dead zombie
 🧟‍♂️
+ turnRandomly
  speed 1
  ifHits
   🪃

@@ -4,11 +4,13 @@
    end GOAAAAAAAAALLLL!
  bouncy
 ⛹️‍♂️
+ turnRandomly
  speed 1
  ifHits
   🏀
    pickItUp
 ⛹️‍♀️
+ turnRandomly
  speed 1
  ifHits
   🏀

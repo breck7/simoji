@@ -16,8 +16,6 @@ integerCell
 angleCell
  enum North South East West NorthWest NorthEast SouthWest SouthEast
  highlightScope constant.numeric
-spinCell
- highlightScope constant.numeric
 errorNode
  baseNodeType errorNode
 simojiNode
@@ -25,29 +23,29 @@ simojiNode
  description A Tree Language that compiles to a TreeComponentFramework app.
  root
  inScope blankLineNode commentNode abstractSetupNumberNode abstractDrawNode styleNode spawnRoutineNode
- catchAllNodeType objectNode
+ catchAllNodeType agentNode
  compilesTo javascript
  javascript
-  compileObjectClassDeclarationsAndMap() {
+  compileAgentClassDeclarationsAndMap() {
     const clone = this.clone()
-    clone.filter(node => node.getNodeTypeId() !== "objectNode").forEach(node => node.destroy())
-    clone.objectClassCount = 0
+    clone.filter(node => node.getNodeTypeId() !== "agentNode").forEach(node => node.destroy())
+    clone.agentClassCount = 0
     const compiled = clone.compile()
-    const agentMap = clone.objectTypes.map((node, index) => `"${node.getWord(0)}":simObject${index}`).join(",")
+    const agentMap = clone.agentTypes.map((node, index) => `"${node.getWord(0)}":simAgent${index}`).join(",")
     return `${compiled}
     const map = {${agentMap}};
     map;`
   }
   compileSetup(rows, cols) {
     const clone = this.clone()
-    clone.filter(node => node.getNodeTypeId() === "objectNode").forEach(node => node.destroy())
+    clone.filter(node => node.getNodeTypeId() === "agentNode").forEach(node => node.destroy())
     clone.positionSet = new Set()
     clone.rows = rows
     clone.cols = cols
     return clone.compile()
   }
-  get objectTypes() {
-    return this.filter(node => node.getNodeTypeId() === "objectNode")
+  get agentTypes() {
+    return this.filter(node => node.getNodeTypeId() === "agentNode")
   }
 abstractDrawNode
 insertNode
@@ -87,14 +85,14 @@ pasteDrawNode
 pasteLineNode
  catchAllCellType anyCell
  catchAllNodeType pasteLineNode
-objectNode
+agentNode
  inScope commentNode abstractEventNode abstractTraitNode abstractAttributeNode abstractRoutineNode
  cells keywordCell
  javascript
   compile() {
     const root = this.getRootNode()
-    const name = `simObject` + root.objectClassCount
-    root.objectClassCount++
+    const name = `simAgent` + root.agentClassCount
+    root.agentClassCount++
     return `class ${name} extends Agent {
     }`
   }
@@ -131,10 +129,9 @@ forceNode
 massNode
  extends abstractAttributeNode
  crux mass
-spinNode
- extends abstractAttributeNode
- cells keywordCell spinCell
- crux spin
+turnRandomlyNode
+ extends abstractTraitNode
+ crux turnRandomly
 angleNode
  extends abstractAttributeNode
  cells keywordCell angleCell

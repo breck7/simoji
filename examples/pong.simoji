@@ -2,7 +2,6 @@
  bouncy
  speed 1
  angle West
- spin 0
 🏓
  angle East
  ifHits

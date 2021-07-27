@@ -4,15 +4,20 @@ comment
 
 🧟
  health 30
+ turnRandomly
  speed 1
 🦸‍♂️
  comment immune
+ turnRandomly
+ speed 2
 🙍
+ turnRandomly
  speed 2
  ifTouches
   🧟
    replaceWith 🧟
 insert 100 🙍
+insert 10 🦸‍♂️
 insert 1 🧟
 
 🪦

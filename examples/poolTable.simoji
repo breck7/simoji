@@ -4,7 +4,6 @@ comment
  mass 1
  speed 0
  bouncy
- spin 1
  ifHits
   🎱
    kickIt
@@ -19,7 +18,6 @@ comment
  force 2
  mass 1
  angle West
- spin 0
 rectangle 🪵 40 20 0 7
 paste
  🏐 17⬇️ 32➡️

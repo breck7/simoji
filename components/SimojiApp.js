@@ -34,7 +34,7 @@ class SimojiApp extends AbstractTreeComponent {
 
   get agentMap() {
     if (!this._agentMap) {
-      this.compiledCode = this.simojiProgram.compileObjectClassDeclarationsAndMap()
+      this.compiledCode = this.simojiProgram.compileAgentClassDeclarationsAndMap()
       this._agentMap = { ...eval(this.compiledCode), GridComponent, BoardStyleComponent }
     }
     return this._agentMap
@@ -232,7 +232,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     selection.forEach(node => {
       const speed = node.speed
       node.angle = direction
-      node.spin = 0
+      node.turnInstruction = false
       node.speed = 1
       node.moveCommand()
       node.speed = speed

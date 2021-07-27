@@ -1,7 +1,6 @@
 🛗
  speed 2
  angle South
- spin 0
  bouncy
  ifHits
   🚶🏻
@@ -9,7 +8,6 @@
 🚶🏻
  angle West
  speed 1
- spin 0
  bouncy
 🌾
 🚪
