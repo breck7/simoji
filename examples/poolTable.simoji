@@ -4,14 +4,14 @@ comment
  mass 1
  speed 0
  bouncy
- ifHits
+ onHit
   🎱
    kickIt
 🪵
  solid
 🏐
  bouncy
- ifHits
+ onHit
   🎱
    kickIt
  speed 0

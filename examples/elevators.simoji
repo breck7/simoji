@@ -2,7 +2,7 @@
  speed 2
  angle South
  bouncy
- ifHits
+ onHit
   🚶🏻
    pickItUp
 🚶🏻

@@ -15,7 +15,7 @@ comment
 🙍
  turnRandomly
  speed 2
- ifTouches
+ onTouch
   🧟
    replaceWith 🧟
 

@@ -125,6 +125,7 @@ diameterNode
  extends abstractAttributeNode
  crux diameter
 forceNode
+ description Accelerate this agent with a starting force.
  extends abstractAttributeNode
  crux force
 massNode
@@ -167,12 +168,14 @@ targetEmojiNode
 abstractEventNode
  cells keywordCell
  catchAllNodeType targetEmojiNode
-ifHitsNode
+onHitNode
  extends abstractEventNode
- crux ifHits
-ifTouchesNode
+ crux onHit
+ description Define what happens when this agent collides with other agents.
+onTouchNode
  extends abstractEventNode
- crux ifTouches
+ crux onTouch
+ description Define what happens when this agent is adjacent to other agents.
 ifDiesNode
  extends abstractEventNode
  crux ifDies

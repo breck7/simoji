@@ -4,12 +4,12 @@
  angle West
 🏓
  angle East
- ifHits
+ onHit
   🏐
    kickIt
 🏸
  angle West
- ifHits
+ onHit
   🏐
    kickIt
 🪵

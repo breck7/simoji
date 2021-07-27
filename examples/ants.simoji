@@ -6,7 +6,7 @@ comment
 🐜
  speed 1
  turnRandomly
- ifHits
+ onHit
   🥖
    pickItUp
 🥖

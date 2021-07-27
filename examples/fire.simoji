@@ -1,10 +1,10 @@
 🔥
  health 100
 🌲
- ifHits
+ onHit
   ⚡️
    replaceWith 🔥
- ifTouches
+ onTouch
   🔥
    replaceWith 🔥
 ⚡️

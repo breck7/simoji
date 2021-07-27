@@ -11,7 +11,7 @@
 🧟‍♂️
  turnRandomly
  speed 1
- ifHits
+ onHit
   🪃
    replaceWith 🪦
   💣

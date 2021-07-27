@@ -1,5 +1,5 @@
 🏀
- ifHits
+ onHit
   🥅
    pause
    alert GOAAAAAAAAALLLL!
@@ -8,14 +8,14 @@
 ⛹️‍♂️
  turnRandomly
  speed 1
- ifHits
+ onHit
   🏀
    pickItUp
 
 ⛹️‍♀️
  turnRandomly
  speed 1
- ifHits
+ onHit
   🏀
    pickItUp
 

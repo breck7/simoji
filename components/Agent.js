@@ -113,11 +113,11 @@ class Agent extends AbstractTreeComponent {
   }
 
   get touchMap() {
-    return this.agentDefinition.getNode("ifTouches")
+    return this.agentDefinition.getNode("onTouch")
   }
 
   handleCollisions(targets) {
-    const commandMap = this.agentDefinition.getNode("ifHits")
+    const commandMap = this.agentDefinition.getNode("onHit")
     if (!commandMap) return
 
     return yodash.applyCommandMap(commandMap, targets, this)
