@@ -44,9 +44,9 @@ class BoardComponent extends AbstractTreeComponent {
       if (nodes.length > 1) nodes.forEach(node => node.handleCollisions(nodes))
     })
     this.handleTouches()
-    this.agents.forEach(node => node.loopRoutine())
+    this.agents.forEach(node => node.onTick())
 
-    const spawnNode = this.getRootNode().simojiProgram.getNode("spawns")
+    const spawnNode = this.getRootNode().simojiProgram.getNode("spawn")
     if (spawnNode) yodash.spawnFunction(spawnNode, this, yodash.getRandomLocation(this.rows, this.cols))
 
     this.renderAndGetRenderReport(this.willowBrowser.getBodyStumpNode())

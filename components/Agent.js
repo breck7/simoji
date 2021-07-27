@@ -9,10 +9,6 @@ class Agent extends AbstractTreeComponent {
     return this.agentDefinition.has("bouncy")
   }
 
-  get hasRoutines() {
-    return this.agentDefinition.has("spawns")
-  }
-
   get icon() {
     return this.agentDefinition.getWord(0)
   }
@@ -108,6 +104,10 @@ class Agent extends AbstractTreeComponent {
     alert(message)
   }
 
+  log(target, message) {
+    console.log(message)
+  }
+
   pause(target, message) {
     this.root.pauseCommand()
   }
@@ -133,15 +133,27 @@ class Agent extends AbstractTreeComponent {
     return this.moveCommand()
   }
 
-  loopRoutine() {
-    if (this.hasRoutines) this.spawnCommand()
+  onTick() {
+    if (this.agentDefinition.has("spawn")) this.spawnCommand()
 
     if (this.health !== Infinity) {
       if (!this._startHealth) this._startHealth = this.health
       this.health--
       this.markDirty()
-      if (!this.health) this.unmountAndDestroy()
+      if (!this.health) this.onDeathCommand()
     }
+  }
+
+  onDeathCommand() {
+    const deathCommands = this.agentDefinition.getNode("onDeath")
+
+    if (deathCommands) {
+      deathCommands.forEach(instruction => {
+        this[instruction.getWord(0)](null, instruction.getWord(1))
+      })
+    }
+
+    this.unmountAndDestroy()
   }
 
   markDirty() {
@@ -149,7 +161,7 @@ class Agent extends AbstractTreeComponent {
   }
 
   spawnCommand() {
-    yodash.spawnFunction(this.agentDefinition.getNode("spawns"), this.getParent(), this.positionHash)
+    yodash.spawnFunction(this.agentDefinition.getNode("spawn"), this.getParent(), this.positionHash)
   }
 
   applyForceCommand() {

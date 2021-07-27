@@ -6,6 +6,8 @@ comment
  health 30
  turnRandomly
  speed 1
+ onDeath
+  log died
 
 🦸‍♂️
  comment immune

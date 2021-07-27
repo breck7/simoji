@@ -22,7 +22,7 @@ simojiNode
  extensions simoji
  description A Tree Language that compiles to a TreeComponentFramework app.
  root
- inScope blankLineNode commentNode abstractSetupNumberNode abstractDrawNode styleNode spawnRoutineNode
+ inScope blankLineNode commentNode abstractSetupNumberNode abstractDrawNode styleNode spawnCommandNode
  catchAllNodeType agentNode
  compilesTo javascript
  javascript
@@ -86,7 +86,7 @@ pasteLineNode
  catchAllCellType anyCell
  catchAllNodeType pasteLineNode
 agentNode
- inScope commentNode abstractEventNode abstractTraitNode abstractAttributeNode abstractRoutineNode
+ inScope commentNode abstractEventNode abstractTraitNode abstractAttributeNode abstractCommandNode
  cells keywordCell
  javascript
   compile() {
@@ -98,11 +98,11 @@ agentNode
   }
 abstractCommandNode
  cells keywordCell
-abstractRoutineNode
- cells keywordCell
-spawnRoutineNode
- crux spawns
- extends abstractRoutineNode
+abstractSubjectObjectCommandNode
+ extends abstractCommandNode
+spawnCommandNode
+ crux spawn
+ extends abstractCommandNode
  cells keywordCell emojiCell integerCell
 abstractTraitNode
  description A boolean attribute.
@@ -167,32 +167,39 @@ targetEmojiNode
  cells emojiCell
 abstractEventNode
  cells keywordCell
+abstractInteractionEventNode
+ extends abstractEventNode
  catchAllNodeType targetEmojiNode
 onHitNode
- extends abstractEventNode
+ extends abstractInteractionEventNode
  crux onHit
  description Define what happens when this agent collides with other agents.
 onTouchNode
- extends abstractEventNode
+ extends abstractInteractionEventNode
  crux onTouch
  description Define what happens when this agent is adjacent to other agents.
-ifDiesNode
+onDeathNode
  extends abstractEventNode
- crux ifDies
+ crux onDeath
  inScope abstractCommandNode
+ description Define what happens when this agent runs out of health.
 replaceWithCommandNode
- extends abstractCommandNode
+ extends abstractSubjectObjectCommandNode
  crux replaceWith
  cells keywordCell emojiCell
 kickItCommandNode
- extends abstractCommandNode
+ extends abstractSubjectObjectCommandNode
  crux kickIt
 pickItUpCommandNode
- extends abstractCommandNode
+ extends abstractSubjectObjectCommandNode
  crux pickItUp
 alertCommandNode
  extends abstractCommandNode
  crux alert
+ catchAllCellType anyCell
+logCommandNode
+ extends abstractCommandNode
+ crux log
  catchAllCellType anyCell
 pauseCommandNode
  extends abstractCommandNode

@@ -2,7 +2,7 @@ comment
  https://ccl.northwestern.edu/netlogo/models/Ants
 
 ⛰
- spawns 🐜 0.05
+ spawn 🐜 0.05
 🐜
  speed 1
  turnRandomly
