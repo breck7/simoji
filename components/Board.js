@@ -37,22 +37,24 @@ class BoardComponent extends AbstractTreeComponent {
   tick = 0
   boardLoop() {
     this.agents.filter(node => node.force).forEach(node => node.applyForceCommand())
+    this.agents.filter(node => node.speed).forEach(node => node.loopMove())
 
-    this.agents.filter(node => node.speed).forEach(node => node.turnCommand().loopMove())
-    const { agentPositionMap } = this
-    agentPositionMap.forEach(nodes => {
-      if (nodes.length > 1) nodes.forEach(node => node.handleCollisions(nodes))
-    })
+    this.handleCollisions()
     this.handleTouches()
+
     this.agents.forEach(node => node.onTick())
 
-    const spawnNode = this.getRootNode().simojiProgram.getNode("spawn")
-    if (spawnNode) yodash.spawnFunction(spawnNode, this, yodash.getRandomLocation(this.rows, this.cols))
+    this.rootOnTick()
 
     this.renderAndGetRenderReport(this.willowBrowser.getBodyStumpNode())
 
     this.tick++
     this._populationCounts.push(this.populationCount)
+  }
+
+  rootOnTick() {
+    const spawnNode = this.getRootNode().simojiProgram.getNode("spawn")
+    if (spawnNode) yodash.spawnFunction(spawnNode, this, yodash.getRandomLocation(this.rows, this.cols))
   }
 
   isSolidAgent(position) {
@@ -88,19 +90,32 @@ class BoardComponent extends AbstractTreeComponent {
     return hits ? hits[0] : undefined
   }
 
+  handleCollisions() {
+    const { agentPositionMap } = this
+    agentPositionMap.forEach(nodes => {
+      if (nodes.length > 1) nodes.forEach(node => node.handleCollisions(nodes))
+    })
+  }
+
   handleTouches() {
     const agentPositionMap = this.agentPositionMap
 
-    this.agents.forEach(node => {
-      const { touchMap } = node
-      if (touchMap) {
-        const hits = yodash
-          .positionsAdjacentTo(node.position)
-          .map(pos => agentPositionMap.get(yodash.makePositionHash(pos)))
-          .map(items => items && items[0])
-          .filter(item => item)
+    this.agents.forEach(subject => {
+      const { touchMap } = subject
+      if (!touchMap) return
 
-        yodash.applyCommandMap(touchMap, hits, node)
+      for (let pos of yodash.positionsAdjacentTo(subject.position)) {
+        const hits = agentPositionMap.get(yodash.makePositionHash(pos)) ?? []
+        for (let target of hits) {
+          const targetId = target.getWord(0)
+          const instructions = touchMap.getNode(targetId)
+          if (instructions) {
+            instructions.forEach(instruction => {
+              subject[instruction.getWord(0)](target, instruction)
+            })
+            if (subject.getIndex() === -1) return
+          }
+        }
       }
     })
   }

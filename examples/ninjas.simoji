@@ -1,10 +1,16 @@
 🤺
  health 100
+ onTick
+  decrease health
+  turnRandomly
  speed 1
- turnRandomly
+
 🥷
  health 100
+ onTick
+  decrease health
+  turnRandomly
  speed 1
- turnRandomly
+
 insert 50 🤺
 insert 50 🥷

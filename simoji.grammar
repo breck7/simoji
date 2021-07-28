@@ -13,6 +13,8 @@ textCell
  highlightScope string
 integerCell
  highlightScope constant.numeric
+propertyNameCell
+ highlightScope keyword
 angleCell
  enum North South East West NorthWest NorthEast SouthWest SouthEast
  highlightScope constant.numeric
@@ -86,14 +88,18 @@ pasteLineNode
  catchAllCellType anyCell
  catchAllNodeType pasteLineNode
 agentNode
- inScope commentNode abstractEventNode abstractTraitNode abstractAttributeNode abstractCommandNode
+ inScope commentNode abstractEventNode abstractAttributeNode
  cells keywordCell
+ compiler
+  stringTemplate 
  javascript
   compile() {
     const root = this.getRootNode()
     const name = `simAgent` + root.agentClassCount
     root.agentClassCount++
+    const normal = super.compile()
     return `class ${name} extends Agent {
+      ${normal}
     }`
   }
 abstractCommandNode
@@ -104,40 +110,59 @@ spawnCommandNode
  crux spawn
  extends abstractCommandNode
  cells keywordCell emojiCell integerCell
-abstractTraitNode
- description A boolean attribute.
+abstractAttributeNode
  cells keywordCell
+abstractBooleanAttributeNode
+ description A boolean attribute.
+ extends abstractAttributeNode
+ javascript
+  compile() {
+    return `${this.getWord(0)} = true`
+  }
 solidTraitNode
- extends abstractTraitNode
+ description If set other agents won't pass through these.
+ extends abstractBooleanAttributeNode
  crux solid
 bouncyTraitNode
- extends abstractTraitNode
+ description If set other agents will bounce off this after a collision.
+ extends abstractBooleanAttributeNode
  crux bouncy
-abstractAttributeNode
- cells keywordCell integerCell
-healthNode
+abstractIntegerAttributeNode
  extends abstractAttributeNode
+ description An integer attribute.
+ cells keywordCell integerCell
+ javascript
+  compile() {
+    return `${this.getWord(0)} = ${this.getWord(1)}`
+  }
+customIntegerAttributeNode
+ pattern ^\w+ \d+$
+ extends abstractIntegerAttributeNode
+healthNode
+ extends abstractIntegerAttributeNode
  crux health
 speedNode
- extends abstractAttributeNode
+ description A value of 1 will move the agent 1 space in 1 tick.
+ extends abstractIntegerAttributeNode
  crux speed
 diameterNode
- extends abstractAttributeNode
+ extends abstractIntegerAttributeNode
  crux diameter
 forceNode
  description Accelerate this agent with a starting force.
- extends abstractAttributeNode
+ extends abstractIntegerAttributeNode
  crux force
 massNode
- extends abstractAttributeNode
+ extends abstractIntegerAttributeNode
  crux mass
-turnRandomlyNode
- extends abstractTraitNode
- crux turnRandomly
 angleNode
  extends abstractAttributeNode
  cells keywordCell angleCell
  crux angle
+ javascript
+  compile() {
+    return `${this.getWord(0)} = "${this.getWord(1)}"`
+  }
 abstractSetupNumberNode
  cells keywordCell integerCell
  javascript
@@ -167,6 +192,10 @@ targetEmojiNode
  cells emojiCell
 abstractEventNode
  cells keywordCell
+ javascript
+  compile() {
+    return ``
+  }
 abstractInteractionEventNode
  extends abstractEventNode
  catchAllNodeType targetEmojiNode
@@ -183,6 +212,11 @@ onDeathNode
  crux onDeath
  inScope abstractCommandNode
  description Define what happens when this agent runs out of health.
+onTickNode
+ extends abstractEventNode
+ crux onTick
+ inScope abstractCommandNode
+ description Define what happens each tick.
 replaceWithCommandNode
  extends abstractSubjectObjectCommandNode
  crux replaceWith
@@ -204,8 +238,20 @@ logCommandNode
 pauseCommandNode
  extends abstractCommandNode
  crux pause
+decreaseCommandNode
+ extends abstractCommandNode
+ description Decrease a property by 1.
+ crux decrease
+ cells keywordCell propertyNameCell
+increaseCommandNode
+ extends abstractCommandNode
+ description Increase a property by 1.
+ crux increase
+ cells keywordCell propertyNameCell
+turnRandomlyCommandNode
+ extends abstractCommandNode
+ crux turnRandomly
 commentNode
- description Will not appear in the compiled HTML.
  catchAllCellType commentCell
  crux comment
  javascript

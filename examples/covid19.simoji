@@ -4,18 +4,22 @@ comment
 
 🧟
  health 30
- turnRandomly
+ onTick
+  decrease health
+  turnRandomly
  speed 1
  onDeath
-  log died
+  replaceWith 🪦
 
 🦸‍♂️
  comment immune
- turnRandomly
+ onTick
+  turnRandomly
  speed 2
 
 🙍
- turnRandomly
+ onTick
+  turnRandomly
  speed 2
  onTouch
   🧟

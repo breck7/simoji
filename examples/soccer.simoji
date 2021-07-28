@@ -4,14 +4,18 @@
    pause
    alert GOAAAAAAAAALLLL!
  bouncy
+
 ⛹️‍♂️
  speed 1
- turnRandomly
+ onTick
+  turnRandomly
  onHit
   ⚽️
    kickIt
+
 ⛹️‍♀️
- turnRandomly
+ onTick
+  turnRandomly
  speed 1
  onHit
   ⚽️
@@ -19,6 +23,10 @@
 🥅
 🪵
  solid
+
+size 20
+ticksPerSecond 10
+
 rectangle 🪵 30 15 5 5
 paste
  🥅 13⬇️ 6➡️
@@ -46,5 +54,3 @@ paste
  ⛹️‍♀️ 13⬇️ 17➡️
  ⛹️‍♀️ 17⬇️ 17➡️
  ⛹️‍♀️ 8⬇️ 17➡️
-size 20
-ticksPerSecond 10

@@ -2,13 +2,16 @@ comment
  https://ccl.northwestern.edu/netlogo/models/Ants
 
 ⛰
- spawn 🐜 0.05
+ onTick
+  spawn 🐜 0.05
 🐜
  speed 1
- turnRandomly
+ onTick
+  turnRandomly
  onHit
   🥖
    pickItUp
 🥖
+
 insert 3 🥖
 insert 1 ⛰

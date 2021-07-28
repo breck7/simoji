@@ -1,5 +1,7 @@
 🔥
- health 100
+ health 30
+ onTick
+  decrease health
 🌲
  onHit
   ⚡️
@@ -8,6 +10,9 @@
   🔥
    replaceWith 🔥
 ⚡️
- health 10
+ health 30
+ onTick
+  decrease health
+
 insert 2000 🌲
 spawn ⚡️ .6

@@ -1,5 +1,6 @@
 comment
  Needs balls to collide. Acceleration.
+
 🎱
  mass 1
  speed 0
@@ -7,8 +8,10 @@ comment
  onHit
   🎱
    kickIt
+
 🪵
  solid
+
 🏐
  bouncy
  onHit
@@ -18,6 +21,7 @@ comment
  force 2
  mass 1
  angle West
+
 rectangle 🪵 40 20 0 7
 paste
  🏐 17⬇️ 32➡️

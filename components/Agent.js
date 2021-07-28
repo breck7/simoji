@@ -1,14 +1,6 @@
 const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework.node.js")
 
 class Agent extends AbstractTreeComponent {
-  get solid() {
-    return this.agentDefinition.has("solid")
-  }
-
-  get bouncy() {
-    return this.agentDefinition.has("bouncy")
-  }
-
   get icon() {
     return this.agentDefinition.getWord(0)
   }
@@ -19,14 +11,6 @@ class Agent extends AbstractTreeComponent {
 
   get mass() {
     return this.agentDefinition.get("mass") ?? 1
-  }
-
-  get turnInstruction() {
-    return this._turnInstruction ?? this.agentDefinition.has("turnRandomly") ? "turnRandomly" : undefined
-  }
-
-  set turnInstruction(value) {
-    this._turnInstruction = value
   }
 
   get force() {
@@ -42,16 +26,6 @@ class Agent extends AbstractTreeComponent {
     return this.force / this.mass
   }
 
-  get speed() {
-    if (this._speed !== undefined) return this._speed
-    const speed = this.agentDefinition.get("speed")
-    return speed ? parseInt(speed) : 0
-  }
-
-  set speed(value) {
-    this._speed = value
-  }
-
   get diameter() {
     return this.agentDefinition.get("diameter") ?? 1
   }
@@ -64,21 +38,12 @@ class Agent extends AbstractTreeComponent {
     this._angle = value
   }
 
-  get health() {
-    if (this._health !== undefined) return this._health
-    const health = this.agentDefinition.get("health")
-    return health ? parseInt(health) : Infinity
-  }
-
-  set health(value) {
-    this._health = value
-  }
-
   get agentDefinition() {
     return this.root.simojiProgram.getNode(this.getWord(0))
   }
 
-  replaceWith(target, newObject) {
+  replaceWith(target, command) {
+    const newObject = command.getWord(1)
     this.getParent().appendLine(`${newObject} ${this.positionHash}`)
     this.unmountAndDestroy()
   }
@@ -100,15 +65,27 @@ class Agent extends AbstractTreeComponent {
     this.angle = yodash.flipAngle(this.angle)
   }
 
-  alert(target, message) {
-    alert(message)
+  alert(target, command) {
+    alert(command.getContent())
   }
 
-  log(target, message) {
-    console.log(message)
+  log(target, command) {
+    console.log(command.getContent())
   }
 
-  pause(target, message) {
+  decrease(target, command) {
+    const property = command.getWord(1)
+    if (target[property] === undefined) target[property] = 0
+    target[property]--
+  }
+
+  increase(target, command) {
+    const property = command.getWord(1)
+    if (target[property] === undefined) target[property] = 0
+    target[property]++
+  }
+
+  pause() {
     this.root.pauseCommand()
   }
 
@@ -123,8 +100,8 @@ class Agent extends AbstractTreeComponent {
     return yodash.applyCommandMap(commandMap, targets, this)
   }
 
-  turnCommand() {
-    if (this.turnInstruction === "turnRandomly") this.angle = yodash.getRandomAngle()
+  turnRandomly() {
+    this.angle = yodash.getRandomAngle()
     return this
   }
 
@@ -133,35 +110,34 @@ class Agent extends AbstractTreeComponent {
     return this.moveCommand()
   }
 
-  onTick() {
-    if (this.agentDefinition.has("spawn")) this.spawnCommand()
-
-    if (this.health !== Infinity) {
-      if (!this._startHealth) this._startHealth = this.health
-      this.health--
-      this.markDirty()
-      if (!this.health) this.onDeathCommand()
+  executeCommands(key) {
+    const commands = this.agentDefinition.getNode(key)
+    if (commands) {
+      commands.forEach(instruction => {
+        this[instruction.getWord(0)](this, instruction)
+      })
     }
   }
 
-  onDeathCommand() {
-    const deathCommands = this.agentDefinition.getNode("onDeath")
+  onTick() {
+    this.executeCommands("onTick")
+    if (this.health === 0) this.onDeathCommand()
+  }
 
-    if (deathCommands) {
-      deathCommands.forEach(instruction => {
-        this[instruction.getWord(0)](null, instruction.getWord(1))
-      })
-    }
-
+  remove() {
     this.unmountAndDestroy()
+  }
+
+  onDeathCommand() {
+    this.executeCommands("onDeath")
   }
 
   markDirty() {
     this.setWord(5, Date.now())
   }
 
-  spawnCommand() {
-    yodash.spawnFunction(this.agentDefinition.getNode("spawn"), this.getParent(), this.positionHash)
+  spawn(subject, command) {
+    yodash.spawnFunction(command, subject.getParent(), subject.positionHash)
   }
 
   applyForceCommand() {
@@ -287,9 +263,13 @@ class Agent extends AbstractTreeComponent {
     this.setWord(4, "")
   }
 
+  get startHealth() {
+    return parseInt(this.agentDefinition.get("health") ?? 100)
+  }
+
   toStumpCode() {
     const { gridSize, health } = this
-    const opacity = health === Infinity ? "" : `opacity:${this.health / (this._startHealth ?? this.health)};`
+    const opacity = health === undefined ? "" : `opacity:${this.health / (this.startHealth ?? this.health)};`
     return `div ${this.icon}
  class Agent ${this.selected ? "selected" : ""}
  style top:${this.top * gridSize}px;left:${this.left *

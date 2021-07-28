@@ -1,8 +1,10 @@
 🌊
  speed 1
  angle South
+
 size 25
+ticksPerSecond 5
+
 rectangle 🌊 100 1 0
 rectangle 🌊 100 1 0 6
 rectangle 🌊 100 1 0 11
-ticksPerSecond 5

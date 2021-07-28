@@ -6,14 +6,16 @@
  bouncy
 
 ⛹️‍♂️
- turnRandomly
+ onTick
+  turnRandomly
  speed 1
  onHit
   🏀
    pickItUp
 
 ⛹️‍♀️
- turnRandomly
+ onTick
+  turnRandomly
  speed 1
  onHit
   🏀

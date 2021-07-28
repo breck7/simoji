@@ -1,11 +1,15 @@
 🚗
  speed 3
- turnRandomly
+ onTick
+  turnRandomly
 🚓
- turnRandomly
+ onTick
+  turnRandomly
  speed 2
+
 size 50
 ticksPerSecond 2
+
 paste
  🚗 1⬇️ 1➡️
  🚓 5⬇️ 5➡️

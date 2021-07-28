@@ -1,13 +1,16 @@
 comment
  http://www.netlogoweb.org/launch#http://www.netlogoweb.org/assets/modelslib/Sample%20Models/Biology/Moths.nlogo
+
 🦋
  speed 1
- turnRandomly
+ onTick
+  turnRandomly
 💡
- emit
-insert 10 🦋
-insert 2 💡
+
 ticksPerSecond 10
 size 20
 style
  .BoardComponent {background:black;}
+
+insert 10 🦋
+insert 2 💡

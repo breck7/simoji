@@ -42,7 +42,7 @@ yodash.applyCommandMap = (commandMap, targets, subject) => {
 		const instructions = commandMap.getNode(targetId)
 		if (instructions) {
 			instructions.forEach(instruction => {
-				subject[instruction.getWord(0)](target, instruction.getWord(1))
+				subject[instruction.getWord(0)](target, instruction)
 			})
 		}
 	})

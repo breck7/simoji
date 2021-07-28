@@ -1,16 +1,23 @@
 🧱
  solid
+
 🔫
- spawn 🪃 .1
+ onTick
+  spawn 🪃 .1
+
 🪃
  speed 1
  angle West
+
 💣
+
 🪦
  comment Dead zombie
+
 🧟‍♂️
- turnRandomly
  speed 1
+ onTick
+  turnRandomly
  onHit
   🪃
    replaceWith 🪦
@@ -20,8 +27,10 @@
    pause
    alert TheyGotYou!
 👨‍👩‍👧‍👦
-insert 50 🧟‍♂️
+
 size 30
 ticksPerSecond 10
+
+insert 50 🧟‍♂️
 paste
  👨‍👩‍👧‍👦 12⬇️ 11➡️

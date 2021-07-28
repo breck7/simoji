@@ -11,14 +11,18 @@
  bouncy
 🌾
 🚪
- spawn 🚶🏻 .001
+ onTick
+  spawn 🚶🏻 .001
 🪵
  solid
 🚗
+
+
+size 15
+
 rectangle 🪵 20➡️ 47⬇️ 5 1
 rectangle 🌾 40➡️ 1⬇️ 0 48
 rectangle 🚪 1➡️ 45⬇️ 15 2
-size 15
 paste
  🛗 6⬇️ 19➡️
  🛗 4⬇️ 22➡️

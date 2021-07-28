@@ -2,15 +2,22 @@ comment
  http://modelingcommons.org/browse/one_model/3362#model_tabs_browse_nlw
 
 🧟
- health 30
  speed 1
- turnRandomly
+ health 30
+ onTick
+  decrease health
+  turnRandomly
+ onDeath
+  remove
+
 🙍
- turnRandomly
+ onTick
+  turnRandomly
  speed 2
  onTouch
   🧟
    replaceWith 🧟
+
 insert 100 🙍
 insert 1 🧟
 
