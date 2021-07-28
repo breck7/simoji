@@ -4,27 +4,34 @@ header
 footer
 
 paragraph
- Simoji is a tool for anyone to build quick shareable simulations using 😃's. You write your simulations in a simple language using mostly Emojis and then click play.
+ Simoji is a tool for anyone to build quick shareable simulations using 😃's. You write your simulations in a simple language using mostly Emojis and then click play. Simoji is open source🔗github.com/publicdomaincompany/simoji and just a few days old.
 
 subsection Example Program
 
 code
- comment Define some agents
- ⛰
-  onTick 0.05
-   spawn 🐜
+ comment Define an ant agent
  🐜
+  comment Ants move one space per tick
   speed 1
-  onTick
-   turnRandomly
+  comment Ants pick up food.
   onHit
    🥖
     pickItUp
+  onTick
+   turnRandomly
+  
+ comment Define an ant hill
+ ⛰
+  comment On each tick, with 5% odds
+  onTick 0.05 
+   comment Spawn an ant
+   spawn 🐜
+  
  🥖
+  
+ comment Set up the board.
  insert 3 🥖
  insert 1 ⛰
-
-paragraph
 
 
 section Concepts
@@ -37,22 +44,21 @@ paragraph
 subsection Agents
 
 paragraph
- Agents are the key concept in Simoji. Everything your see on your board is an agent. A person emoji would be an agent, and a rock emoji would be an agent.
+ Agents are the key concept in Simoji. Everything you see on your board is an agent. In the code above, the ant, hill, and food are all agent types.
 
 subsection Attributes
 
 paragraph
- Agents can have attributes.
+ Agents can have attributes. You can define your own. Some are built in like:
 
 list
  - speed
- - spin
- - force
  - health
  - angle
+ - force
 
 paragraph
- Some attributes are booleans with only 2 states.
+ Some attributes are booleans with only 2 states like:
 
 list
  - solid
@@ -64,9 +70,10 @@ paragraph
  Events are things that can happen to agents.
 
 list
- - ifHits
- - ifTouches
- - ifDies
+ - onTick
+ - onHit
+ - onTouch
+ - onDeath
 
 subsection Commands
 
@@ -74,6 +81,10 @@ list
  - kickIt
  - replaceWith
  - spawn
+ - remove
+ - pickItUp
+ - turnRandomly
+ - turnToward
 
 section Board Setup
 
@@ -83,7 +94,6 @@ paragraph
 list
  - insert
  - paste
- - speed
 
 section Agent Palette
 

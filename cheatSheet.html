@@ -19,7 +19,7 @@
   <meta name="description" content="Design quick simulations with Emojis"></meta>
   <meta name="generator" content="Scroll v22.1.0"></meta>
   <meta property="og:title" content="Simoji Quickstart Guide"></meta>
-  <meta property="og:description" content="Simoji is a tool for anyone to build quick useful shareable simulations. You write your simulations in a simple language using mostly Emojis and then click play."></meta>
+  <meta property="og:description" content="Simoji is a tool for anyone to build quick shareable simulations using 😃's. You write your simulations in a simple language using mostly Emojis and then click play. Simoji is open source and just a few days old."></meta>
   <meta property="og:image" content=""></meta>
   <meta name="twitter:card" content="summary_large_image"></meta>
   <style>html,body,div,span,h1,h2,h3,h4,p,ol,ul,table {
@@ -211,16 +211,34 @@ html {
 
 
 
-<p class="scrollParagraphComponent">Simoji is a tool for anyone to build quick useful shareable simulations. You write your simulations in a simple language using mostly Emojis and then click play.</p>
+<p class="scrollParagraphComponent">Simoji is a tool for anyone to build quick shareable simulations using 😃's. You write your simulations in a simple language using mostly Emojis and then click play. Simoji is open <a href="https://github.com/publicdomaincompany/simoji">source</a> and just a few days old.</p>
 
-<code class="scrollCodeBlockComponent">🐜
+<h4 class="scrollSubsectionComponent">Example Program</h4>
+
+<code class="scrollCodeBlockComponent">comment Define an ant agent
+🐜
+ comment Ants move one space per tick
  speed 1
- ifHits
+ comment Ants pick up food.
+ onHit
   🥖
    pickItUp
+ onTick
+  turnRandomly
+ 
+comment Define an ant hill
+⛰
+ comment On each tick, with 5% odds
+ onTick 0.05 
+  comment Spawn an ant
+  spawn 🐜
+ 
 🥖
-insert 100 🐜
-insert 10 🥖</code>
+ 
+comment Set up the board.
+insert 3 🥖
+insert 1 ⛰</code>
+
 
 <h3 class="scrollSectionComponent">Concepts</h3>
 
@@ -230,21 +248,20 @@ insert 10 🥖</code>
 
 <h4 class="scrollSubsectionComponent">Agents</h4>
 
-<p class="scrollParagraphComponent">Agents are the key concept in Simoji. Everything your see on your board is an agent. A person emoji would be an agent, and a rock emoji would be an agent.</p>
+<p class="scrollParagraphComponent">Agents are the key concept in Simoji. Everything you see on your board is an agent. In the code above, the ant, hill, and food are all agent types.</p>
 
 <h4 class="scrollSubsectionComponent">Attributes</h4>
 
-<p class="scrollParagraphComponent">Agents can have attributes.</p>
+<p class="scrollParagraphComponent">Agents can have attributes. You can define your own. Some are built in like:</p>
 
 <ul class="scrollUnorderedListComponent">
 <li>speed</li>
-<li>spin</li>
-<li>force</li>
 <li>health</li>
 <li>angle</li>
+<li>force</li>
 </ul>
 
-<p class="scrollParagraphComponent">Some attributes are booleans with only 2 states.</p>
+<p class="scrollParagraphComponent">Some attributes are booleans with only 2 states like:</p>
 
 <ul class="scrollUnorderedListComponent">
 <li>solid</li>
@@ -256,9 +273,10 @@ insert 10 🥖</code>
 <p class="scrollParagraphComponent">Events are things that can happen to agents.</p>
 
 <ul class="scrollUnorderedListComponent">
-<li>ifHits</li>
-<li>ifTouches</li>
-<li>ifDies</li>
+<li>onTick</li>
+<li>onHit</li>
+<li>onTouch</li>
+<li>onDeath</li>
 </ul>
 
 <h4 class="scrollSubsectionComponent">Commands</h4>
@@ -267,6 +285,10 @@ insert 10 🥖</code>
 <li>kickIt</li>
 <li>replaceWith</li>
 <li>spawn</li>
+<li>remove</li>
+<li>pickItUp</li>
+<li>turnRandomly</li>
+<li>turnToward</li>
 </ul>
 
 <h3 class="scrollSectionComponent">Board Setup</h3>
@@ -276,9 +298,11 @@ insert 10 🥖</code>
 <ul class="scrollUnorderedListComponent">
 <li>insert</li>
 <li>paste</li>
-<li>speed</li>
 </ul>
 
+<h3 class="scrollSectionComponent">Agent Palette</h3>
+
+<p class="scrollParagraphComponent">You can drop new Agents onto your board using the Agent Palette on the right side of your screen.</p>
 
 <h3 class="scrollSectionComponent">Tree Notation</h3>
 
