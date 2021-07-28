@@ -5,4 +5,27 @@ skipIndexPage
 paragraph
  An early work in progress.
 
+section Related Work
+
+list
+ - Agent Based Modelling and Simulation tools: A review🔗www2.econ.iastate.edu/tesfatsi/ABMSoftwareReview.AbarEtAl2017.pdf of the
+state-of-art software
+ - Comparison🔗en.wikipedia.org/wiki/Comparison_of_agent-based_modeling_software of agent-based modeling software
+ - NetLogo🔗www.netlogoweb.org/launch#http://www.netlogoweb.org/assets/modelslib/Sample%20Models/Biology/Flocking%20Vee%20Formations.nlogo - 2D/3D, Web/Desktop, Open
+ - GAMA🔗gama-platform.github.io/
+ - GAML🔗gama-platform.github.io/wiki/Introduction Language - Desktop, OpenSource
+ - InsightMaker🔗insightmaker.comSource
+ - AnyLogic🔗www.anylogic.com/ - 2D/3D
+ - SARL🔗en.wikipedia.org/wiki/SARL_language
+ - Framsticks🔗www.framsticks.com/ - 3D, Desktop
+ - Hash.ai🔗hash.ai
+ - SOAR🔗en.wikipedia.org/wiki/Soar_(cognitive_architecture)
+ - JADE🔗en.wikipedia.org/wiki/Java_Agent_Development_Framework
+ - MASON🔗cs.gmu.edu/~eclab/projects/mason/
+ - REPAST🔗repast.github.io/index.html
+ - Simulations in Mathematica🔗demonstrations.wolfram.com/SugarscapeAgentBasedModeling/
+ - Swarm🔗swarm.org/wiki/Swarm_main_page
+ - Altreva🔗www.altreva.com/
+
+
 section ❤️ Public Domain ❤️ 
