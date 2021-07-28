@@ -3,8 +3,8 @@
  angle North
 🛒
 🚪
- onTick
-  spawn 🚶🏻 .1
+ onTick .1
+  spawn 🚶🏻
 🪵
  solid
 

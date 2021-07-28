@@ -11,8 +11,8 @@
  bouncy
 🌾
 🚪
- onTick
-  spawn 🚶🏻 .001
+ onTick .001
+  spawn 🚶🏻
 🪵
  solid
 🚗

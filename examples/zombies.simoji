@@ -2,8 +2,8 @@
  solid
 
 🔫
- onTick
-  spawn 🪃 .1
+ onTick .1
+  spawn 🪃
 
 🪃
  speed 1

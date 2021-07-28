@@ -32,7 +32,7 @@ simojiNode
  extensions simoji
  description A Tree Language that compiles to a TreeComponentFramework app.
  root
- inScope blankLineNode commentNode abstractSetupNumberNode abstractDrawNode styleNode spawnCommandNode
+ inScope blankLineNode commentNode abstractSetupNumberNode abstractDrawNode styleNode onTickNode
  catchAllNodeType agentNode
  compilesTo javascript
  javascript
@@ -117,7 +117,7 @@ abstractSubjectObjectCommandNode
 spawnCommandNode
  crux spawn
  extends abstractCommandNode
- cells keywordCell emojiCell integerCell
+ cells keywordCell emojiCell
 abstractAttributeNode
  cells keywordCell
 abstractStringAttributeNode

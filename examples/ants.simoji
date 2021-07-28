@@ -2,8 +2,8 @@ comment
  https://ccl.northwestern.edu/netlogo/models/Ants
 
 ⛰
- onTick
-  spawn 🐜 0.05
+ onTick 0.05
+  spawn 🐜
 🐜
  speed 1
  onTick

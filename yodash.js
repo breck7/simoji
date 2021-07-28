@@ -48,14 +48,6 @@ yodash.angle = (cx, cy, ex, ey) => {
 	return angle
 }
 
-yodash.spawnFunction = (def, board, positionHash) => {
-	const probability = parseFloat(def.getWord(2) ?? 1)
-	if (Math.random() > probability) return false
-
-	const newObject = def.getWord(1)
-	return board.appendLine(`${newObject} ${positionHash}`)
-}
-
 yodash.getRandomLocation = (rows, cols, positionSet) => {
 	const maxRight = cols
 	const maxBottom = rows

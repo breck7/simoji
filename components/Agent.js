@@ -150,7 +150,7 @@ class Agent extends AbstractTreeComponent {
   }
 
   spawn(subject, command) {
-    yodash.spawnFunction(command, subject.getParent(), subject.positionHash)
+    this.board.appendLine(`${command.getWord(1)} ${subject.positionHash}`)
   }
 
   applyForceCommand() {

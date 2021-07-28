@@ -4,17 +4,28 @@ header
 footer
 
 paragraph
- Simoji is a tool for anyone to build quick useful shareable simulations. You write your simulations in a simple language using mostly Emojis and then click play.
+ Simoji is a tool for anyone to build quick shareable simulations using 😃's. You write your simulations in a simple language using mostly Emojis and then click play.
+
+subsection Example Program
 
 code
+ comment Define some agents
+ ⛰
+  onTick 0.05
+   spawn 🐜
  🐜
   speed 1
-  ifHits
+  onTick
+   turnRandomly
+  onHit
    🥖
     pickItUp
  🥖
- insert 100 🐜
- insert 10 🥖
+ insert 3 🥖
+ insert 1 ⛰
+
+paragraph
+
 
 section Concepts
 

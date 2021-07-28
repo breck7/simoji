@@ -48,14 +48,6 @@ yodash.angle = (cx, cy, ex, ey) => {
 	return angle
 }
 
-yodash.spawnFunction = (def, board, positionHash) => {
-	const probability = parseFloat(def.getWord(2) ?? 1)
-	if (Math.random() > probability) return false
-
-	const newObject = def.getWord(1)
-	return board.appendLine(`${newObject} ${positionHash}`)
-}
-
 yodash.getRandomLocation = (rows, cols, positionSet) => {
 	const maxRight = cols
 	const maxBottom = rows
@@ -283,7 +275,7 @@ class Agent extends AbstractTreeComponent {
   }
 
   spawn(subject, command) {
-    yodash.spawnFunction(command, subject.getParent(), subject.positionHash)
+    this.board.appendLine(`${command.getWord(1)} ${subject.positionHash}`)
   }
 
   applyForceCommand() {
@@ -506,7 +498,7 @@ class BoardComponent extends AbstractTreeComponent {
 
     this.agents.forEach(node => node.onTick())
 
-    this.rootOnTick()
+    this.executeCommands("onTick")
 
     this.renderAndGetRenderReport(this.willowBrowser.getBodyStumpNode())
 
@@ -514,9 +506,20 @@ class BoardComponent extends AbstractTreeComponent {
     this._populationCounts.push(this.populationCount)
   }
 
-  rootOnTick() {
-    const spawnNode = this.getRootNode().simojiProgram.getNode("spawn")
-    if (spawnNode) yodash.spawnFunction(spawnNode, this, yodash.getRandomLocation(this.rows, this.cols))
+  spawn(subject, command) {
+    this.appendLine(`${command.getWord(1)} ${yodash.getRandomLocation(this.rows, this.cols)}`)
+  }
+
+  executeCommands(key) {
+    this.getParent()
+      .simojiProgram.findNodes(key)
+      .forEach(commands => {
+        const probability = commands.getWord(1)
+        if (probability && Math.random() > parseFloat(probability)) return
+        commands.forEach(instruction => {
+          this[instruction.getWord(0)](this, instruction)
+        })
+      })
   }
 
   isSolidAgent(position) {

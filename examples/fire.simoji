@@ -28,4 +28,5 @@
 
 
 insert 1500 🌲
-spawn ⚡️ .3
+onTick .3
+ spawn ⚡️
