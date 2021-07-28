@@ -18,6 +18,36 @@ yodash.flipAngle = angle => {
 	return newAngle
 }
 
+yodash.getBestAngle = (targets, position) => {
+	let closest = Infinity
+	let target
+	targets.forEach(candidate => {
+		const pos = candidate.position
+		const distance = math.distance([pos.down, pos.right], [position.down, position.right])
+		if (distance < closest) {
+			closest = distance
+			target = candidate
+		}
+	})
+	const heading = target.position
+	return yodash.angle(position.down, position.right, heading.down, heading.right)
+}
+
+yodash.angle = (cx, cy, ex, ey) => {
+	const dy = ey - cy
+	const dx = ex - cx
+	let theta = Math.atan2(dy, dx) // range (-PI, PI]
+	theta *= 180 / Math.PI // rads to degs, range (-180, 180]
+	//if (theta < 0) theta = 360 + theta; // range [0, 360)
+	let angle = ""
+
+	if (Math.abs(theta) > 90) angle += "North"
+	else angle += "South"
+	if (theta < 0) angle += "West"
+	else angle += "East"
+	return angle
+}
+
 yodash.spawnFunction = (def, board, positionHash) => {
 	const probability = parseFloat(def.getWord(2) ?? 1)
 	if (Math.random() > probability) return false

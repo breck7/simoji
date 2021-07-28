@@ -6,6 +6,7 @@ const { TypeScriptRewriter } = require("jtree/products/TypeScriptRewriter.js")
 const { getExamples } = require("./examples")
 
 const libPaths = `node_modules/jtree/treeComponentFramework/sweepercraft/lib/mousetrap.min.js
+node_modules/mathjs/lib/browser/math.js
 node_modules/jtree/sandbox/lib/codemirror.js
 node_modules/jtree/sandbox/lib/show-hint.js
 node_modules/jtree/products/jtree.browser.js
@@ -37,7 +38,7 @@ Disk.write(__dirname + "/dist/simoji.js", simCode)
 
 const SimConstants = {
 	grammar: Disk.read(__dirname + "/simoji.grammar"),
-	examples: getExamples(new Set("covid19 fire pong soccer zombies".split(" ")))
+	examples: getExamples(new Set("covid19 fire moths pong soccer zombies".split(" ")))
 }
 
 Disk.write(__dirname + "/dist/constants.js", `const SimConstants = ` + JSON.stringify(SimConstants))

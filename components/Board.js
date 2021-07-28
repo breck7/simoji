@@ -1,9 +1,11 @@
 const { jtree } = require("jtree")
+const { yodash } = require("../yodash.js")
 const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework.node.js")
+const { GridComponent } = require("./Grid.js")
 
 class BoardComponent extends AbstractTreeComponent {
   createParser() {
-    return new jtree.TreeNode.Parser(undefined, this.getParent().agentMap)
+    return new jtree.TreeNode.Parser(undefined, { ...this.getParent().agentMap, GridComponent, BoardStyleComponent })
   }
 
   get gridSize() {
@@ -85,6 +87,16 @@ class BoardComponent extends AbstractTreeComponent {
     return map
   }
 
+  get agentTypeMap() {
+    const map = new Map()
+    this.agents.forEach(node => {
+      const { name } = node
+      if (!map.has(name)) map.set(name, [])
+      map.get(name).push(node)
+    })
+    return map
+  }
+
   agentAt(position) {
     const hits = this.agentPositionMap.get(position)
     return hits ? hits[0] : undefined
@@ -129,4 +141,4 @@ class BoardStyleComponent extends AbstractTreeComponent {
   }
 }
 
-module.exports = { BoardStyleComponent, BoardComponent }
+module.exports = { BoardComponent }

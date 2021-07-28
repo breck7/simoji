@@ -272,6 +272,16 @@ increaseCommandNode
 turnRandomlyCommandNode
  extends abstractCommandNode
  crux turnRandomly
+turnTowardCommandNode
+ description Turn to the closest agent of a certain type.
+ extends abstractCommandNode
+ crux turnToward
+ cells keywordCell emojiCell
+turnFromCommandNode
+ description Turn away from the closest agent of a certain type.
+ extends abstractCommandNode
+ crux turnFrom
+ cells keywordCell emojiCell
 commentNode
  catchAllCellType commentCell
  crux comment

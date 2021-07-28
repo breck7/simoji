@@ -105,6 +105,18 @@ class Agent extends AbstractTreeComponent {
     return this
   }
 
+  turnToward(target, instruction) {
+    const targets = this.board.agentTypeMap.get(instruction.getWord(1))
+    if (targets) this.angle = yodash.getBestAngle(targets, this.position)
+    return this
+  }
+
+  turnFrom(target, instruction) {
+    const targets = this.board.agentTypeMap.get(instruction.getWord(1))
+    if (targets) this.angle = yodash.flipAngle(yodash.getBestAngle(targets, this.position))
+    return this
+  }
+
   loopMove() {
     if (this.selected) return
     return this.moveCommand()

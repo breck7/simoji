@@ -3,8 +3,10 @@ comment
 
 🦋
  speed 1
- onTick
+ onTick .1
   turnRandomly
+ onTick .2
+  turnToward 💡
 💡
 
 ticksPerSecond 10

@@ -7,8 +7,7 @@ const { yodash } = require("../yodash")
 const { TopBarComponent } = require("./TopBar.js")
 const { SimEditorComponent } = require("./SimEditor.js")
 const { HelpModalComponent } = require("./HelpModal.js")
-const { BoardComponent, BoardStyleComponent } = require("./Board.js")
-const { GridComponent } = require("./Grid.js")
+const { BoardComponent } = require("./Board.js")
 const { BottomBarComponent } = require("./BottomBar.js")
 const { RightBarComponent } = require("./RightBar.js")
 
@@ -40,7 +39,7 @@ class SimojiApp extends AbstractTreeComponent {
       try {
         evaled = eval(this.compiledCode)
       } catch {}
-      this._agentMap = { ...evaled, GridComponent, BoardStyleComponent }
+      this._agentMap = evaled
     }
     return this._agentMap
   }

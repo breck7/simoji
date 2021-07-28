@@ -18,6 +18,36 @@ yodash.flipAngle = angle => {
 	return newAngle
 }
 
+yodash.getBestAngle = (targets, position) => {
+	let closest = Infinity
+	let target
+	targets.forEach(candidate => {
+		const pos = candidate.position
+		const distance = math.distance([pos.down, pos.right], [position.down, position.right])
+		if (distance < closest) {
+			closest = distance
+			target = candidate
+		}
+	})
+	const heading = target.position
+	return yodash.angle(position.down, position.right, heading.down, heading.right)
+}
+
+yodash.angle = (cx, cy, ex, ey) => {
+	const dy = ey - cy
+	const dx = ex - cx
+	let theta = Math.atan2(dy, dx) // range (-PI, PI]
+	theta *= 180 / Math.PI // rads to degs, range (-180, 180]
+	//if (theta < 0) theta = 360 + theta; // range [0, 360)
+	let angle = ""
+
+	if (Math.abs(theta) > 90) angle += "North"
+	else angle += "South"
+	if (theta < 0) angle += "West"
+	else angle += "East"
+	return angle
+}
+
 yodash.spawnFunction = (def, board, positionHash) => {
 	const probability = parseFloat(def.getWord(2) ?? 1)
 	if (Math.random() > probability) return false
@@ -205,6 +235,18 @@ class Agent extends AbstractTreeComponent {
 
   turnRandomly() {
     this.angle = yodash.getRandomAngle()
+    return this
+  }
+
+  turnToward(target, instruction) {
+    const targets = this.board.agentTypeMap.get(instruction.getWord(1))
+    if (targets) this.angle = yodash.getBestAngle(targets, this.position)
+    return this
+  }
+
+  turnFrom(target, instruction) {
+    const targets = this.board.agentTypeMap.get(instruction.getWord(1))
+    if (targets) this.angle = yodash.flipAngle(yodash.getBestAngle(targets, this.position))
     return this
   }
 
@@ -419,9 +461,11 @@ window.AgentPaletteComponent = AgentPaletteComponent
 
 
 
+
+
 class BoardComponent extends AbstractTreeComponent {
   createParser() {
-    return new jtree.TreeNode.Parser(undefined, this.getParent().agentMap)
+    return new jtree.TreeNode.Parser(undefined, { ...this.getParent().agentMap, GridComponent, BoardStyleComponent })
   }
 
   get gridSize() {
@@ -503,6 +547,16 @@ class BoardComponent extends AbstractTreeComponent {
     return map
   }
 
+  get agentTypeMap() {
+    const map = new Map()
+    this.agents.forEach(node => {
+      const { name } = node
+      if (!map.has(name)) map.set(name, [])
+      map.get(name).push(node)
+    })
+    return map
+  }
+
   agentAt(position) {
     const hits = this.agentPositionMap.get(position)
     return hits ? hits[0] : undefined
@@ -546,8 +600,6 @@ class BoardStyleComponent extends AbstractTreeComponent {
   ${this.childrenToString().replace(/\n/g, "\n  ")}`
   }
 }
-
-window.BoardStyleComponent = BoardStyleComponent
 
 window.BoardComponent = BoardComponent
 
@@ -876,7 +928,6 @@ window.SimEditorComponent = SimEditorComponent
 
 
 
-
 // prettier-ignore
 
 const boardMargin = 20
@@ -904,7 +955,7 @@ class SimojiApp extends AbstractTreeComponent {
       try {
         evaled = eval(this.compiledCode)
       } catch {}
-      this._agentMap = { ...evaled, GridComponent, BoardStyleComponent }
+      this._agentMap = evaled
     }
     return this._agentMap
   }
