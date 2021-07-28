@@ -36,7 +36,11 @@ class SimojiApp extends AbstractTreeComponent {
     if (!this._agentMap) {
       this.compiledCode = this.simojiProgram.compileAgentClassDeclarationsAndMap()
       //console.log(this.compiledCode)
-      this._agentMap = { ...eval(this.compiledCode), GridComponent, BoardStyleComponent }
+      let evaled = {}
+      try {
+        evaled = eval(this.compiledCode)
+      } catch {}
+      this._agentMap = { ...evaled, GridComponent, BoardStyleComponent }
     }
     return this._agentMap
   }

@@ -3,7 +3,10 @@ comment
  - http://modelingcommons.org/browse/one_model/6282#model_tabs_browse_info
 
 🧟
- health 30
+ health 100
+ onTick .03
+  log recovered
+  replaceWith 🦸‍♂️
  onTick
   decrease health
   turnRandomly
@@ -25,14 +28,14 @@ comment
   🧟
    replaceWith 🧟
 
-insert 100 🙍
-insert 10 🦸‍♂️
-insert 1 🧟
+insert 1000 🙍
+insert 5 🦸‍♂️
+insert 5 🧟
 
 🪦
  comment Dead Person
 💉
 
-size 20
+size 15
 ticksPerSecond 10
 

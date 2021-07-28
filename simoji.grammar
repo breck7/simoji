@@ -1,4 +1,6 @@
 anyCell
+stringCell
+ highlightScope string
 cssCell
 emojiCell
  highlightScope string
@@ -12,6 +14,9 @@ keywordCell
 textCell
  highlightScope string
 integerCell
+ highlightScope constant.numeric
+probabilityCell
+ description A number between 0 and 1
  highlightScope constant.numeric
 propertyNameCell
  highlightScope keyword
@@ -216,6 +221,7 @@ onTickNode
  extends abstractEventNode
  crux onTick
  inScope abstractCommandNode
+ catchAllCellType probabilityCell
  description Define what happens each tick.
 replaceWithCommandNode
  extends abstractSubjectObjectCommandNode
@@ -230,11 +236,11 @@ pickItUpCommandNode
 alertCommandNode
  extends abstractCommandNode
  crux alert
- catchAllCellType anyCell
+ catchAllCellType stringCell
 logCommandNode
  extends abstractCommandNode
  crux log
- catchAllCellType anyCell
+ catchAllCellType stringCell
 pauseCommandNode
  extends abstractCommandNode
  crux pause

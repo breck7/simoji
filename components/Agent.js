@@ -111,12 +111,13 @@ class Agent extends AbstractTreeComponent {
   }
 
   executeCommands(key) {
-    const commands = this.agentDefinition.getNode(key)
-    if (commands) {
+    this.agentDefinition.findNodes(key).forEach(commands => {
+      const probability = commands.getWord(1)
+      if (probability && Math.random() > parseFloat(probability)) return
       commands.forEach(instruction => {
         this[instruction.getWord(0)](this, instruction)
       })
-    }
+    })
   }
 
   onTick() {
