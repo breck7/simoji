@@ -1,0 +1,26 @@
+👨‍💼🔖
+ comment person with an idea
+ onTick
+  turnRandomly
+ speed 1
+
+👨‍💼💰
+ comment peron with an idea
+  that is making money
+ speed 1
+ onTick
+  turnRandomly
+
+👨‍
+ speed 1
+ onTick .1
+  turnRandomly
+ onTick .1
+  turnToward 👨‍💼💰
+
+
+size 10
+insert 200 👨‍
+insert 30 👨‍💼🔖
+insert 3 👨‍💼💰
+
