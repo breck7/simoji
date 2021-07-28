@@ -1,7 +1,3 @@
-🔥
- health 30
- onTick
-  decrease health
 🌲
  onHit
   ⚡️
@@ -9,10 +5,27 @@
  onTouch
   🔥
    replaceWith 🔥
+
 ⚡️
- health 30
+ health 10
  onTick
   decrease health
+ onDeath
+  remove
 
-insert 2000 🌲
-spawn ⚡️ .6
+🔥
+ health 50
+ onTick
+  decrease health
+ onDeath
+  replaceWith ⬛️
+
+
+⬛️
+ comment Burnt forest
+ html 🌲
+ style filter:grayscale(100%);
+
+
+insert 1500 🌲
+spawn ⚡️ .3

@@ -2,6 +2,9 @@ anyCell
 stringCell
  highlightScope string
 cssCell
+ highlightScope string
+htmlCell
+ highlightScope string
 emojiCell
  highlightScope string
 blankCell
@@ -117,6 +120,12 @@ spawnCommandNode
  cells keywordCell emojiCell integerCell
 abstractAttributeNode
  cells keywordCell
+abstractStringAttributeNode
+ extends abstractAttributeNode
+ javascript
+  compile() {
+    return `${this.getWord(0)} = "${this.getWord(1)}"`
+  }
 abstractBooleanAttributeNode
  description A boolean attribute.
  extends abstractAttributeNode
@@ -161,13 +170,19 @@ massNode
  extends abstractIntegerAttributeNode
  crux mass
 angleNode
- extends abstractAttributeNode
+ extends abstractStringAttributeNode
  cells keywordCell angleCell
  crux angle
- javascript
-  compile() {
-    return `${this.getWord(0)} = "${this.getWord(1)}"`
-  }
+agentStyleNode
+ description Provide custom CSS for an agent type.
+ extends abstractStringAttributeNode
+ cells keywordCell cssCell
+ crux style
+agentHtmlNode
+ description Provide custom HTML for each rendered agent.
+ extends abstractStringAttributeNode
+ cells keywordCell htmlCell
+ crux html
 abstractSetupNumberNode
  cells keywordCell integerCell
  javascript

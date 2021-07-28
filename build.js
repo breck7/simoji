@@ -37,7 +37,7 @@ Disk.write(__dirname + "/dist/simoji.js", simCode)
 
 const SimConstants = {
 	grammar: Disk.read(__dirname + "/simoji.grammar"),
-	examples: getExamples()
+	examples: getExamples(new Set("covid19 fire pong soccer zombies".split(" ")))
 }
 
 Disk.write(__dirname + "/dist/constants.js", `const SimConstants = ` + JSON.stringify(SimConstants))

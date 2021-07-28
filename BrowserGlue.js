@@ -1,4 +1,4 @@
-const DEFAULT_SIM = "soccer"
+const DEFAULT_SIM = "fire"
 const { jtree } = require("jtree")
 const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework.node.js")
 

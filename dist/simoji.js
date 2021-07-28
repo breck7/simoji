@@ -368,16 +368,16 @@ class Agent extends AbstractTreeComponent {
   }
 
   get startHealth() {
-    return parseInt(this.agentDefinition.get("health") ?? 100)
+    return parseInt(this.agentDefinition.get("health"))
   }
 
   toStumpCode() {
     const { gridSize, health } = this
-    const opacity = health === undefined ? "" : `opacity:${this.health / (this.startHealth ?? this.health)};`
-    return `div ${this.icon}
+    const opacity = health === undefined ? "" : `opacity:${this.health / this.startHealth};`
+    return `div ${this.html ?? this.icon}
  class Agent ${this.selected ? "selected" : ""}
  style top:${this.top * gridSize}px;left:${this.left *
-      gridSize}px;font-size:${gridSize}px;line-height: ${gridSize}px;${opacity}`
+      gridSize}px;font-size:${gridSize}px;line-height: ${gridSize}px;${opacity};${this.style ?? ""}`
   }
 }
 
@@ -1201,7 +1201,7 @@ class LogoComponent extends AbstractTreeComponent {
 window.TopBarComponent = TopBarComponent
 
 
-const DEFAULT_SIM = "soccer"
+const DEFAULT_SIM = "fire"
 
 
 
