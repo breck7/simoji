@@ -3,113 +3,107 @@ const yodash = {}
 yodash.parseInts = (arr, start) => arr.map((item, index) => (index >= start ? parseInt(item) : item))
 
 yodash.getRandomAngle = () => {
-  const r1 = Math.random()
-  const r2 = Math.random()
-  if (r1 > 0.5) return r2 > 0.5 ? "North" : "South"
-  return r2 > 0.5 ? "West" : "East"
+	const r1 = Math.random()
+	const r2 = Math.random()
+	if (r1 > 0.5) return r2 > 0.5 ? "North" : "South"
+	return r2 > 0.5 ? "West" : "East"
 }
 
 yodash.flipAngle = angle => {
-  let newAngle = ""
-  if (angle.includes("North")) newAngle += "South"
-  else if (angle.includes("South")) newAngle += "North"
-  if (angle.includes("East")) newAngle += "West"
-  else if (angle.includes("West")) newAngle += "East"
-  return newAngle
+	let newAngle = ""
+	if (angle.includes("North")) newAngle += "South"
+	else if (angle.includes("South")) newAngle += "North"
+	if (angle.includes("East")) newAngle += "West"
+	else if (angle.includes("West")) newAngle += "East"
+	return newAngle
 }
 
 yodash.spawnFunction = (def, board, positionHash) => {
-  const probability = parseFloat(def.getWord(2) ?? 1)
-  if (Math.random() > probability) return false
+	const probability = parseFloat(def.getWord(2) ?? 1)
+	if (Math.random() > probability) return false
 
-  const newObject = def.getWord(1)
-  return board.appendLine(`${newObject} ${positionHash}`)
+	const newObject = def.getWord(1)
+	return board.appendLine(`${newObject} ${positionHash}`)
 }
 
 yodash.getRandomLocation = (rows, cols, positionSet) => {
-  const maxRight = cols
-  const maxBottom = rows
-  const right = Math.round(Math.random() * maxRight)
-  const down = Math.round(Math.random() * maxBottom)
-  const hash = yodash.makePositionHash({ right, down })
-  if (positionSet && positionSet.has(hash)) return yodash.getRandomLocation(rows, cols, positionSet)
-  return hash
+	const maxRight = cols
+	const maxBottom = rows
+	const right = Math.round(Math.random() * maxRight)
+	const down = Math.round(Math.random() * maxBottom)
+	const hash = yodash.makePositionHash({ right, down })
+	if (positionSet && positionSet.has(hash)) return yodash.getRandomLocation(rows, cols, positionSet)
+	return hash
 }
 
-yodash.applyCommandMap = (commandMap, targets, subject, verbose) => {
-  targets.forEach(target => {
-    const targetId = target.getWord(0)
-    const instructions = commandMap.getNode(targetId)
-    if (verbose) console.log(instructions)
-    if (instructions) {
-      instructions.forEach(instruction => {
-        subject[instruction.getWord(0)](target, instruction)
-      })
-    }
-  })
+yodash.applyCommandMap = (commandMap, targets, subject) => {
+	targets.forEach(target => {
+		const targetId = target.getWord(0)
+		const instructions = commandMap.getNode(targetId)
+		if (instructions) {
+			instructions.forEach(instruction => {
+				subject[instruction.getWord(0)](target, instruction)
+			})
+		}
+	})
 }
 
 yodash.positionsAdjacentTo = position => {
-  let { right, down } = position
-  const positions = []
-  down--
-  positions.push({ down, right })
-  right--
-  positions.push({ down, right })
-  right++
-  right++
-  positions.push({ down, right })
-  down++
-  positions.push({ down, right })
-  right--
-  right--
-  positions.push({ down, right })
-  down++
-  positions.push({ down, right })
-  right++
-  positions.push({ down, right })
-  right++
-  positions.push({ down, right })
-  return positions
+	let { right, down } = position
+	const positions = []
+	down--
+	positions.push({ down, right })
+	right--
+	positions.push({ down, right })
+	right++
+	right++
+	positions.push({ down, right })
+	down++
+	positions.push({ down, right })
+	right--
+	right--
+	positions.push({ down, right })
+	down++
+	positions.push({ down, right })
+	right++
+	positions.push({ down, right })
+	right++
+	positions.push({ down, right })
+	return positions
 }
 
 yodash.makePositionHash = position => `${position.down + "⬇️ " + position.right + "➡️"}`
 
 yodash.makeRectangle = (character = "🧱", width = 20, height = 20, startRight = 0, startDown = 0) => {
-  if (width < 1 || height < 1) {
-    return ""
-  }
-  const cells = []
-  let row = 0
-  while (row < height) {
-    let col = 0
-    while (col < width) {
-      const isPerimeter = row === 0 || row === height - 1 || col === 0 || col === width - 1
-      if (isPerimeter)
-        cells.push(
-          `${character} ${yodash.makePositionHash({
-            down: startDown + row,
-            right: startRight + col
-          })}`
-        )
-      col++
-    }
-    row++
-  }
-  return cells.join("\n")
+	if (width < 1 || height < 1) {
+		return ""
+	}
+	const cells = []
+	let row = 0
+	while (row < height) {
+		let col = 0
+		while (col < width) {
+			const isPerimeter = row === 0 || row === height - 1 || col === 0 || col === width - 1
+			if (isPerimeter)
+				cells.push(
+					`${character} ${yodash.makePositionHash({
+						down: startDown + row,
+						right: startRight + col
+					})}`
+				)
+			col++
+		}
+		row++
+	}
+	return cells.join("\n")
 }
 
 window.yodash = yodash
 
+
+
+
 class Agent extends AbstractTreeComponent {
-  get solid() {
-    return this.agentDefinition.has("solid")
-  }
-
-  get bouncy() {
-    return this.agentDefinition.has("bouncy")
-  }
-
   get icon() {
     return this.agentDefinition.getWord(0)
   }
@@ -120,14 +114,6 @@ class Agent extends AbstractTreeComponent {
 
   get mass() {
     return this.agentDefinition.get("mass") ?? 1
-  }
-
-  get turnInstruction() {
-    return this._turnInstruction ?? this.agentDefinition.has("turnRandomly") ? "turnRandomly" : undefined
-  }
-
-  set turnInstruction(value) {
-    this._turnInstruction = value
   }
 
   get force() {
@@ -143,16 +129,6 @@ class Agent extends AbstractTreeComponent {
     return this.force / this.mass
   }
 
-  get speed() {
-    if (this._speed !== undefined) return this._speed
-    const speed = this.agentDefinition.get("speed")
-    return speed ? parseInt(speed) : 0
-  }
-
-  set speed(value) {
-    this._speed = value
-  }
-
   get diameter() {
     return this.agentDefinition.get("diameter") ?? 1
   }
@@ -165,21 +141,12 @@ class Agent extends AbstractTreeComponent {
     this._angle = value
   }
 
-  get health() {
-    if (this._health !== undefined) return this._health
-    const health = this.agentDefinition.get("health")
-    return health ? parseInt(health) : Infinity
-  }
-
-  set health(value) {
-    this._health = value
-  }
-
   get agentDefinition() {
     return this.root.simojiProgram.getNode(this.getWord(0))
   }
 
-  replaceWith(target, newObject) {
+  replaceWith(target, command) {
+    const newObject = command.getWord(1)
     this.getParent().appendLine(`${newObject} ${this.positionHash}`)
     this.unmountAndDestroy()
   }
@@ -201,15 +168,27 @@ class Agent extends AbstractTreeComponent {
     this.angle = yodash.flipAngle(this.angle)
   }
 
-  alert(target, message) {
-    alert(message)
+  alert(target, command) {
+    alert(command.getContent())
   }
 
-  log(target, message) {
-    console.log(message)
+  log(target, command) {
+    console.log(command.getContent())
   }
 
-  pause(target, message) {
+  decrease(target, command) {
+    const property = command.getWord(1)
+    if (target[property] === undefined) target[property] = 0
+    target[property]--
+  }
+
+  increase(target, command) {
+    const property = command.getWord(1)
+    if (target[property] === undefined) target[property] = 0
+    target[property]++
+  }
+
+  pause() {
     this.root.pauseCommand()
   }
 
@@ -224,8 +203,8 @@ class Agent extends AbstractTreeComponent {
     return yodash.applyCommandMap(commandMap, targets, this)
   }
 
-  turnCommand() {
-    if (this.turnInstruction === "turnRandomly") this.angle = yodash.getRandomAngle()
+  turnRandomly() {
+    this.angle = yodash.getRandomAngle()
     return this
   }
 
@@ -234,35 +213,35 @@ class Agent extends AbstractTreeComponent {
     return this.moveCommand()
   }
 
-  onTick() {
-    if (this.agentDefinition.has("spawn")) this.spawnCommand()
+  executeCommands(key) {
+    this.agentDefinition.findNodes(key).forEach(commands => {
+      const probability = commands.getWord(1)
+      if (probability && Math.random() > parseFloat(probability)) return
+      commands.forEach(instruction => {
+        this[instruction.getWord(0)](this, instruction)
+      })
+    })
+  }
 
-    if (this.health !== Infinity) {
-      if (!this._startHealth) this._startHealth = this.health
-      this.health--
-      this.markDirty()
-      if (!this.health) this.onDeathCommand()
-    }
+  onTick() {
+    this.executeCommands("onTick")
+    if (this.health === 0) this.onDeathCommand()
+  }
+
+  remove() {
+    this.unmountAndDestroy()
   }
 
   onDeathCommand() {
-    const deathCommands = this.agentDefinition.getNode("onDeath")
-
-    if (deathCommands) {
-      deathCommands.forEach(instruction => {
-        this[instruction.getWord(0)](null, instruction.getWord(1))
-      })
-    }
-
-    this.unmountAndDestroy()
+    this.executeCommands("onDeath")
   }
 
   markDirty() {
     this.setWord(5, Date.now())
   }
 
-  spawnCommand() {
-    yodash.spawnFunction(this.agentDefinition.getNode("spawn"), this.getParent(), this.positionHash)
+  spawn(subject, command) {
+    yodash.spawnFunction(command, subject.getParent(), subject.positionHash)
   }
 
   applyForceCommand() {
@@ -388,9 +367,13 @@ class Agent extends AbstractTreeComponent {
     this.setWord(4, "")
   }
 
+  get startHealth() {
+    return parseInt(this.agentDefinition.get("health") ?? 100)
+  }
+
   toStumpCode() {
     const { gridSize, health } = this
-    const opacity = health === Infinity ? "" : `opacity:${this.health / (this._startHealth ?? this.health)};`
+    const opacity = health === undefined ? "" : `opacity:${this.health / (this.startHealth ?? this.health)};`
     return `div ${this.icon}
  class Agent ${this.selected ? "selected" : ""}
  style top:${this.top * gridSize}px;left:${this.left *
@@ -399,6 +382,9 @@ class Agent extends AbstractTreeComponent {
 }
 
 window.Agent = Agent
+
+
+
 
 class AgentPaletteComponent extends AbstractTreeComponent {
   toStumpCode() {
@@ -428,6 +414,10 @@ ${items}`
 }
 
 window.AgentPaletteComponent = AgentPaletteComponent
+
+
+
+
 
 class BoardComponent extends AbstractTreeComponent {
   createParser() {
@@ -465,22 +455,24 @@ class BoardComponent extends AbstractTreeComponent {
   tick = 0
   boardLoop() {
     this.agents.filter(node => node.force).forEach(node => node.applyForceCommand())
+    this.agents.filter(node => node.speed).forEach(node => node.loopMove())
 
-    this.agents.filter(node => node.speed).forEach(node => node.turnCommand().loopMove())
-    const { agentPositionMap } = this
-    agentPositionMap.forEach(nodes => {
-      if (nodes.length > 1) nodes.forEach(node => node.handleCollisions(nodes))
-    })
+    this.handleCollisions()
     this.handleTouches()
+
     this.agents.forEach(node => node.onTick())
 
-    const spawnNode = this.getRootNode().simojiProgram.getNode("spawn")
-    if (spawnNode) yodash.spawnFunction(spawnNode, this, yodash.getRandomLocation(this.rows, this.cols))
+    this.rootOnTick()
 
     this.renderAndGetRenderReport(this.willowBrowser.getBodyStumpNode())
 
     this.tick++
     this._populationCounts.push(this.populationCount)
+  }
+
+  rootOnTick() {
+    const spawnNode = this.getRootNode().simojiProgram.getNode("spawn")
+    if (spawnNode) yodash.spawnFunction(spawnNode, this, yodash.getRandomLocation(this.rows, this.cols))
   }
 
   isSolidAgent(position) {
@@ -516,19 +508,32 @@ class BoardComponent extends AbstractTreeComponent {
     return hits ? hits[0] : undefined
   }
 
+  handleCollisions() {
+    const { agentPositionMap } = this
+    agentPositionMap.forEach(nodes => {
+      if (nodes.length > 1) nodes.forEach(node => node.handleCollisions(nodes))
+    })
+  }
+
   handleTouches() {
     const agentPositionMap = this.agentPositionMap
 
-    this.agents.forEach(node => {
-      const { touchMap } = node
-      if (touchMap) {
-        const hits = yodash
-          .positionsAdjacentTo(node.position)
-          .map(pos => agentPositionMap.get(yodash.makePositionHash(pos)))
-          .map(items => items && items[0])
-          .filter(item => item)
+    this.agents.forEach(subject => {
+      const { touchMap } = subject
+      if (!touchMap) return
 
-        yodash.applyCommandMap(touchMap, hits, node)
+      for (let pos of yodash.positionsAdjacentTo(subject.position)) {
+        const hits = agentPositionMap.get(yodash.makePositionHash(pos)) ?? []
+        for (let target of hits) {
+          const targetId = target.getWord(0)
+          const instructions = touchMap.getNode(targetId)
+          if (instructions) {
+            instructions.forEach(instruction => {
+              subject[instruction.getWord(0)](target, instruction)
+            })
+            if (subject.getIndex() === -1) return
+          }
+        }
       }
     })
   }
@@ -546,6 +551,10 @@ window.BoardStyleComponent = BoardStyleComponent
 
 window.BoardComponent = BoardComponent
 
+
+
+
+
 class BottomBarComponent extends AbstractTreeComponent {
   toStumpCode() {
     return `div
@@ -557,6 +566,9 @@ class BottomBarComponent extends AbstractTreeComponent {
 }
 
 window.BottomBarComponent = BottomBarComponent
+
+
+
 
 class ExamplesComponent extends AbstractTreeComponent {
   toStumpCode() {
@@ -575,6 +587,9 @@ ${sims}`
 }
 
 window.ExamplesComponent = ExamplesComponent
+
+
+
 
 class GridComponent extends AbstractTreeComponent {
   gridClickCommand(down, right) {
@@ -620,6 +635,10 @@ class GridComponent extends AbstractTreeComponent {
 }
 
 window.GridComponent = GridComponent
+
+
+
+
 
 class AbstractModalTreeComponent extends AbstractTreeComponent {
   toHakonCode() {
@@ -683,6 +702,9 @@ class HelpModalComponent extends AbstractModalTreeComponent {
 
 window.HelpModalComponent = HelpModalComponent
 
+
+
+
 class PlayButtonComponent extends AbstractTreeComponent {
   get isStarted() {
     return this.getRootNode().isRunning
@@ -697,15 +719,23 @@ class PlayButtonComponent extends AbstractTreeComponent {
 
 window.PlayButtonComponent = PlayButtonComponent
 
+
+
+
+
+
 class RightBarComponent extends AbstractTreeComponent {
-  createParser() {
-    return new jtree.TreeNode.Parser(undefined, {
-      AgentPaletteComponent
-    })
-  }
+	createParser() {
+		return new jtree.TreeNode.Parser(undefined, {
+			AgentPaletteComponent
+		})
+	}
 }
 
 window.RightBarComponent = RightBarComponent
+
+
+
 
 class ShareComponent extends AbstractTreeComponent {
   toStumpCode() {
@@ -728,6 +758,10 @@ class ShareComponent extends AbstractTreeComponent {
 }
 
 window.ShareComponent = ShareComponent
+
+
+
+
 
 // prettier-ignore
 
@@ -829,7 +863,19 @@ class SimEditorComponent extends AbstractTreeComponent {
 
 window.SimEditorComponent = SimEditorComponent
 
+
 // prettier-ignore
+
+
+
+
+
+
+
+
+
+
+
 
 // prettier-ignore
 
@@ -853,7 +899,12 @@ class SimojiApp extends AbstractTreeComponent {
   get agentMap() {
     if (!this._agentMap) {
       this.compiledCode = this.simojiProgram.compileAgentClassDeclarationsAndMap()
-      this._agentMap = { ...eval(this.compiledCode), GridComponent, BoardStyleComponent }
+      //console.log(this.compiledCode)
+      let evaled = {}
+      try {
+        evaled = eval(this.compiledCode)
+      } catch {}
+      this._agentMap = { ...evaled, GridComponent, BoardStyleComponent }
     }
     return this._agentMap
   }
@@ -1050,7 +1101,6 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     selection.forEach(node => {
       const speed = node.speed
       node.angle = direction
-      node.turnInstruction = false
       node.speed = 1
       node.moveCommand()
       node.speed = speed
@@ -1109,6 +1159,13 @@ SimEditorComponent
 
 window.SimojiApp = SimojiApp
 
+
+
+
+
+
+
+
 class TopBarComponent extends AbstractTreeComponent {
   createParser() {
     return new jtree.TreeNode.Parser(undefined, {
@@ -1143,7 +1200,10 @@ class LogoComponent extends AbstractTreeComponent {
 
 window.TopBarComponent = TopBarComponent
 
+
 const DEFAULT_SIM = "soccer"
+
+
 
 let exampleSims = new jtree.TreeNode()
 
