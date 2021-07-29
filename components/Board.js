@@ -48,7 +48,7 @@ class BoardComponent extends AbstractTreeComponent {
 
     this.executeCommands("onTick")
 
-    this.renderAndGetRenderReport(this.willowBrowser.getBodyStumpNode())
+    this.renderAndGetRenderReport()
 
     this.tick++
     this._populationCounts.push(this.populationCount)

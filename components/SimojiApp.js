@@ -87,7 +87,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
 
     this.board.unmountAndDestroy()
     this.appendBoard()
-    this.renderAndGetRenderReport(this.willowBrowser.getBodyStumpNode())
+    this.renderAndGetRenderReport()
     this.updateLocalStorage(simCode)
   }
 
@@ -150,7 +150,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
 
   ensureRender() {
     if (this.interval) return this
-    const renderReport = this.renderAndGetRenderReport(this.willowBrowser.getBodyStumpNode())
+    this.renderAndGetRenderReport()
   }
 
   toggleSelectCommand(object) {

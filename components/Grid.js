@@ -14,7 +14,7 @@ class GridComponent extends AbstractTreeComponent {
     //if (parent.findNodes(agentToInsert).length > MAX_ITEMS) return true
 
     board.prependLine(`${agentToInsert} ${positionHash}`)
-    board.renderAndGetRenderReport(this.willowBrowser.getBodyStumpNode())
+    board.renderAndGetRenderReport()
   }
 
   makeBlock(down, right, gridSize) {

@@ -500,7 +500,7 @@ class BoardComponent extends AbstractTreeComponent {
 
     this.executeCommands("onTick")
 
-    this.renderAndGetRenderReport(this.willowBrowser.getBodyStumpNode())
+    this.renderAndGetRenderReport()
 
     this.tick++
     this._populationCounts.push(this.populationCount)
@@ -660,7 +660,7 @@ class GridComponent extends AbstractTreeComponent {
     //if (parent.findNodes(agentToInsert).length > MAX_ITEMS) return true
 
     board.prependLine(`${agentToInsert} ${positionHash}`)
-    board.renderAndGetRenderReport(this.willowBrowser.getBodyStumpNode())
+    board.renderAndGetRenderReport()
   }
 
   makeBlock(down, right, gridSize) {
@@ -1006,7 +1006,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
 
     this.board.unmountAndDestroy()
     this.appendBoard()
-    this.renderAndGetRenderReport(this.willowBrowser.getBodyStumpNode())
+    this.renderAndGetRenderReport()
     this.updateLocalStorage(simCode)
   }
 
@@ -1069,7 +1069,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
 
   ensureRender() {
     if (this.interval) return this
-    const renderReport = this.renderAndGetRenderReport(this.willowBrowser.getBodyStumpNode())
+    this.renderAndGetRenderReport()
   }
 
   toggleSelectCommand(object) {
