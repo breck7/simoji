@@ -937,10 +937,32 @@ const boardMargin = 20
 const chromeHeight = 48 + boardMargin
 const chromeWidth = 280 + boardMargin
 
+class githubTriangleComponent extends AbstractTreeComponent {
+  githubLink = `https://github.com/publicdomaincompany/simoji`
+  toHakonCode() {
+    return `.AbstractGithubTriangleComponent
+ display block
+ position absolute
+ top 0
+ right 0
+ z-index 3`
+  }
+  toStumpCode() {
+    return `a
+ class AbstractGithubTriangleComponent
+ href ${this.githubLink}
+ target _blank
+ img
+  height 40px
+  src github-fork.svg`
+  }
+}
+
 class SimojiApp extends AbstractTreeComponent {
   createParser() {
     return new jtree.TreeNode.Parser(undefined, {
       TopBarComponent,
+      githubTriangleComponent,
       SimEditorComponent,
       HelpModalComponent,
       BoardComponent,
@@ -1191,7 +1213,8 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
 }
 
 SimojiApp.setupApp = (simojiCode, windowWidth = 1000, windowHeight = 1000) => {
-  const startState = new jtree.TreeNode(`TopBarComponent
+  const startState = new jtree.TreeNode(`githubTriangleComponent
+TopBarComponent
  LogoComponent
  ShareComponent
  PlayButtonComponent

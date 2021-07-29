@@ -1,6 +1,4 @@
-title Simoji
-description Design your own simulations using Emojis
-skipIndexPage
+title Simoji - Write simulations with Emojis
 
 paragraph
  An early work in progress.
@@ -8,24 +6,28 @@ paragraph
 section Related Work
 
 list
- - Agent Based Modelling and Simulation tools: A review🔗www2.econ.iastate.edu/tesfatsi/ABMSoftwareReview.AbarEtAl2017.pdf of the
-state-of-art software
+ - Agent Based Modelling and Simulation tools: A review🔗www2.econ.iastate.edu/tesfatsi/ABMSoftwareReview.AbarEtAl2017.pdf of the state-of-art software
  - Comparison🔗en.wikipedia.org/wiki/Comparison_of_agent-based_modeling_software of agent-based modeling software
  - NetLogo🔗www.netlogoweb.org/launch#http://www.netlogoweb.org/assets/modelslib/Sample%20Models/Biology/Flocking%20Vee%20Formations.nlogo - 2D/3D, Web/Desktop, Open
- - GAMA🔗gama-platform.github.io/
+ - GAMA🔗gama-platform.github.io
  - GAML🔗gama-platform.github.io/wiki/Introduction Language - Desktop, OpenSource
+ - EmojiSimulator🔗ncase.me/sim/ - After shipping I learned Nicky had a similar idea 5+ years before me and executed very well!
  - InsightMaker🔗insightmaker.comSource
- - AnyLogic🔗www.anylogic.com/ - 2D/3D
+ - AnyLogic🔗www.anylogic.com - 2D/3D
  - SARL🔗en.wikipedia.org/wiki/SARL_language
  - Framsticks🔗www.framsticks.com/ - 3D, Desktop
  - Hash.ai🔗hash.ai
  - SOAR🔗en.wikipedia.org/wiki/Soar_(cognitive_architecture)
  - JADE🔗en.wikipedia.org/wiki/Java_Agent_Development_Framework
  - MASON🔗cs.gmu.edu/~eclab/projects/mason/
- - REPAST🔗repast.github.io/index.html
+ - REPAST🔗repast.github.io
  - Simulations in Mathematica🔗demonstrations.wolfram.com/SugarscapeAgentBasedModeling/
  - Swarm🔗swarm.org/wiki/Swarm_main_page
- - Altreva🔗www.altreva.com/
+ - Altreva🔗www.altreva.com
+ - sandspiel🔗sandspiel.club
+ - The-Powder-Toy🔗github.com/The-Powder-Toy/The-Powder-Toy
 
 
 section ❤️ Public Domain ❤️ 
+
+skipIndexPage
