@@ -10,7 +10,7 @@ class ShareComponent extends AbstractTreeComponent {
   }
 
   getDependencies() {
-    return [this.getRootNode().editor]
+    return [this.getRootNode().simojiProgram]
   }
 
   get link() {
