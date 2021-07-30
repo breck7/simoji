@@ -58,6 +58,21 @@ yodash.getRandomLocation = (rows, cols, positionSet) => {
 	return hash
 }
 
+yodash.fill = (rows, cols, positionSet, emoji) => {
+	const board = []
+	while (rows >= 0) {
+		let col = cols
+		while (col >= 0) {
+			const hash = yodash.makePositionHash({ right: col, down: rows })
+			col--
+			if (positionSet.has(hash)) continue
+			board.push(`${emoji} ${hash}`)
+		}
+		rows--
+	}
+	return board.join("\n")
+}
+
 yodash.applyCommandMap = (commandMap, targets, subject) => {
 	targets.forEach(target => {
 		const targetId = target.getWord(0)

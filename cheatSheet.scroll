@@ -11,14 +11,14 @@ subsection Example Program
 code
  comment Define an ant agent
  🐜
-  comment Ants move one space per tick
-  speed 1
+  comment Ants turn then move one space per tick
+  onTick
+   turnRandomly
+   move
   comment Ants pick up food.
   onHit
    🥖
     pickItUp
-  onTick
-   turnRandomly
   
  comment Define an ant hill
  ⛰

@@ -12,7 +12,7 @@ comment
  onTick
   decrease health
   turnRandomly
- speed 1
+  move
  onDeath
   replaceWith 🪦
 
@@ -20,12 +20,14 @@ comment
  comment immune
  onTick
   turnRandomly
- speed 2
+  move
+  move
 
 🙍
  onTick
   turnRandomly
- speed 2
+  move
+  move
  onTouch
   🧟
    replaceWith 🧟

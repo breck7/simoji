@@ -1,6 +1,7 @@
 🏐
  bouncy
- speed 1
+ onTick
+  move
  angle West
 🏓
  angle East

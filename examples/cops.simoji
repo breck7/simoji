@@ -1,21 +1,22 @@
 🚗
- speed 4
  onTick .5
   turnRandomly
+  move
+  move
 🚓
- onTick .1
-  turnRandomly
- speed 2
  onHit
   🚗
    alert Got em!
    pause
- onTick .2
+ onTick .1
   turnToward 🚗
+  move
+ onTick .1
+  move
 
 size 20
-ticksPerSecond 10
+ticksPerSecond 30
 
 paste
- 🚗 1⬇️ 1➡️
- 🚓 5⬇️ 5➡️
+ 🚓 1⬇️ 1➡️
+ 🚗 15⬇️ 5➡️

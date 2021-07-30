@@ -2,11 +2,11 @@ comment
  Needs balls to collide. Acceleration.
 
 🎱
- mass 1
- speed 0
  bouncy
  onHit
   🎱
+   kickIt
+  🏐
    kickIt
 
 🪵
@@ -14,12 +14,14 @@ comment
 
 🏐
  bouncy
+ onTick .1
+  turnRandomly
+  kickIt
+ onTick .5
+  kickIt
  onHit
   🎱
    kickIt
- speed 0
- force 2
- mass 1
  angle West
 
 rectangle 🪵 40 20 0 7

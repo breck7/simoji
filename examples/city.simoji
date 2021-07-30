@@ -21,14 +21,21 @@
 🏪
  comment store
 🚗
- speed 2
+ onTick
+  move
+  move
  angle West
 🚓
- speed 2
+ onTick
+  move
+  move
  angle West
 🚋
  comment subway
- speed 3
+ onTick
+  move
+  move
+  move
  angle West
 ⬜️
  comment road

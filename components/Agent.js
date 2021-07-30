@@ -9,27 +9,6 @@ class Agent extends AbstractTreeComponent {
     return this._name ?? this.icon
   }
 
-  get mass() {
-    return this.agentDefinition.get("mass") ?? 1
-  }
-
-  get force() {
-    if (this._force !== undefined) return this._force
-    return this.agentDefinition.get("force") ?? 0
-  }
-
-  set force(value) {
-    this._force = value
-  }
-
-  get acceleration() {
-    return this.force / this.mass
-  }
-
-  get diameter() {
-    return this.agentDefinition.get("diameter") ?? 1
-  }
-
   get angle() {
     return this._angle ?? this.agentDefinition.get("angle") ?? "South"
   }
@@ -49,10 +28,19 @@ class Agent extends AbstractTreeComponent {
   }
 
   kickIt(target) {
-    target.speed = 1
-    target.turnInstruction = false
     target.angle = this.angle
-    target.moveCommand()
+    target.tickStack = new jtree.TreeNode(`1
+ move
+ move
+ move
+2
+ move
+ move
+3
+ move
+4
+ move`)
+    target._move()
   }
 
   pickItUp(target) {
@@ -117,22 +105,25 @@ class Agent extends AbstractTreeComponent {
     return this
   }
 
-  loopMove() {
-    if (this.selected) return
-    return this.moveCommand()
+  executeCommands(key) {
+    this.agentDefinition.findNodes(key).forEach(commands => this.executeCommandSequence(commands))
   }
 
-  executeCommands(key) {
-    this.agentDefinition.findNodes(key).forEach(commands => {
-      const probability = commands.getWord(1)
-      if (probability && Math.random() > parseFloat(probability)) return
-      commands.forEach(instruction => {
-        this[instruction.getWord(0)](this, instruction)
-      })
+  executeCommandSequence(commandSequence) {
+    const probability = commandSequence.getWord(1)
+    if (probability && Math.random() > parseFloat(probability)) return
+    commandSequence.forEach(instruction => {
+      this[instruction.getWord(0)](this, instruction)
     })
   }
 
   onTick() {
+    if (this.tickStack) {
+      const next = this.tickStack.shift()
+      this.executeCommandSequence(next)
+      if (!this.tickStack.length) this.tickStack = undefined
+    }
+
     this.executeCommands("onTick")
     if (this.health === 0) this.onDeathCommand()
   }
@@ -153,25 +144,19 @@ class Agent extends AbstractTreeComponent {
     this.board.appendLine(`${command.getWord(1)} ${subject.positionHash}`)
   }
 
-  applyForceCommand() {
-    if (this.force) {
-      this.speed += this.acceleration
-      this.force = 0
-    }
+  move() {
+    if (this.selected) return
+    return this._move()
   }
 
-  moveCommand() {
+  _move() {
     if (this.owner) return this
 
-    let moves = this.speed
-    while (moves) {
-      const { angle } = this
-      if (angle.includes("North")) this.moveNorthCommand()
-      else if (angle.includes("South")) this.moveSouthCommand()
-      if (angle.includes("East")) this.moveEastCommand()
-      else if (angle.includes("West")) this.moveWestCommand()
-      moves--
-    }
+    const { angle } = this
+    if (angle.includes("North")) this.moveNorthCommand()
+    else if (angle.includes("South")) this.moveSouthCommand()
+    if (angle.includes("East")) this.moveEastCommand()
+    else if (angle.includes("West")) this.moveWestCommand()
 
     if (this.holding) {
       this.holding.forEach(node => {

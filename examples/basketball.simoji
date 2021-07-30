@@ -8,7 +8,7 @@
 ⛹️‍♂️
  onTick
   turnRandomly
- speed 1
+  move
  onHit
   🏀
    pickItUp
@@ -16,7 +16,7 @@
 ⛹️‍♀️
  onTick
   turnRandomly
- speed 1
+  move
  onHit
   🏀
    pickItUp

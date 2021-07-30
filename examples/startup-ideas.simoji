@@ -2,21 +2,22 @@
  comment person with an idea
  onTick
   turnRandomly
- speed 1
+  move
 
 👨‍💼💰
  comment peron with an idea
   that is making money
- speed 1
  onTick
   turnRandomly
+  move
 
 👨‍
- speed 1
  onTick .1
   turnRandomly
+  move
  onTick .1
   turnToward 👨‍💼💰
+  move
 
 
 size 10

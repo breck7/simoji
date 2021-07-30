@@ -1,0 +1,18 @@
+comment
+ https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life
+
+⬛️
+ onTick
+  replaceWith ◻️
+ onTouch
+  ⬛️ 2
+   replaceWith ⬛️
+  ⬛️ 3
+   replaceWith ⬛️
+
+◻️
+ onTouch
+  ⬛️ 3
+   replaceWith ⬛️
+
+fill ⬛️ ◻️

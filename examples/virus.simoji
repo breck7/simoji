@@ -2,18 +2,19 @@ comment
  http://modelingcommons.org/browse/one_model/3362#model_tabs_browse_nlw
 
 🧟
- speed 1
  health 30
  onTick
   decrease health
   turnRandomly
+  move
  onDeath
   remove
 
 🙍
  onTick
   turnRandomly
- speed 2
+  move
+  move
  onTouch
   🧟
    replaceWith 🧟

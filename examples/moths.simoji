@@ -2,11 +2,14 @@ comment
  http://www.netlogoweb.org/launch#http://www.netlogoweb.org/assets/modelslib/Sample%20Models/Biology/Moths.nlogo
 
 🦋
- speed 1
  onTick .1
   turnRandomly
+  move
+  move
  onTick .2
   turnToward 💡
+  move
+  move
 💡
 
 ticksPerSecond 10

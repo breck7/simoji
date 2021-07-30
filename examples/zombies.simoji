@@ -6,8 +6,9 @@
   spawn 🪃
 
 🪃
- speed 1
  angle West
+ onTick
+  move
 
 💣
 
@@ -15,9 +16,9 @@
  comment Dead zombie
 
 🧟‍♂️
- speed 1
  onTick
   turnRandomly
+  move
  onHit
   🪃
    replaceWith 🪦

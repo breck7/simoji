@@ -1,5 +1,6 @@
 🌊
- speed 1
+ onTick
+  move
  angle South
 
 size 25

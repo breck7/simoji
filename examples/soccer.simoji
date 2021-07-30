@@ -6,9 +6,9 @@
  bouncy
 
 ⛹️‍♂️
- speed 1
  onTick
   turnRandomly
+  move
  onHit
   ⚽️
    kickIt
@@ -16,7 +16,7 @@
 ⛹️‍♀️
  onTick
   turnRandomly
- speed 1
+  move
  onHit
   ⚽️
    kickIt

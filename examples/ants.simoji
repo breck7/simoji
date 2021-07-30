@@ -5,9 +5,9 @@ comment
  onTick 0.05
   spawn 🐜
 🐜
- speed 1
  onTick
   turnRandomly
+  move
  onHit
   🥖
    pickItUp

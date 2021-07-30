@@ -58,6 +58,16 @@ simojiNode
     return this.filter(node => node.getNodeTypeId() === "agentNode")
   }
 abstractDrawNode
+fillNode
+ description Fill all blank cells with this agent.
+ extends abstractDrawNode
+ cells keywordCell emojiCell
+ crux fill
+ javascript
+  compile() {
+    const {rows, cols, positionSet} = this.getParent()
+     return yodash.fill(rows, cols, positionSet, this.getWord(1))
+  }
 insertNode
  extends abstractDrawNode
  cells keywordCell integerCell emojiCell
@@ -69,7 +79,9 @@ insertNode
      let startBoard = []
      let char = this.getWord(2)
      while (objects) {
-       startBoard.push(`${char} ${yodash.getRandomLocation(rows, cols, positionSet)}`)
+       const hash = yodash.getRandomLocation(rows, cols, positionSet)
+       positionSet.add(hash)
+       startBoard.push(`${char} ${hash}`)
        objects--
      }
      return startBoard.join("\n")
@@ -155,20 +167,6 @@ customIntegerAttributeNode
 healthNode
  extends abstractIntegerAttributeNode
  crux health
-speedNode
- description A value of 1 will move the agent 1 space in 1 tick.
- extends abstractIntegerAttributeNode
- crux speed
-diameterNode
- extends abstractIntegerAttributeNode
- crux diameter
-forceNode
- description Accelerate this agent with a starting force.
- extends abstractIntegerAttributeNode
- crux force
-massNode
- extends abstractIntegerAttributeNode
- crux mass
 angleNode
  extends abstractStringAttributeNode
  cells keywordCell angleCell

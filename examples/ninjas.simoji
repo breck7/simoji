@@ -3,14 +3,14 @@
  onTick
   decrease health
   turnRandomly
- speed 1
+  move
 
 🥷
  health 100
  onTick
   decrease health
   turnRandomly
- speed 1
+  move
 
 insert 50 🤺
 insert 50 🥷

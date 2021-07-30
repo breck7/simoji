@@ -256,11 +256,8 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     const { selection } = this
     if (!selection.length) return this
     selection.forEach(node => {
-      const speed = node.speed
       node.angle = direction
-      node.speed = 1
-      node.moveCommand()
-      node.speed = speed
+      node._move()
     })
 
     this.ensureRender()

@@ -1,0 +1,13 @@
+title Release Notes
+skipIndexPage
+
+paragraph
+ Here's a list of the notable changes in Simoji.
+
+section 2.0.0 07-30-2021
+list
+ - 🎉 fill command
+ - 🎉 kickIt behaves a little smarter
+ - 🧹 kickIt now uses a tick command stack internally
+ - ⚠️ speed is gone. you now need to explcitly move agents in their onTick.
+ - ⚠️ mass, diameter, force removed

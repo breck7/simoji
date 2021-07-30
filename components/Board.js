@@ -38,15 +38,11 @@ class BoardComponent extends AbstractTreeComponent {
 
   tick = 0
   boardLoop() {
-    this.agents.filter(node => node.force).forEach(node => node.applyForceCommand())
-    this.agents.filter(node => node.speed).forEach(node => node.loopMove())
-
+    this.agents.forEach(node => node.onTick())
     this.handleCollisions()
     this.handleTouches()
 
-    this.agents.forEach(node => node.onTick())
-
-    this.executeCommands("onTick")
+    this.executeBoardCommands("onTick")
 
     this.renderAndGetRenderReport()
 
@@ -58,7 +54,7 @@ class BoardComponent extends AbstractTreeComponent {
     this.appendLine(`${command.getWord(1)} ${yodash.getRandomLocation(this.rows, this.cols)}`)
   }
 
-  executeCommands(key) {
+  executeBoardCommands(key) {
     this.getParent()
       .simojiProgram.findNodes(key)
       .forEach(commands => {

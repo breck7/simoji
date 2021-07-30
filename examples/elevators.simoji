@@ -1,5 +1,7 @@
 🛗
- speed 2
+ onTick
+  move
+  move
  angle South
  bouncy
  onHit
@@ -7,7 +9,8 @@
    pickItUp
 🚶🏻
  angle West
- speed 1
+ onTick
+  move
  bouncy
 🌾
 🚪
