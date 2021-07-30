@@ -123,22 +123,41 @@ class BoardComponent extends AbstractTreeComponent {
       const { touchMap } = subject
       if (!touchMap) return
 
-      for (let pos of yodash.positionsAdjacentTo(subject.position)) {
-        const hits = agentPositionMap.get(yodash.makePositionHash(pos)) ?? []
-        for (let target of hits) {
-          const targetId = target.getWord(0)
-          const instructions = touchMap.getNode(targetId)
-          if (instructions) {
-            instructions.forEach(instruction => {
-              subject[instruction.getWord(0)](target, instruction)
-            })
-            if (subject.getIndex() === -1) return
-          }
-        }
-      }
+      const isNeighborTouchMap = touchMap.nodeAt(0).getWords().length > 1
+
+      if (isNeighborTouchMap) applyNeighborTouchMap()
+      else applyFastTouchMap(subject, touchMap)
     })
   }
 }
+
+const applyFastTouchMap = (subject, touchMap) => {
+  for (let pos of yodash.positionsAdjacentTo(subject.position)) {
+    const hits = agentPositionMap.get(yodash.makePositionHash(pos)) ?? []
+    for (let target of hits) {
+      const targetId = target.getWord(0)
+      const instructions = touchMap.getNode(targetId)
+      if (instructions) {
+        instructions.forEach(instruction => {
+          subject[instruction.getWord(0)](target, instruction)
+        })
+        if (subject.getIndex() === -1) return
+      }
+    }
+  }
+}
+
+/*
+
+⬛️
+ onTouch
+  ⬛️ 2
+   replaceWith ⬛️
+  ⬛️ 3
+   replaceWith ⬛️
+  replaceWith ◻️
+
+*/
 
 class BoardStyleComponent extends AbstractTreeComponent {
   toStumpCode() {
