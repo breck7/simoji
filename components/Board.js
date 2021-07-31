@@ -38,7 +38,10 @@ class BoardComponent extends AbstractTreeComponent {
 
   tick = 0
   boardLoop() {
+    if (!this.tick) this.agentPositionMap = this.makeAgentPositionMap()
     this.agents.forEach(node => node.onTick())
+
+    this.agentPositionMap = this.makeAgentPositionMap()
     this.handleCollisions()
     this.handleTouches()
 
@@ -84,7 +87,7 @@ class BoardComponent extends AbstractTreeComponent {
     return this.getTopDownArray().filter(node => node instanceof Agent)
   }
 
-  get agentPositionMap() {
+  makeAgentPositionMap() {
     const map = new Map()
     this.agents.forEach(node => {
       const { positionHash } = node
