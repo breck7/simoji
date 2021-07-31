@@ -3,6 +3,8 @@ stringCell
  highlightScope string
 cssCell
  highlightScope string
+javascriptCell
+ highlightScope string
 htmlCell
  highlightScope string
 emojiCell
@@ -240,6 +242,12 @@ replaceWithCommandNode
  extends abstractSubjectObjectCommandNode
  crux replaceWith
  cells keywordCell emojiCell
+javascriptCommandNode
+ description An escape hatch so you can write custom javascript in a pinch.
+ extends abstractCommandNode
+ crux javascript
+ catchAllNodeType javascriptLineNode
+ cells keywordCell
 kickItCommandNode
  extends abstractSubjectObjectCommandNode
  crux kickIt
@@ -300,3 +308,5 @@ blankLineNode
  tags doNotSynthesize
 commentLineNode
  catchAllCellType commentCell
+javascriptLineNode
+ catchAllCellType javascriptCell

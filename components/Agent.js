@@ -27,6 +27,10 @@ class Agent extends AbstractTreeComponent {
     this.unmountAndDestroy()
   }
 
+  javascript(target, command) {
+    eval(command.childrenToString())
+  }
+
   kickIt(target) {
     target.angle = this.angle
     target.tickStack = new jtree.TreeNode(`1
