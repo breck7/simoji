@@ -242,11 +242,7 @@ class Agent extends AbstractTreeComponent {
   }
 
   get position() {
-    const words = this.getWords()
-    return {
-      down: parseInt(words.find(word => word.includes("⬇️")).slice(0, -1)),
-      right: parseInt(words.find(word => word.includes("➡️")).slice(0, -1))
-    }
+    return yodash.parsePosition(this.getWords())
   }
 
   get positionHash() {

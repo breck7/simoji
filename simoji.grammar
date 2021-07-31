@@ -104,7 +104,10 @@ pasteDrawNode
  catchAllNodeType pasteLineNode
  javascript
   compile() {
-    return this.childrenToString()
+    const {positionSet} = this.getParent()
+    const board = this.childrenToString()
+    yodash.updatePositionSet(board, positionSet)
+    return board
   }
 pasteLineNode
  catchAllCellType anyCell

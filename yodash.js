@@ -135,4 +135,17 @@ yodash.makeRectangle = (character = "🧱", width = 20, height = 20, startRight 
 	return cells.join("\n")
 }
 
+yodash.parsePosition = words => {
+	return {
+		down: parseInt(words.find(word => word.includes("⬇️")).slice(0, -1)),
+		right: parseInt(words.find(word => word.includes("➡️")).slice(0, -1))
+	}
+}
+
+yodash.updatePositionSet = (board, positionSet) => {
+	new TreeNode(board).forEach(line => {
+		positionSet.add(yodash.makePositionHash(yodash.parsePosition(line.getWords())))
+	})
+}
+
 module.exports = { yodash }
