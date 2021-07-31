@@ -3,16 +3,15 @@ comment
 
 ⬛️
  onTick
-  replaceWith ◻️
- onTouch
-  ⬛️ 2
-   replaceWith ⬛️
-  ⬛️ 3
-   replaceWith ⬛️
+  javascript
+   if (this.neighorCount["⬛️"] === 2 || this.neighorCount["⬛️"] === 3) {}
+   else this._replaceWith("◻️")
 
 ◻️
- onTouch
-  ⬛️ 3
-   replaceWith ⬛️
+ onTick
+  javascript
+   if (this.neighorCount["⬛️"] === 3) this._replaceWith("⬛️")
 
-fill ⬛️ ◻️
+insert 500 ⬛️
+fill ◻️
+size 15

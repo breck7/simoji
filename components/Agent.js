@@ -22,7 +22,10 @@ class Agent extends AbstractTreeComponent {
   }
 
   replaceWith(target, command) {
-    const newObject = command.getWord(1)
+    return this._replaceWith(command.getWord(1))
+  }
+
+  _replaceWith(newObject) {
     this.getParent().appendLine(`${newObject} ${this.positionHash}`)
     this.unmountAndDestroy()
   }
@@ -138,6 +141,19 @@ class Agent extends AbstractTreeComponent {
 
   remove() {
     this.unmountAndDestroy()
+  }
+
+  get neighorCount() {
+    const { agentPositionMap } = this.board
+    const neighborCounts = {}
+    yodash.positionsAdjacentTo(this.position).forEach(pos => {
+      const agents = agentPositionMap.get(yodash.makePositionHash(pos)) ?? []
+      agents.forEach(agent => {
+        if (!neighborCounts[agent.name]) neighborCounts[agent.name] = 0
+        neighborCounts[agent.name]++
+      })
+    })
+    return neighborCounts
   }
 
   onDeathCommand() {
