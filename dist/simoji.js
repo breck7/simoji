@@ -58,6 +58,21 @@ yodash.getRandomLocation = (rows, cols, positionSet) => {
 	return hash
 }
 
+yodash.fill = (rows, cols, positionSet, emoji) => {
+	const board = []
+	while (rows >= 0) {
+		let col = cols
+		while (col >= 0) {
+			const hash = yodash.makePositionHash({ right: col, down: rows })
+			col--
+			if (positionSet.has(hash)) continue
+			board.push(`${emoji} ${hash}`)
+		}
+		rows--
+	}
+	return board.join("\n")
+}
+
 yodash.applyCommandMap = (commandMap, targets, subject) => {
 	targets.forEach(target => {
 		const targetId = target.getWord(0)
@@ -120,6 +135,60 @@ yodash.makeRectangle = (character = "🧱", width = 20, height = 20, startRight 
 	return cells.join("\n")
 }
 
+yodash.parsePosition = words => {
+	return {
+		down: parseInt(words.find(word => word.includes("⬇️")).slice(0, -1)),
+		right: parseInt(words.find(word => word.includes("➡️")).slice(0, -1))
+	}
+}
+
+yodash.updatePositionSet = (board, positionSet) => {
+	new TreeNode(board).forEach(line => {
+		positionSet.add(yodash.makePositionHash(yodash.parsePosition(line.getWords())))
+	})
+}
+
+yodash.makePositionSet = (rows, cols, positionSet) => {
+	const set = []
+	while (rows >= 0) {
+		let col = cols
+		while (col >= 0) {
+			const hash = yodash.makePositionHash({ right: col, down: rows })
+			if (!positionSet.has(hash)) set.push(hash)
+			col--
+		}
+		rows--
+	}
+	return set
+}
+
+yodash.insertRandomAgents = (amount, char, rows, cols, positionSet) => {
+	const availableSpots = yodash.makePositionSet(rows, cols, positionSet)
+	return sampleFrom(availableSpots, amount)
+		.map(hash => {
+			positionSet.add(hash)
+			return `${char} ${hash}`
+		})
+		.join("\n")
+}
+
+const getRandomNumberGenerator = (min = 0, max = 100, seed = Date.now()) => () => {
+	const semiRand = Math.sin(seed++) * 10000
+	return Math.floor(min + (max - min) * (semiRand - Math.floor(semiRand)))
+}
+
+const sampleFrom = (collection, howMany, seed) => shuffleArray(collection, seed).slice(0, howMany)
+
+const shuffleArray = (array, seed = Date.now()) => {
+	const rand = getRandomNumberGenerator(0, 100, seed)
+	const clonedArr = array.slice()
+	for (let index = clonedArr.length - 1; index > 0; index--) {
+		const replacerIndex = Math.floor((rand() / 100) * (index + 1))
+		;[clonedArr[index], clonedArr[replacerIndex]] = [clonedArr[replacerIndex], clonedArr[index]]
+	}
+	return clonedArr
+}
+
 window.yodash = yodash
 
 
@@ -147,9 +216,16 @@ class Agent extends AbstractTreeComponent {
   }
 
   replaceWith(target, command) {
-    const newObject = command.getWord(1)
+    return this._replaceWith(command.getWord(1))
+  }
+
+  _replaceWith(newObject) {
     this.getParent().appendLine(`${newObject} ${this.positionHash}`)
     this.unmountAndDestroy()
+  }
+
+  javascript(target, command) {
+    eval(command.childrenToString())
   }
 
   kickIt(target) {
@@ -180,6 +256,10 @@ class Agent extends AbstractTreeComponent {
 
   alert(target, command) {
     alert(command.getContent())
+  }
+
+  reset() {
+    this.getRootNode().resetCommand()
   }
 
   log(target, command) {
@@ -255,6 +335,19 @@ class Agent extends AbstractTreeComponent {
 
   remove() {
     this.unmountAndDestroy()
+  }
+
+  get neighorCount() {
+    const { agentPositionMap } = this.board
+    const neighborCounts = {}
+    yodash.positionsAdjacentTo(this.position).forEach(pos => {
+      const agents = agentPositionMap.get(yodash.makePositionHash(pos)) ?? []
+      agents.forEach(agent => {
+        if (!neighborCounts[agent.name]) neighborCounts[agent.name] = 0
+        neighborCounts[agent.name]++
+      })
+    })
+    return neighborCounts
   }
 
   onDeathCommand() {
@@ -359,11 +452,7 @@ class Agent extends AbstractTreeComponent {
   }
 
   get position() {
-    const words = this.getWords()
-    return {
-      down: parseInt(words.find(word => word.includes("⬇️")).slice(0, -1)),
-      right: parseInt(words.find(word => word.includes("➡️")).slice(0, -1))
-    }
+    return yodash.parsePosition(this.getWords())
   }
 
   get positionHash() {
@@ -475,12 +564,13 @@ class BoardComponent extends AbstractTreeComponent {
 
   tick = 0
   boardLoop() {
+    this.agents.forEach(node => node.onTick())
+
+    this._agentPositionMap = this.makeAgentPositionMap()
     this.handleCollisions()
     this.handleTouches()
 
-    this.agents.forEach(node => node.onTick())
-
-    this.executeCommands("onTick")
+    this.executeBoardCommands("onTick")
 
     this.renderAndGetRenderReport()
 
@@ -492,7 +582,7 @@ class BoardComponent extends AbstractTreeComponent {
     this.appendLine(`${command.getWord(1)} ${yodash.getRandomLocation(this.rows, this.cols)}`)
   }
 
-  executeCommands(key) {
+  executeBoardCommands(key) {
     this.getParent()
       .simojiProgram.findNodes(key)
       .forEach(commands => {
@@ -515,6 +605,7 @@ class BoardComponent extends AbstractTreeComponent {
     }
     const hash = yodash.makePositionHash(position)
     if (this._solidsSet.has(hash)) return true
+
     return false
   }
 
@@ -523,6 +614,11 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   get agentPositionMap() {
+    if (!this._agentPositionMap) this._agentPositionMap = this.makeAgentPositionMap()
+    return this._agentPositionMap
+  }
+
+  makeAgentPositionMap() {
     const map = new Map()
     this.agents.forEach(node => {
       const { positionHash } = node
@@ -967,6 +1063,12 @@ class SimojiApp extends AbstractTreeComponent {
     return this._agentMap
   }
 
+  resetCommand() {
+    const restart = this.isRunning
+    this.loadNewSim(this.simojiProgram.toString())
+    if (restart) this.startInterval()
+  }
+
   appendBoard() {
     const { simojiProgram, windowWidth, windowHeight } = this
     const setSize = simojiProgram.get("size")
@@ -1180,6 +1282,9 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
       },
       c: () => {
         this.exportDataCommand()
+      },
+      r: () => {
+        this.resetCommand()
       },
       up: () => this.moveSelection("North"),
       down: () => this.moveSelection("South"),
