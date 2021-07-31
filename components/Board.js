@@ -38,10 +38,9 @@ class BoardComponent extends AbstractTreeComponent {
 
   tick = 0
   boardLoop() {
-    if (!this.tick) this.agentPositionMap = this.makeAgentPositionMap()
     this.agents.forEach(node => node.onTick())
 
-    this.agentPositionMap = this.makeAgentPositionMap()
+    this._agentPositionMap = this.makeAgentPositionMap()
     this.handleCollisions()
     this.handleTouches()
 
@@ -80,11 +79,17 @@ class BoardComponent extends AbstractTreeComponent {
     }
     const hash = yodash.makePositionHash(position)
     if (this._solidsSet.has(hash)) return true
+
     return false
   }
 
   get agents() {
     return this.getTopDownArray().filter(node => node instanceof Agent)
+  }
+
+  get agentPositionMap() {
+    if (!this._agentPositionMap) this._agentPositionMap = this.makeAgentPositionMap()
+    return this._agentPositionMap
   }
 
   makeAgentPositionMap() {
