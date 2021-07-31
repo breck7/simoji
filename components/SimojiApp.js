@@ -66,6 +66,12 @@ class SimojiApp extends AbstractTreeComponent {
     return this._agentMap
   }
 
+  resetCommand() {
+    const restart = this.isRunning
+    this.loadNewSim(this.simojiProgram.toString())
+    if (restart) this.startInterval()
+  }
+
   appendBoard() {
     const { simojiProgram, windowWidth, windowHeight } = this
     const setSize = simojiProgram.get("size")
@@ -279,6 +285,9 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
       },
       c: () => {
         this.exportDataCommand()
+      },
+      r: () => {
+        this.resetCommand()
       },
       up: () => this.moveSelection("North"),
       down: () => this.moveSelection("South"),

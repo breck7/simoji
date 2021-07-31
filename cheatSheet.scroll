@@ -110,6 +110,7 @@ section Keyboard shortcuts
 pipeTable
  Combo|Command
  ?|Toggle Help
+ r|Reset
  Spacebar|Play/Pause
 
 section Sharing Your Simulations
