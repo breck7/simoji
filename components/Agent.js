@@ -61,6 +61,10 @@ class Agent extends AbstractTreeComponent {
     alert(command.getContent())
   }
 
+  reset() {
+    this.getRootNode().resetCommand()
+  }
+
   log(target, command) {
     console.log(command.getContent())
   }
