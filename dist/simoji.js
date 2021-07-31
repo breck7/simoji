@@ -688,13 +688,12 @@ window.BoardComponent = BoardComponent
 
 
 
+
 class BottomBarComponent extends AbstractTreeComponent {
-  toStumpCode() {
-    return `div
- class BottomBarComponent
- span
-  clickCommand dumpErrorsCommand
-  id codeErrorsConsole`
+  createParser() {
+    return new jtree.TreeNode.Parser(undefined, {
+      PlayButtonComponent
+    })
   }
 }
 
@@ -844,7 +843,7 @@ class PlayButtonComponent extends AbstractTreeComponent {
   }
 
   toStumpCode() {
-    return `span ${this.isStarted ? "⏸" : "▶️"}
+    return `span ${this.isStarted ? "&#10074;&#10074;" : "▶︎"}
  class TopBarComponentButton
  clickCommand togglePlayCommand`
   }
@@ -898,12 +897,17 @@ window.ShareComponent = ShareComponent
 
 // prettier-ignore
 
+const CHROME_HEIGHT = 88
+
 class SimEditorComponent extends AbstractTreeComponent {
   toStumpCode() {
     return `div
  class SimEditorComponent
  textarea
-  id EditorTextarea`
+  id EditorTextarea
+ div &nbsp;
+  clickCommand dumpErrorsCommand
+  id codeErrorsConsole`
   }
 
   createParser() {
@@ -928,7 +932,8 @@ class SimEditorComponent extends AbstractTreeComponent {
     this.program = new simojiCompiler(code)
     const errs = this.program.getAllErrors()
 
-    willowBrowser.setHtmlOfElementWithIdHack("codeErrorsConsole", `${errs.length} errors`)
+    const errMessage = errs.length ? `${errs.length} errors` : "&nbsp;"
+    willowBrowser.setHtmlOfElementWithIdHack("codeErrorsConsole", errMessage)
 
     const cursor = this.codeMirrorInstance.getCursor()
 
@@ -990,7 +995,7 @@ class SimEditorComponent extends AbstractTreeComponent {
       })
     this.setCodeMirrorValue(this.getNode("value").childrenToString())
     this.codeMirrorInstance.on("keyup", () => this._onCodeKeyUp())
-    this.codeMirrorInstance.setSize(250, window.innerHeight - 68)
+    this.codeMirrorInstance.setSize(250, window.innerHeight - CHROME_HEIGHT)
   }
 }
 
@@ -1012,7 +1017,7 @@ window.SimEditorComponent = SimEditorComponent
 // prettier-ignore
 
 const boardMargin = 20
-const chromeHeight = 48 + boardMargin
+const chromeHeight = 68 + boardMargin
 const chromeWidth = 280 + boardMargin
 
 class githubTriangleComponent extends AbstractTreeComponent {
@@ -1223,7 +1228,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
   }
 
   updatePlayButtonComponentHack() {
-    this.getNode("TopBarComponent PlayButtonComponent")
+    this.getNode("BottomBarComponent PlayButtonComponent")
       .setContent(this.interval)
       .renderAndGetRenderReport()
   }
@@ -1301,10 +1306,10 @@ SimojiApp.setupApp = (simojiCode, windowWidth = 1000, windowHeight = 1000) => {
 TopBarComponent
  LogoComponent
  ShareComponent
- PlayButtonComponent
  AnalyzeDataButtonComponent
  ExamplesComponent
 BottomBarComponent
+ PlayButtonComponent
 RightBarComponent
  AgentPaletteComponent
 SimEditorComponent
@@ -1326,13 +1331,11 @@ window.SimojiApp = SimojiApp
 
 
 
-
 class TopBarComponent extends AbstractTreeComponent {
   createParser() {
     return new jtree.TreeNode.Parser(undefined, {
       LogoComponent,
       ShareComponent,
-      PlayButtonComponent,
       AnalyzeDataButtonComponent,
       ExamplesComponent
     })

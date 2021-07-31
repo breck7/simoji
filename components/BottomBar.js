@@ -1,13 +1,12 @@
 const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework.node.js")
+const { PlayButtonComponent } = require("./PlayButton.js")
 const { jtree } = require("jtree")
 
 class BottomBarComponent extends AbstractTreeComponent {
-  toStumpCode() {
-    return `div
- class BottomBarComponent
- span
-  clickCommand dumpErrorsCommand
-  id codeErrorsConsole`
+  createParser() {
+    return new jtree.TreeNode.Parser(undefined, {
+      PlayButtonComponent
+    })
   }
 }
 

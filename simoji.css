@@ -22,7 +22,7 @@ body {
 :root {
 	--rightBarWidth: 30px;
 	--topBarHeight: 28px;
-	--bottomBarHeight: 20px;
+	--bottomBarHeight: 40px;
 	--chromeColor: rgb(47, 47, 51);
 	--editorWidth: 250px;
 }
@@ -136,7 +136,14 @@ body {
 	right: 0;
 	background-color: var(--chromeColor);
 	color: white;
-	font-size: 12px;
+	font-size: 34px;
+	text-align: center;
+}
+
+#codeErrorsConsole {
+	font-size: 10px;
+	color: #999;
+	text-align: center;
 }
 
 .TopBarComponentButton {
@@ -157,6 +164,7 @@ body {
 	color: white;
 	font-size: 12px;
 	z-index: 1;
+	overflow: hidden;
 }
 
 .Agent {

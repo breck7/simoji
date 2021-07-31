@@ -15,7 +15,7 @@ const { RightBarComponent } = require("./RightBar.js")
 /*NODE_JS_ONLY*/ const simojiCompiler = jtree.compileGrammarFileAtPathAndReturnRootConstructor(   __dirname + "/../simoji.grammar")
 
 const boardMargin = 20
-const chromeHeight = 48 + boardMargin
+const chromeHeight = 68 + boardMargin
 const chromeWidth = 280 + boardMargin
 
 class githubTriangleComponent extends AbstractTreeComponent {
@@ -226,7 +226,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
   }
 
   updatePlayButtonComponentHack() {
-    this.getNode("TopBarComponent PlayButtonComponent")
+    this.getNode("BottomBarComponent PlayButtonComponent")
       .setContent(this.interval)
       .renderAndGetRenderReport()
   }
@@ -304,10 +304,10 @@ SimojiApp.setupApp = (simojiCode, windowWidth = 1000, windowHeight = 1000) => {
 TopBarComponent
  LogoComponent
  ShareComponent
- PlayButtonComponent
  AnalyzeDataButtonComponent
  ExamplesComponent
 BottomBarComponent
+ PlayButtonComponent
 RightBarComponent
  AgentPaletteComponent
 SimEditorComponent

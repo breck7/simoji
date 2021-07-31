@@ -4,12 +4,17 @@ const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework
 // prettier-ignore
 /*NODE_JS_ONLY*/ const simojiCompiler = jtree.compileGrammarFileAtPathAndReturnRootConstructor(   __dirname + "/../simoji.grammar")
 
+const CHROME_HEIGHT = 88
+
 class SimEditorComponent extends AbstractTreeComponent {
   toStumpCode() {
     return `div
  class SimEditorComponent
  textarea
-  id EditorTextarea`
+  id EditorTextarea
+ div &nbsp;
+  clickCommand dumpErrorsCommand
+  id codeErrorsConsole`
   }
 
   createParser() {
@@ -34,7 +39,8 @@ class SimEditorComponent extends AbstractTreeComponent {
     this.program = new simojiCompiler(code)
     const errs = this.program.getAllErrors()
 
-    willowBrowser.setHtmlOfElementWithIdHack("codeErrorsConsole", `${errs.length} errors`)
+    const errMessage = errs.length ? `${errs.length} errors` : "&nbsp;"
+    willowBrowser.setHtmlOfElementWithIdHack("codeErrorsConsole", errMessage)
 
     const cursor = this.codeMirrorInstance.getCursor()
 
@@ -96,7 +102,7 @@ class SimEditorComponent extends AbstractTreeComponent {
       })
     this.setCodeMirrorValue(this.getNode("value").childrenToString())
     this.codeMirrorInstance.on("keyup", () => this._onCodeKeyUp())
-    this.codeMirrorInstance.setSize(250, window.innerHeight - 68)
+    this.codeMirrorInstance.setSize(250, window.innerHeight - CHROME_HEIGHT)
   }
 }
 
