@@ -77,16 +77,7 @@ insertNode
  javascript
   compile() {
     const {rows, cols, positionSet} = this.getParent()
-    let objects = parseInt(this.getWord(1))
-     let startBoard = []
-     let char = this.getWord(2)
-     while (objects) {
-       const hash = yodash.getRandomLocation(rows, cols, positionSet)
-       positionSet.add(hash)
-       startBoard.push(`${char} ${hash}`)
-       objects--
-     }
-     return startBoard.join("\n")
+     return yodash.insertRandomAgents(parseInt(this.getWord(1)), this.getWord(2), rows, cols,  positionSet)
   }
 rectangleDrawNode
  extends abstractDrawNode

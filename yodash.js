@@ -148,4 +148,45 @@ yodash.updatePositionSet = (board, positionSet) => {
 	})
 }
 
+yodash.makePositionSet = (rows, cols, positionSet) => {
+	const set = []
+	while (rows >= 0) {
+		let col = cols
+		while (col >= 0) {
+			const hash = yodash.makePositionHash({ right: col, down: rows })
+			if (!positionSet.has(hash)) set.push(hash)
+			col--
+		}
+		rows--
+	}
+	return set
+}
+
+yodash.insertRandomAgents = (amount, char, rows, cols, positionSet) => {
+	const availableSpots = yodash.makePositionSet(rows, cols, positionSet)
+	return sampleFrom(availableSpots, amount)
+		.map(hash => {
+			positionSet.add(hash)
+			return `${char} ${hash}`
+		})
+		.join("\n")
+}
+
+const getRandomNumberGenerator = (min = 0, max = 100, seed = Date.now()) => () => {
+	const semiRand = Math.sin(seed++) * 10000
+	return Math.floor(min + (max - min) * (semiRand - Math.floor(semiRand)))
+}
+
+const sampleFrom = (collection, howMany, seed) => shuffleArray(collection, seed).slice(0, howMany)
+
+const shuffleArray = (array, seed = Date.now()) => {
+	const rand = getRandomNumberGenerator(0, 100, seed)
+	const clonedArr = array.slice()
+	for (let index = clonedArr.length - 1; index > 0; index--) {
+		const replacerIndex = Math.floor((rand() / 100) * (index + 1))
+		;[clonedArr[index], clonedArr[replacerIndex]] = [clonedArr[replacerIndex], clonedArr[index]]
+	}
+	return clonedArr
+}
+
 module.exports = { yodash }
