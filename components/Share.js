@@ -3,9 +3,10 @@ const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework
 class ShareComponent extends AbstractTreeComponent {
   toStumpCode() {
     return `div
- style display: inline;
+ class ShareComponent
  input
   readonly
+  title ${this.link}
   value ${this.link}`
   }
 

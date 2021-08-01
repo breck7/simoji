@@ -32,10 +32,6 @@ body {
 	width: 100%;
 }
 
-.LogoComponent {
-	cursor: pointer;
-}
-
 .ExamplesComponent a {
 	padding-right: 5px;
 }
@@ -120,10 +116,22 @@ body {
 	padding-left: 5px;
 	white-space: nowrap;
 }
-.TopBarComponent input {
-	background: transparent;
+.ShareComponent {
+	display: inline;
+}
+.ShareComponent input {
+	background: rgb(79, 79, 79);
+	padding: 3px;
+	border-radius: 5px;
 	color: white;
 	border: 0;
+	width: 210px;
+}
+
+.LogoComponent {
+	display: inline-block;
+	cursor: pointer;
+	width: 45px;
 }
 
 .BottomBarComponent {
@@ -181,6 +189,11 @@ body {
 }
 .ExamplesComponent a {
 	color: white;
+	text-decoration: none;
+	opacity: 0.4;
+}
+.ExamplesComponent a:hover {
+	opacity: 1;
 }
 .ExamplesComponent {
 	padding-left: 10px;

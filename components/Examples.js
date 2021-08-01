@@ -5,7 +5,7 @@ class ExamplesComponent extends AbstractTreeComponent {
     const sims = exampleSims
       .getFirstWords()
       .map(
-        item => ` a ${item}
+        item => ` a ${jtree.Utils.ucfirst(item)}
   href index.html#example%20${item}
   clickCommand loadExampleCommand ${item}`
       )

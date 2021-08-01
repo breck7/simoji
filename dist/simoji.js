@@ -717,7 +717,7 @@ class ExamplesComponent extends AbstractTreeComponent {
     const sims = exampleSims
       .getFirstWords()
       .map(
-        item => ` a ${item}
+        item => ` a ${jtree.Utils.ucfirst(item)}
   href index.html#example%20${item}
   clickCommand loadExampleCommand ${item}`
       )
@@ -882,9 +882,10 @@ window.RightBarComponent = RightBarComponent
 class ShareComponent extends AbstractTreeComponent {
   toStumpCode() {
     return `div
- style display: inline;
+ class ShareComponent
  input
   readonly
+  title ${this.link}
   value ${this.link}`
   }
 
