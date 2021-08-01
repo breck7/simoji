@@ -692,8 +692,18 @@ window.BoardComponent = BoardComponent
 class BottomBarComponent extends AbstractTreeComponent {
   createParser() {
     return new jtree.TreeNode.Parser(undefined, {
-      PlayButtonComponent
+      PlayButtonComponent,
+      AnalyzeDataButtonComponent
     })
+  }
+}
+
+class AnalyzeDataButtonComponent extends AbstractTreeComponent {
+  toStumpCode() {
+    return `span Δ
+ title Open Report
+ class BottomBarComponentButton ReportButton
+ clickCommand openInOhayoCommand`
   }
 }
 
@@ -844,7 +854,7 @@ class PlayButtonComponent extends AbstractTreeComponent {
 
   toStumpCode() {
     return `span ${this.isStarted ? "&#10074;&#10074;" : "▶︎"}
- class TopBarComponentButton
+ class BottomBarComponentButton
  clickCommand togglePlayCommand`
   }
 }
@@ -1313,10 +1323,10 @@ SimojiApp.setupApp = (simojiCode, windowWidth = 1000, windowHeight = 1000) => {
 TopBarComponent
  LogoComponent
  ShareComponent
- AnalyzeDataButtonComponent
  ExamplesComponent
 BottomBarComponent
  PlayButtonComponent
+ AnalyzeDataButtonComponent
 RightBarComponent
  AgentPaletteComponent
 SimEditorComponent
@@ -1343,17 +1353,8 @@ class TopBarComponent extends AbstractTreeComponent {
     return new jtree.TreeNode.Parser(undefined, {
       LogoComponent,
       ShareComponent,
-      AnalyzeDataButtonComponent,
       ExamplesComponent
     })
-  }
-}
-
-class AnalyzeDataButtonComponent extends AbstractTreeComponent {
-  toStumpCode() {
-    return `span 📈
- class TopBarComponentButton
- clickCommand openInOhayoCommand`
   }
 }
 

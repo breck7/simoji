@@ -304,10 +304,10 @@ SimojiApp.setupApp = (simojiCode, windowWidth = 1000, windowHeight = 1000) => {
 TopBarComponent
  LogoComponent
  ShareComponent
- AnalyzeDataButtonComponent
  ExamplesComponent
 BottomBarComponent
  PlayButtonComponent
+ AnalyzeDataButtonComponent
 RightBarComponent
  AgentPaletteComponent
 SimEditorComponent

@@ -138,6 +138,7 @@ body {
 	color: white;
 	font-size: 34px;
 	text-align: center;
+	padding-right: var(--rightBarWidth);
 }
 
 #codeErrorsConsole {
@@ -146,11 +147,19 @@ body {
 	text-align: center;
 }
 
-.TopBarComponentButton {
+.BottomBarComponentButton {
 	cursor: pointer;
 	user-select: none;
 	width: 30px;
 	display: inline-block;
+}
+
+.ReportButton {
+	float: right;
+	opacity: 0.2;
+}
+.ReportButton:hover {
+	opacity: 1;
 }
 
 .RightBarComponent {
