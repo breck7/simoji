@@ -925,6 +925,8 @@ class SimEditorComponent extends AbstractTreeComponent {
   _onCodeKeyUp() {
     const { willowBrowser } = this
     const code = this.codeMirrorValue
+    if (this._code === code) return
+    this._code = code
     const root = this.getRootNode()
     root.pauseCommand()
     // this._updateLocalStorage()
@@ -968,20 +970,22 @@ class SimEditorComponent extends AbstractTreeComponent {
   }
 
   async treeComponentDidMount() {
-    this.loadCodeMirror()
+    this._initCodeMirror()
+    this._updateCodeMirror()
     super.treeComponentDidMount()
   }
 
   async treeComponentDidUpdate() {
-    this.loadCodeMirror()
+    this._updateCodeMirror()
     super.treeComponentDidUpdate()
   }
 
   setCodeMirrorValue(value) {
     this.codeMirrorInstance.setValue(value)
+    this._code = value
   }
 
-  loadCodeMirror() {
+  _initCodeMirror() {
     this.codeMirrorInstance = new jtree.TreeNotationCodeMirrorMode(
       "custom",
       () => simojiCompiler,
@@ -993,9 +997,12 @@ class SimEditorComponent extends AbstractTreeComponent {
         lineWrapping: false,
         lineNumbers: false
       })
-    this.setCodeMirrorValue(this.getNode("value").childrenToString())
     this.codeMirrorInstance.on("keyup", () => this._onCodeKeyUp())
     this.codeMirrorInstance.setSize(250, window.innerHeight - CHROME_HEIGHT)
+  }
+
+  _updateCodeMirror() {
+    this.setCodeMirrorValue(this.getNode("value").childrenToString())
   }
 }
 
