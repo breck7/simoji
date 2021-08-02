@@ -48,24 +48,24 @@ yodash.angle = (cx, cy, ex, ey) => {
 	return angle
 }
 
-yodash.getRandomLocation = (rows, cols, positionSet) => {
+yodash.getRandomLocation = (rows, cols, occupiedSpots) => {
 	const maxRight = cols
 	const maxBottom = rows
 	const right = Math.round(Math.random() * maxRight)
 	const down = Math.round(Math.random() * maxBottom)
 	const hash = yodash.makePositionHash({ right, down })
-	if (positionSet && positionSet.has(hash)) return yodash.getRandomLocation(rows, cols, positionSet)
+	if (occupiedSpots && occupiedSpots.has(hash)) return yodash.getRandomLocation(rows, cols, occupiedSpots)
 	return hash
 }
 
-yodash.fill = (rows, cols, positionSet, emoji) => {
+yodash.fill = (rows, cols, occupiedSpots, emoji) => {
 	const board = []
 	while (rows >= 0) {
 		let col = cols
 		while (col >= 0) {
 			const hash = yodash.makePositionHash({ right: col, down: rows })
 			col--
-			if (positionSet.has(hash)) continue
+			if (occupiedSpots.has(hash)) continue
 			board.push(`${emoji} ${hash}`)
 		}
 		rows--
@@ -142,31 +142,31 @@ yodash.parsePosition = words => {
 	}
 }
 
-yodash.updatePositionSet = (board, positionSet) => {
+yodash.updateOccupiedSpots = (board, occupiedSpots) => {
 	new TreeNode(board).forEach(line => {
-		positionSet.add(yodash.makePositionHash(yodash.parsePosition(line.getWords())))
+		occupiedSpots.add(yodash.makePositionHash(yodash.parsePosition(line.getWords())))
 	})
 }
 
-yodash.makePositionSet = (rows, cols, positionSet) => {
-	const set = []
-	while (rows >= 0) {
+yodash.getAllAvailableSpots = (rows, cols, occupiedSpots, rowStart = 0, colStart = 0) => {
+	const availablePositions = []
+	while (rows >= rowStart) {
 		let col = cols
-		while (col >= 0) {
+		while (col >= colStart) {
 			const hash = yodash.makePositionHash({ right: col, down: rows })
-			if (!positionSet.has(hash)) set.push(hash)
+			if (!occupiedSpots.has(hash)) availablePositions.push(hash)
 			col--
 		}
 		rows--
 	}
-	return set
+	return availablePositions
 }
 
-yodash.insertRandomAgents = (amount, char, rows, cols, positionSet) => {
-	const availableSpots = yodash.makePositionSet(rows, cols, positionSet)
+yodash.insertRandomAgents = (amount, char, rows, cols, occupiedSpots) => {
+	const availableSpots = yodash.getAllAvailableSpots(rows, cols, occupiedSpots)
 	return sampleFrom(availableSpots, amount)
 		.map(hash => {
-			positionSet.add(hash)
+			occupiedSpots.add(hash)
 			return `${char} ${hash}`
 		})
 		.join("\n")

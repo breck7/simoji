@@ -51,7 +51,7 @@ simojiNode
   compileSetup(rows, cols) {
     const clone = this.clone()
     clone.filter(node => node.getNodeTypeId() === "agentNode").forEach(node => node.destroy())
-    clone.positionSet = new Set()
+    clone.occupiedSpots = new Set()
     clone.rows = rows
     clone.cols = cols
     return clone.compile()
@@ -67,8 +67,8 @@ fillNode
  crux fill
  javascript
   compile() {
-    const {rows, cols, positionSet} = this.getParent()
-     return yodash.fill(rows, cols, positionSet, this.getWord(1))
+    const {rows, cols, occupiedSpots} = this.getParent()
+     return yodash.fill(rows, cols, occupiedSpots, this.getWord(1))
   }
 insertNode
  extends abstractDrawNode
@@ -76,8 +76,8 @@ insertNode
  crux insert
  javascript
   compile() {
-    const {rows, cols, positionSet} = this.getParent()
-     return yodash.insertRandomAgents(parseInt(this.getWord(1)), this.getWord(2), rows, cols,  positionSet)
+    const {rows, cols, occupiedSpots} = this.getParent()
+     return yodash.insertRandomAgents(parseInt(this.getWord(1)), this.getWord(2), rows, cols,  occupiedSpots)
   }
 rectangleDrawNode
  extends abstractDrawNode
@@ -95,9 +95,8 @@ pasteDrawNode
  catchAllNodeType pasteLineNode
  javascript
   compile() {
-    const {positionSet} = this.getParent()
     const board = this.childrenToString()
-    yodash.updatePositionSet(board, positionSet)
+    yodash.updateOccupiedSpots(board, this.getParent().occupiedSpots)
     return board
   }
 pasteLineNode
