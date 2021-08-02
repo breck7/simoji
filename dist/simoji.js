@@ -725,6 +725,10 @@ class BoardComponent extends AbstractTreeComponent {
 }
 
 class BoardStyleComponent extends AbstractTreeComponent {
+  createParser() {
+    return new jtree.TreeNode.Parser(TreeNode)
+  }
+
   toStumpCode() {
     return `styleTag
  bern
@@ -752,7 +756,7 @@ class AnalyzeDataButtonComponent extends AbstractTreeComponent {
   toStumpCode() {
     return `span Δ
  title Open Report
- class BottomBarComponentButton ReportButton
+ class ReportButton
  clickCommand openInOhayoCommand`
   }
 }
@@ -904,7 +908,7 @@ class PlayButtonComponent extends AbstractTreeComponent {
 
   toStumpCode() {
     return `span ${this.isStarted ? "&#10074;&#10074;" : "▶︎"}
- class BottomBarComponentButton
+ class PlayButtonComponent
  clickCommand togglePlayCommand`
   }
 }
@@ -1109,9 +1113,20 @@ class githubTriangleComponent extends AbstractTreeComponent {
   }
 }
 
+class ErrorNode extends AbstractTreeComponent {
+  _isErrorNodeType() {
+    return true
+  }
+  toStumpCode() {
+    console.error(`Warning: SimojiApp does not have a node type for "${this.getLine()}"`)
+    return `span
+ style display: none;`
+  }
+}
+
 class SimojiApp extends AbstractTreeComponent {
   createParser() {
-    return new jtree.TreeNode.Parser(undefined, {
+    return new jtree.TreeNode.Parser(ErrorNode, {
       TopBarComponent,
       githubTriangleComponent,
       SimEditorComponent,

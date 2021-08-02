@@ -171,6 +171,10 @@ class BoardComponent extends AbstractTreeComponent {
 }
 
 class BoardStyleComponent extends AbstractTreeComponent {
+  createParser() {
+    return new jtree.TreeNode.Parser(TreeNode)
+  }
+
   toStumpCode() {
     return `styleTag
  bern

@@ -155,7 +155,8 @@ body {
 	text-align: center;
 }
 
-.BottomBarComponentButton {
+.PlayButtonComponent,
+.ReportButton {
 	cursor: pointer;
 	user-select: none;
 	width: 30px;

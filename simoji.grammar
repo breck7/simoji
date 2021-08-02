@@ -50,7 +50,7 @@ simojiNode
   }
   compileSetup(rows, cols) {
     const clone = this.clone()
-    clone.filter(node => node.getNodeTypeId() === "agentNode").forEach(node => node.destroy())
+    clone.filter(node => node.getNodeTypeId() === "blankLineNode" || node.getNodeTypeId() === "agentNode").forEach(node => node.destroy())
     clone.occupiedSpots = new Set()
     clone.rows = rows
     clone.cols = cols
@@ -204,8 +204,10 @@ styleNode
  cells keywordCell
  crux style
  catchAllNodeType styleLineNode
- compiler
-  stringTemplate 
+ javascript
+  compile() {
+   return ""
+  }
 styleLineNode
  catchAllCellType cssCell
  catchAllNodeType styleLineNode
@@ -243,8 +245,8 @@ onExtinctNode
  inScope abstractCommandNode
  cells keywordCell emojiCell
  description Define what happens when a type of agent goes extinct from the board.
- compiler
-  stringTemplate 
+ javascript
+  compile() { return ""}
 replaceWithCommandNode
  extends abstractSubjectObjectCommandNode
  crux replaceWith
