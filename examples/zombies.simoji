@@ -32,6 +32,6 @@
 size 30
 ticksPerSecond 10
 
-insert 50 🧟‍♂️
+insertCluster 30 🧟‍♂️ 1 1
 paste
  👨‍👩‍👧‍👦 12⬇️ 11➡️

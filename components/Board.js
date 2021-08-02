@@ -24,6 +24,15 @@ class BoardComponent extends AbstractTreeComponent {
     return new TreeNode(this._populationCounts).toCsv()
   }
 
+  // todo: cleanup board vs agent commands
+  alert(target, command) {
+    alert(command.getContent())
+  }
+
+  pause() {
+    this.getRootNode().pauseCommand()
+  }
+
   get populationCount() {
     const counts = {}
     this.agents.forEach(node => {
@@ -45,6 +54,7 @@ class BoardComponent extends AbstractTreeComponent {
     this.handleTouches()
 
     this.executeBoardCommands("onTick")
+    this.handleExtinctions()
 
     this.renderAndGetRenderReport()
 
@@ -53,7 +63,19 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   spawn(subject, command) {
-    this.appendLine(`${command.getWord(1)} ${yodash.getRandomLocation(this.rows, this.cols)}`)
+    this.appendLine(`${command.getWord(1)} ${yodash.getRandomLocationHash(this.rows, this.cols)}`)
+  }
+
+  handleExtinctions() {
+    this.getParent()
+      .simojiProgram.findNodes("onExtinct")
+      .forEach(commands => {
+        const emoji = commands.getWord(1)
+        if (emoji && this.has(emoji)) return
+        commands.forEach(instruction => {
+          this[instruction.getWord(0)](this, instruction)
+        })
+      })
   }
 
   executeBoardCommands(key) {

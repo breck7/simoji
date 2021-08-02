@@ -7,6 +7,7 @@ const { getExamples } = require("./examples")
 
 const libPaths = `node_modules/jtree/treeComponentFramework/sweepercraft/lib/mousetrap.min.js
 node_modules/mathjs/lib/browser/math.js
+node_modules/lodash/lodash.min.js
 node_modules/jtree/sandbox/lib/codemirror.js
 node_modules/jtree/sandbox/lib/show-hint.js
 node_modules/jtree/products/jtree.browser.js

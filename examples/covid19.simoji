@@ -21,20 +21,28 @@ comment
  onTick
   turnRandomly
   move
-  move
 
 🙍
  onTick
   turnRandomly
   move
-  move
  onTouch
   🧟
    replaceWith 🧟
 
-insert 1000 🙍
-insert 5 🦸‍♂️
-insert 5 🧟
+insertCluster 100 🙍
+insertCluster 100 🙍
+insertCluster 30 🙍
+insertCluster 30 🙍
+insertCluster 10 🙍
+insertCluster 10 🙍
+
+insert 2 🧟
+
+onExtinct 🧟
+ alert No more cases.
+ pause
+
 
 🪦
  comment Dead Person

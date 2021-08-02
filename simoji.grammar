@@ -34,7 +34,7 @@ simojiNode
  extensions simoji
  description A Tree Language that compiles to a TreeComponentFramework app.
  root
- inScope blankLineNode commentNode abstractSetupNumberNode abstractDrawNode styleNode onTickNode
+ inScope blankLineNode commentNode abstractSetupNumberNode abstractDrawNode styleNode onTickNode onExtinctNode
  catchAllNodeType agentNode
  compilesTo javascript
  javascript
@@ -78,6 +78,15 @@ insertNode
   compile() {
     const {rows, cols, occupiedSpots} = this.getParent()
      return yodash.insertRandomAgents(parseInt(this.getWord(1)), this.getWord(2), rows, cols,  occupiedSpots)
+  }
+insertClusterNode
+ extends insertNode
+ crux insertCluster
+ catchAllCellType integerCell
+ javascript
+  compile() {
+    const {rows, cols, occupiedSpots} = this.getParent()
+     return yodash.insertClusteredRandomAgents(parseInt(this.getWord(1)), this.getWord(2), rows, cols,  occupiedSpots, this.getWord(3), this.getWord(4))
   }
 rectangleDrawNode
  extends abstractDrawNode
@@ -206,9 +215,7 @@ targetEmojiNode
 abstractEventNode
  cells keywordCell
  javascript
-  compile() {
-    return ``
-  }
+  compile() { return ``}
 abstractInteractionEventNode
  extends abstractEventNode
  catchAllNodeType targetEmojiNode
@@ -231,6 +238,13 @@ onTickNode
  inScope abstractCommandNode
  catchAllCellType probabilityCell
  description Define what happens each tick.
+onExtinctNode
+ crux onExtinct
+ inScope abstractCommandNode
+ cells keywordCell emojiCell
+ description Define what happens when a type of agent goes extinct from the board.
+ compiler
+  stringTemplate 
 replaceWithCommandNode
  extends abstractSubjectObjectCommandNode
  crux replaceWith

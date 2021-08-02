@@ -1,5 +1,6 @@
 const yodash = {}
 
+
 yodash.parseInts = (arr, start) => arr.map((item, index) => (index >= start ? parseInt(item) : item))
 
 yodash.getRandomAngle = () => {
@@ -48,24 +49,29 @@ yodash.angle = (cx, cy, ex, ey) => {
 	return angle
 }
 
-yodash.getRandomLocation = (rows, cols, positionSet) => {
+yodash.getRandomLocation = (rows, cols) => {
 	const maxRight = cols
 	const maxBottom = rows
 	const right = Math.round(Math.random() * maxRight)
 	const down = Math.round(Math.random() * maxBottom)
+	return { right, down }
+}
+
+yodash.getRandomLocationHash = (rows, cols, occupiedSpots) => {
+	const { right, down } = yodash.getRandomLocation(rows, cols)
 	const hash = yodash.makePositionHash({ right, down })
-	if (positionSet && positionSet.has(hash)) return yodash.getRandomLocation(rows, cols, positionSet)
+	if (occupiedSpots && occupiedSpots.has(hash)) return yodash.getRandomLocationHash(rows, cols, occupiedSpots)
 	return hash
 }
 
-yodash.fill = (rows, cols, positionSet, emoji) => {
+yodash.fill = (rows, cols, occupiedSpots, emoji) => {
 	const board = []
 	while (rows >= 0) {
 		let col = cols
 		while (col >= 0) {
 			const hash = yodash.makePositionHash({ right: col, down: rows })
 			col--
-			if (positionSet.has(hash)) continue
+			if (occupiedSpots.has(hash)) continue
 			board.push(`${emoji} ${hash}`)
 		}
 		rows--
@@ -142,31 +148,53 @@ yodash.parsePosition = words => {
 	}
 }
 
-yodash.updatePositionSet = (board, positionSet) => {
+yodash.updateOccupiedSpots = (board, occupiedSpots) => {
 	new TreeNode(board).forEach(line => {
-		positionSet.add(yodash.makePositionHash(yodash.parsePosition(line.getWords())))
+		occupiedSpots.add(yodash.makePositionHash(yodash.parsePosition(line.getWords())))
 	})
 }
 
-yodash.makePositionSet = (rows, cols, positionSet) => {
-	const set = []
-	while (rows >= 0) {
-		let col = cols
-		while (col >= 0) {
-			const hash = yodash.makePositionHash({ right: col, down: rows })
-			if (!positionSet.has(hash)) set.push(hash)
-			col--
+yodash.getAllAvailableSpots = (rows, cols, occupiedSpots, rowStart = 0, colStart = 0) => {
+	const availablePositions = []
+	let down = rows
+	while (down >= rowStart) {
+		let right = cols
+		while (right >= colStart) {
+			const hash = yodash.makePositionHash({ right, down })
+			if (!occupiedSpots.has(hash)) availablePositions.push({ right, down, hash })
+			right--
 		}
-		rows--
+		down--
 	}
-	return set
+	return availablePositions
 }
 
-yodash.insertRandomAgents = (amount, char, rows, cols, positionSet) => {
-	const availableSpots = yodash.makePositionSet(rows, cols, positionSet)
+yodash.insertRandomAgents = (amount, char, rows, cols, occupiedSpots) => {
+	const availableSpots = yodash.getAllAvailableSpots(rows, cols, occupiedSpots)
 	return sampleFrom(availableSpots, amount)
-		.map(hash => {
-			positionSet.add(hash)
+		.map(spot => {
+			const { hash } = spot
+			occupiedSpots.add(hash)
+			return `${char} ${hash}`
+		})
+		.join("\n")
+}
+
+yodash.insertClusteredRandomAgents = (amount, char, rows, cols, occupiedSpots, originRow, originColumn) => {
+	const availableSpots = yodash.getAllAvailableSpots(rows, cols, occupiedSpots)
+	const spots = sampleFrom(availableSpots, amount * 10)
+	const origin = originColumn
+		? { down: parseInt(originRow), right: parseInt(originColumn) }
+		: yodash.getRandomLocation(rows, cols)
+	const sortedByDistance = lodash.sortBy(spots, spot =>
+		math.distance([origin.down, origin.right], [spot.down, spot.right])
+	)
+
+	return sortedByDistance
+		.slice(0, amount)
+		.map(spot => {
+			const { hash } = spot
+			occupiedSpots.add(hash)
 			return `${char} ${hash}`
 		})
 		.join("\n")
@@ -550,6 +578,15 @@ class BoardComponent extends AbstractTreeComponent {
     return new TreeNode(this._populationCounts).toCsv()
   }
 
+  // todo: cleanup board vs agent commands
+  alert(target, command) {
+    alert(command.getContent())
+  }
+
+  pause() {
+    this.getRootNode().pauseCommand()
+  }
+
   get populationCount() {
     const counts = {}
     this.agents.forEach(node => {
@@ -571,6 +608,7 @@ class BoardComponent extends AbstractTreeComponent {
     this.handleTouches()
 
     this.executeBoardCommands("onTick")
+    this.handleExtinctions()
 
     this.renderAndGetRenderReport()
 
@@ -579,7 +617,19 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   spawn(subject, command) {
-    this.appendLine(`${command.getWord(1)} ${yodash.getRandomLocation(this.rows, this.cols)}`)
+    this.appendLine(`${command.getWord(1)} ${yodash.getRandomLocationHash(this.rows, this.cols)}`)
+  }
+
+  handleExtinctions() {
+    this.getParent()
+      .simojiProgram.findNodes("onExtinct")
+      .forEach(commands => {
+        const emoji = commands.getWord(1)
+        if (emoji && this.has(emoji)) return
+        commands.forEach(instruction => {
+          this[instruction.getWord(0)](this, instruction)
+        })
+      })
   }
 
   executeBoardCommands(key) {

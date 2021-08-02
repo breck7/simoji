@@ -1,4 +1,5 @@
 const yodash = {}
+const lodash = require("lodash")
 
 yodash.parseInts = (arr, start) => arr.map((item, index) => (index >= start ? parseInt(item) : item))
 
@@ -48,13 +49,18 @@ yodash.angle = (cx, cy, ex, ey) => {
 	return angle
 }
 
-yodash.getRandomLocation = (rows, cols, occupiedSpots) => {
+yodash.getRandomLocation = (rows, cols) => {
 	const maxRight = cols
 	const maxBottom = rows
 	const right = Math.round(Math.random() * maxRight)
 	const down = Math.round(Math.random() * maxBottom)
+	return { right, down }
+}
+
+yodash.getRandomLocationHash = (rows, cols, occupiedSpots) => {
+	const { right, down } = yodash.getRandomLocation(rows, cols)
 	const hash = yodash.makePositionHash({ right, down })
-	if (occupiedSpots && occupiedSpots.has(hash)) return yodash.getRandomLocation(rows, cols, occupiedSpots)
+	if (occupiedSpots && occupiedSpots.has(hash)) return yodash.getRandomLocationHash(rows, cols, occupiedSpots)
 	return hash
 }
 
@@ -150,14 +156,15 @@ yodash.updateOccupiedSpots = (board, occupiedSpots) => {
 
 yodash.getAllAvailableSpots = (rows, cols, occupiedSpots, rowStart = 0, colStart = 0) => {
 	const availablePositions = []
-	while (rows >= rowStart) {
-		let col = cols
-		while (col >= colStart) {
-			const hash = yodash.makePositionHash({ right: col, down: rows })
-			if (!occupiedSpots.has(hash)) availablePositions.push(hash)
-			col--
+	let down = rows
+	while (down >= rowStart) {
+		let right = cols
+		while (right >= colStart) {
+			const hash = yodash.makePositionHash({ right, down })
+			if (!occupiedSpots.has(hash)) availablePositions.push({ right, down, hash })
+			right--
 		}
-		rows--
+		down--
 	}
 	return availablePositions
 }
@@ -165,7 +172,28 @@ yodash.getAllAvailableSpots = (rows, cols, occupiedSpots, rowStart = 0, colStart
 yodash.insertRandomAgents = (amount, char, rows, cols, occupiedSpots) => {
 	const availableSpots = yodash.getAllAvailableSpots(rows, cols, occupiedSpots)
 	return sampleFrom(availableSpots, amount)
-		.map(hash => {
+		.map(spot => {
+			const { hash } = spot
+			occupiedSpots.add(hash)
+			return `${char} ${hash}`
+		})
+		.join("\n")
+}
+
+yodash.insertClusteredRandomAgents = (amount, char, rows, cols, occupiedSpots, originRow, originColumn) => {
+	const availableSpots = yodash.getAllAvailableSpots(rows, cols, occupiedSpots)
+	const spots = sampleFrom(availableSpots, amount * 10)
+	const origin = originColumn
+		? { down: parseInt(originRow), right: parseInt(originColumn) }
+		: yodash.getRandomLocation(rows, cols)
+	const sortedByDistance = lodash.sortBy(spots, spot =>
+		math.distance([origin.down, origin.right], [spot.down, spot.right])
+	)
+
+	return sortedByDistance
+		.slice(0, amount)
+		.map(spot => {
+			const { hash } = spot
 			occupiedSpots.add(hash)
 			return `${char} ${hash}`
 		})
