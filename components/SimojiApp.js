@@ -10,13 +10,10 @@ const { HelpModalComponent } = require("./HelpModal.js")
 const { BoardComponent } = require("./Board.js")
 const { BottomBarComponent } = require("./BottomBar.js")
 const { RightBarComponent } = require("./RightBar.js")
+const { SIZES } = require("./Sizes.js")
 
 // prettier-ignore
 /*NODE_JS_ONLY*/ const simojiCompiler = jtree.compileGrammarFileAtPathAndReturnRootConstructor(   __dirname + "/../simoji.grammar")
-
-const boardMargin = 20
-const chromeHeight = 68 + boardMargin
-const chromeWidth = 280 + boardMargin
 
 class githubTriangleComponent extends AbstractTreeComponent {
   githubLink = `https://github.com/publicdomaincompany/simoji`
@@ -83,12 +80,28 @@ class SimojiApp extends AbstractTreeComponent {
     if (restart) this.startInterval()
   }
 
-  appendBoard() {
-    const { simojiProgram, windowWidth, windowHeight } = this
+  makeGrid(simojiProgram, windowWidth, windowHeight) {
     const setSize = simojiProgram.get("size")
     const gridSize = Math.min(Math.max(setSize ? parseInt(setSize) : 20, 10), 200)
-    const cols = Math.floor((windowWidth - chromeWidth) / gridSize) - 1
-    const rows = Math.floor((windowHeight - chromeHeight) / gridSize) - 1
+
+    const maxAvailableCols = Math.floor((windowWidth - SIZES.CHROME_WIDTH) / gridSize) - 1
+    const maxAvailableRows = Math.floor((windowHeight - SIZES.CHROME_HEIGHT) / gridSize) - 1
+
+    const minRequiredCols = 10
+    const minRequiredRows = 10
+
+    const setCols = simojiProgram.get("columns")
+    const cols = Math.max(1, setCols ? parseInt(setCols) : Math.max(minRequiredCols, maxAvailableCols))
+
+    const setRows = simojiProgram.get("rows")
+    const rows = Math.max(1, setRows ? parseInt(setRows) : Math.max(minRequiredRows, maxAvailableRows))
+
+    return { gridSize, cols, rows }
+  }
+
+  appendBoard() {
+    const { simojiProgram, windowWidth, windowHeight } = this
+    const { gridSize, cols, rows } = this.makeGrid(simojiProgram, windowWidth, windowHeight)
     const seed = simojiProgram.has("seed") ? parseInt(simojiProgram.get("seed")) : Date.now()
     this.randomNumberGenerator = yodash.getRandomNumberGenerator(seed)
 
@@ -179,6 +192,11 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
         if (evt.preventDefault) evt.preventDefault()
         return false
       })
+    })
+
+    this.willowBrowser.setResizeEndHandler(() => {
+      console.log("resize")
+      this.editor.setSize()
     })
   }
 

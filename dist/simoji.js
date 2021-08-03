@@ -995,7 +995,7 @@ window.ShareComponent = ShareComponent
 
 // prettier-ignore
 
-const CHROME_HEIGHT = 88
+
 
 class SimEditorComponent extends AbstractTreeComponent {
   toStumpCode() {
@@ -1096,7 +1096,11 @@ class SimEditorComponent extends AbstractTreeComponent {
         lineNumbers: false
       })
     this.codeMirrorInstance.on("keyup", () => this._onCodeKeyUp())
-    this.codeMirrorInstance.setSize(250, window.innerHeight - CHROME_HEIGHT)
+    this.setSize()
+  }
+
+  setSize() {
+    this.codeMirrorInstance.setSize(SIZES.EDITOR_WIDTH, window.innerHeight - SIZES.CHROME_HEIGHT)
   }
 
   _updateCodeMirror() {
@@ -1119,11 +1123,8 @@ window.SimEditorComponent = SimEditorComponent
 
 
 
-// prettier-ignore
 
-const boardMargin = 20
-const chromeHeight = 68 + boardMargin
-const chromeWidth = 280 + boardMargin
+// prettier-ignore
 
 class githubTriangleComponent extends AbstractTreeComponent {
   githubLink = `https://github.com/publicdomaincompany/simoji`
@@ -1190,12 +1191,28 @@ class SimojiApp extends AbstractTreeComponent {
     if (restart) this.startInterval()
   }
 
-  appendBoard() {
-    const { simojiProgram, windowWidth, windowHeight } = this
+  makeGrid(simojiProgram, windowWidth, windowHeight) {
     const setSize = simojiProgram.get("size")
     const gridSize = Math.min(Math.max(setSize ? parseInt(setSize) : 20, 10), 200)
-    const cols = Math.floor((windowWidth - chromeWidth) / gridSize) - 1
-    const rows = Math.floor((windowHeight - chromeHeight) / gridSize) - 1
+
+    const maxAvailableCols = Math.floor((windowWidth - SIZES.CHROME_WIDTH) / gridSize) - 1
+    const maxAvailableRows = Math.floor((windowHeight - SIZES.CHROME_HEIGHT) / gridSize) - 1
+
+    const minRequiredCols = 10
+    const minRequiredRows = 10
+
+    const setCols = simojiProgram.get("columns")
+    const cols = Math.max(1, setCols ? parseInt(setCols) : Math.max(minRequiredCols, maxAvailableCols))
+
+    const setRows = simojiProgram.get("rows")
+    const rows = Math.max(1, setRows ? parseInt(setRows) : Math.max(minRequiredRows, maxAvailableRows))
+
+    return { gridSize, cols, rows }
+  }
+
+  appendBoard() {
+    const { simojiProgram, windowWidth, windowHeight } = this
+    const { gridSize, cols, rows } = this.makeGrid(simojiProgram, windowWidth, windowHeight)
     const seed = simojiProgram.has("seed") ? parseInt(simojiProgram.get("seed")) : Date.now()
     this.randomNumberGenerator = yodash.getRandomNumberGenerator(seed)
 
@@ -1286,6 +1303,11 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
         if (evt.preventDefault) evt.preventDefault()
         return false
       })
+    })
+
+    this.willowBrowser.setResizeEndHandler(() => {
+      console.log("resize")
+      this.editor.setSize()
     })
   }
 
@@ -1442,6 +1464,20 @@ SimEditorComponent
 }
 
 window.SimojiApp = SimojiApp
+
+
+const SIZES = {}
+
+SIZES.BOARD_MARGIN = 20
+SIZES.TOP_BAR_HEIGHT = 28
+SIZES.BOTTOM_BAR_HEIGHT = 40
+SIZES.CHROME_HEIGHT = SIZES.TOP_BAR_HEIGHT + SIZES.BOTTOM_BAR_HEIGHT + SIZES.BOARD_MARGIN
+
+SIZES.EDITOR_WIDTH = 250
+SIZES.RIGHT_BAR_WIDTH = 30
+SIZES.CHROME_WIDTH = SIZES.EDITOR_WIDTH + SIZES.RIGHT_BAR_WIDTH + SIZES.BOARD_MARGIN
+
+window.SIZES = SIZES
 
 
 

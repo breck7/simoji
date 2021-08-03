@@ -4,7 +4,7 @@ const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework
 // prettier-ignore
 /*NODE_JS_ONLY*/ const simojiCompiler = jtree.compileGrammarFileAtPathAndReturnRootConstructor(   __dirname + "/../simoji.grammar")
 
-const CHROME_HEIGHT = 88
+const { SIZES } = require("./Sizes.js")
 
 class SimEditorComponent extends AbstractTreeComponent {
   toStumpCode() {
@@ -105,7 +105,11 @@ class SimEditorComponent extends AbstractTreeComponent {
         lineNumbers: false
       })
     this.codeMirrorInstance.on("keyup", () => this._onCodeKeyUp())
-    this.codeMirrorInstance.setSize(250, window.innerHeight - CHROME_HEIGHT)
+    this.setSize()
+  }
+
+  setSize() {
+    this.codeMirrorInstance.setSize(SIZES.EDITOR_WIDTH, window.innerHeight - SIZES.CHROME_HEIGHT)
   }
 
   _updateCodeMirror() {
