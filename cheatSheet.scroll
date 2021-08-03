@@ -52,10 +52,7 @@ paragraph
  Agents can have attributes. You can define your own. Some are built in like:
 
 list
- - speed
  - health
- - angle
- - force
 
 paragraph
  Some attributes are booleans with only 2 states like:

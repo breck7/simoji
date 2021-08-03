@@ -39,6 +39,18 @@ simojiNode
  inScope blankLineNode commentNode abstractSetupNumberNode abstractDrawNode styleNode onTickNode onExtinctNode reportNode
  catchAllNodeType agentNode
  compilesTo javascript
+ example
+  🦋
+   onTick .1
+    turnRandomly
+    move
+   onTick .2
+    turnToward 💡
+    move
+  💡
+  
+  insert 10 🦋
+  insert 2 💡
  javascript
   compileAgentClassDeclarationsAndMap() {
     const clone = this.clone()

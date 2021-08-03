@@ -217,14 +217,14 @@ html {
 
 <code class="scrollCodeBlockComponent">comment Define an ant agent
 🐜
- comment Ants move one space per tick
- speed 1
+ comment Ants turn then move one space per tick
+ onTick
+  turnRandomly
+  move
  comment Ants pick up food.
  onHit
   🥖
    pickItUp
- onTick
-  turnRandomly
  
 comment Define an ant hill
 ⛰
@@ -255,10 +255,7 @@ insert 1 ⛰</code>
 <p class="scrollParagraphComponent">Agents can have attributes. You can define your own. Some are built in like:</p>
 
 <ul class="scrollUnorderedListComponent">
-<li>speed</li>
 <li>health</li>
-<li>angle</li>
-<li>force</li>
 </ul>
 
 <p class="scrollParagraphComponent">Some attributes are booleans with only 2 states like:</p>
@@ -316,6 +313,9 @@ insert 1 ⛰</code>
 </tr></thead>
 <tbody><tr><td>?</td>
 <td>Toggle Help</td>
+</tr>
+<tr><td>r</td>
+<td>Reset</td>
 </tr>
 <tr><td>Spacebar</td>
 <td>Play/Pause</td>
