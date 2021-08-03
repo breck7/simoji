@@ -337,6 +337,7 @@ TopBarComponent
  ShareComponent
  ExamplesComponent
 BottomBarComponent
+ ResetButtonComponent
  PlayButtonComponent
  ReportButtonComponent
 RightBarComponent

@@ -774,11 +774,13 @@ window.BoardComponent = BoardComponent
 
 
 
+
 class BottomBarComponent extends AbstractTreeComponent {
   createParser() {
     return new jtree.TreeNode.Parser(undefined, {
       PlayButtonComponent,
-      ReportButtonComponent
+      ReportButtonComponent,
+      ResetButtonComponent
     })
   }
 }
@@ -950,6 +952,25 @@ class ReportButtonComponent extends AbstractTreeComponent {
 }
 
 window.ReportButtonComponent = ReportButtonComponent
+
+
+
+
+class ResetButtonComponent extends AbstractTreeComponent {
+  toStumpCode() {
+    return `span ≪
+ title Clear and reset
+ class ResetButtonComponent
+ clickCommand resetCommand`
+  }
+
+  resetCommand() {
+    this.getRootNode().pauseCommand()
+    this.getRootNode().resetCommand()
+  }
+}
+
+window.ResetButtonComponent = ResetButtonComponent
 
 
 
@@ -1451,6 +1472,7 @@ TopBarComponent
  ShareComponent
  ExamplesComponent
 BottomBarComponent
+ ResetButtonComponent
  PlayButtonComponent
  ReportButtonComponent
 RightBarComponent

@@ -157,7 +157,8 @@ body {
 }
 
 .PlayButtonComponent,
-.ReportButtonComponent {
+.ReportButtonComponent,
+.ResetButtonComponent {
 	cursor: pointer;
 	user-select: none;
 	width: 30px;
@@ -168,7 +169,12 @@ body {
 	float: right;
 	opacity: 0.2;
 }
-.ReportButtonComponent:hover {
+.ResetButtonComponent {
+	float: left;
+	opacity: 0.2;
+}
+.ReportButtonComponent:hover,
+.ResetButtonComponent:hover {
 	opacity: 1;
 }
 
