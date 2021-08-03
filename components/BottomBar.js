@@ -1,6 +1,6 @@
 const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework.node.js")
 const { PlayButtonComponent } = require("./PlayButton.js")
-const { ReportButtonComponent } = require("./ReportButtonComponent.js")
+const { ReportButtonComponent } = require("./ReportButton.js")
 const { jtree } = require("jtree")
 
 class BottomBarComponent extends AbstractTreeComponent {

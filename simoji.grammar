@@ -62,10 +62,11 @@ simojiNode
     const map = {${agentMap}};
     map;`
   }
-  compileSetup(rows, cols) {
+  compileSetup(rows, cols, randomNumberGenerator) {
     const clone = this.clone()
     clone.filter(node => node.getNodeTypeId() === "blankLineNode" || node.getNodeTypeId() === "agentNode").forEach(node => node.destroy())
     clone.occupiedSpots = new Set()
+    clone.randomNumberGenerator = randomNumberGenerator
     clone.rows = rows
     clone.cols = cols
     return clone.compile()
@@ -90,8 +91,8 @@ insertNode
  crux insert
  javascript
   compile() {
-    const {rows, cols, occupiedSpots} = this.getParent()
-     return yodash.insertRandomAgents(parseInt(this.getWord(1)), this.getWord(2), rows, cols,  occupiedSpots)
+    const {rows, cols, occupiedSpots, randomNumberGenerator} = this.getParent()
+     return yodash.insertRandomAgents(randomNumberGenerator, parseInt(this.getWord(1)), this.getWord(2), rows, cols,  occupiedSpots)
   }
 insertClusterNode
  extends insertNode
@@ -99,8 +100,8 @@ insertClusterNode
  catchAllCellType integerCell
  javascript
   compile() {
-    const {rows, cols, occupiedSpots} = this.getParent()
-     return yodash.insertClusteredRandomAgents(parseInt(this.getWord(1)), this.getWord(2), rows, cols,  occupiedSpots, this.getWord(3), this.getWord(4))
+    const {rows, cols, occupiedSpots, randomNumberGenerator} = this.getParent()
+     return yodash.insertClusteredRandomAgents(randomNumberGenerator, parseInt(this.getWord(1)), this.getWord(2), rows, cols,  occupiedSpots, this.getWord(3), this.getWord(4))
   }
 rectangleDrawNode
  extends abstractDrawNode
@@ -209,6 +210,10 @@ sizeNode
  description Size of the sim squares in pixels. Min is 10. Max is 200.
  extends abstractSetupNumberNode
  crux size
+seedNode
+ description If you'd like reproducible runs set a seed for the random number generator.
+ extends abstractSetupNumberNode
+ crux seed
 ticksPerSecondNode
  description Time in milliseconds of one step.
  extends abstractSetupNumberNode

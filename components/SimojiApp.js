@@ -89,8 +89,10 @@ class SimojiApp extends AbstractTreeComponent {
     const gridSize = Math.min(Math.max(setSize ? parseInt(setSize) : 20, 10), 200)
     const cols = Math.floor((windowWidth - chromeWidth) / gridSize) - 1
     const rows = Math.floor((windowHeight - chromeHeight) / gridSize) - 1
+    const seed = simojiProgram.has("seed") ? parseInt(simojiProgram.get("seed")) : Date.now()
+    this.randomNumberGenerator = yodash.getRandomNumberGenerator(seed)
 
-    const compiledStartState = simojiProgram.compileSetup(rows, cols).trim()
+    const compiledStartState = simojiProgram.compileSetup(rows, cols, this.randomNumberGenerator).trim()
     const styleNode = simojiProgram.getNode("style") ?? undefined
     this.appendLineAndChildren(
       `BoardComponent ${gridSize} ${rows} ${cols}`,

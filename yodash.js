@@ -3,9 +3,9 @@ const lodash = require("lodash")
 
 yodash.parseInts = (arr, start) => arr.map((item, index) => (index >= start ? parseInt(item) : item))
 
-yodash.getRandomAngle = () => {
-	const r1 = Math.random()
-	const r2 = Math.random()
+yodash.getRandomAngle = randomNumberGenerator => {
+	const r1 = randomNumberGenerator()
+	const r2 = randomNumberGenerator()
 	if (r1 > 0.5) return r2 > 0.5 ? "North" : "South"
 	return r2 > 0.5 ? "West" : "East"
 }
@@ -49,18 +49,19 @@ yodash.angle = (cx, cy, ex, ey) => {
 	return angle
 }
 
-yodash.getRandomLocation = (rows, cols) => {
+yodash.getRandomLocation = (rows, cols, randomNumberGenerator) => {
 	const maxRight = cols
 	const maxBottom = rows
-	const right = Math.round(Math.random() * maxRight)
-	const down = Math.round(Math.random() * maxBottom)
+	const right = Math.round(randomNumberGenerator() * maxRight)
+	const down = Math.round(randomNumberGenerator() * maxBottom)
 	return { right, down }
 }
 
-yodash.getRandomLocationHash = (rows, cols, occupiedSpots) => {
-	const { right, down } = yodash.getRandomLocation(rows, cols)
+yodash.getRandomLocationHash = (rows, cols, occupiedSpots, randomNumberGenerator) => {
+	const { right, down } = yodash.getRandomLocation(rows, cols, randomNumberGenerator)
 	const hash = yodash.makePositionHash({ right, down })
-	if (occupiedSpots && occupiedSpots.has(hash)) return yodash.getRandomLocationHash(rows, cols, occupiedSpots)
+	if (occupiedSpots && occupiedSpots.has(hash))
+		return yodash.getRandomLocationHash(rows, cols, occupiedSpots, randomNumberGenerator)
 	return hash
 }
 
@@ -169,9 +170,9 @@ yodash.getAllAvailableSpots = (rows, cols, occupiedSpots, rowStart = 0, colStart
 	return availablePositions
 }
 
-yodash.insertRandomAgents = (amount, char, rows, cols, occupiedSpots) => {
+yodash.insertRandomAgents = (randomNumberGenerator, amount, char, rows, cols, occupiedSpots) => {
 	const availableSpots = yodash.getAllAvailableSpots(rows, cols, occupiedSpots)
-	return sampleFrom(availableSpots, amount)
+	return sampleFrom(availableSpots, amount, randomNumberGenerator)
 		.map(spot => {
 			const { hash } = spot
 			occupiedSpots.add(hash)
@@ -180,12 +181,21 @@ yodash.insertRandomAgents = (amount, char, rows, cols, occupiedSpots) => {
 		.join("\n")
 }
 
-yodash.insertClusteredRandomAgents = (amount, char, rows, cols, occupiedSpots, originRow, originColumn) => {
+yodash.insertClusteredRandomAgents = (
+	randomNumberGenerator,
+	amount,
+	char,
+	rows,
+	cols,
+	occupiedSpots,
+	originRow,
+	originColumn
+) => {
 	const availableSpots = yodash.getAllAvailableSpots(rows, cols, occupiedSpots)
-	const spots = sampleFrom(availableSpots, amount * 10)
+	const spots = sampleFrom(availableSpots, amount * 10, randomNumberGenerator)
 	const origin = originColumn
 		? { down: parseInt(originRow), right: parseInt(originColumn) }
-		: yodash.getRandomLocation(rows, cols)
+		: yodash.getRandomLocation(rows, cols, randomNumberGenerator)
 	const sortedByDistance = lodash.sortBy(spots, spot =>
 		math.distance([origin.down, origin.right], [spot.down, spot.right])
 	)
@@ -200,18 +210,18 @@ yodash.insertClusteredRandomAgents = (amount, char, rows, cols, occupiedSpots, o
 		.join("\n")
 }
 
-const getRandomNumberGenerator = (min = 0, max = 100, seed = Date.now()) => () => {
+yodash.getRandomNumberGenerator = seed => () => {
 	const semiRand = Math.sin(seed++) * 10000
-	return Math.floor(min + (max - min) * (semiRand - Math.floor(semiRand)))
+	return semiRand - Math.floor(semiRand)
 }
 
-const sampleFrom = (collection, howMany, seed) => shuffleArray(collection, seed).slice(0, howMany)
+const sampleFrom = (collection, howMany, randomNumberGenerator) =>
+	shuffleArray(collection, randomNumberGenerator).slice(0, howMany)
 
-const shuffleArray = (array, seed = Date.now()) => {
-	const rand = getRandomNumberGenerator(0, 100, seed)
+const shuffleArray = (array, randomNumberGenerator) => {
 	const clonedArr = array.slice()
 	for (let index = clonedArr.length - 1; index > 0; index--) {
-		const replacerIndex = Math.floor((rand() / 100) * (index + 1))
+		const replacerIndex = Math.floor(randomNumberGenerator() * (index + 1))
 		;[clonedArr[index], clonedArr[replacerIndex]] = [clonedArr[replacerIndex], clonedArr[index]]
 	}
 	return clonedArr

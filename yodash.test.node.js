@@ -5,7 +5,7 @@ const { yodash } = require("./yodash.js")
 const testTree = {}
 
 testTree.getRandomAngle = areEqual => {
-	areEqual(yodash.getRandomAngle().match(/(East|West|North|South)/).length, 2)
+	areEqual(yodash.getRandomAngle(Math.random).match(/(East|West|North|South)/).length, 2)
 }
 
 testTree.makeRectangle = areEqual => {

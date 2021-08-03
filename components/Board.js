@@ -5,7 +5,7 @@ const { GridComponent } = require("./Grid.js")
 
 class BoardComponent extends AbstractTreeComponent {
   createParser() {
-    return new jtree.TreeNode.Parser(undefined, { ...this.getParent().agentMap, GridComponent, BoardStyleComponent })
+    return new jtree.TreeNode.Parser(undefined, { ...this.root.agentMap, GridComponent, BoardStyleComponent })
   }
 
   get gridSize() {
@@ -40,7 +40,7 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   pause() {
-    this.getRootNode().pauseCommand()
+    this.root.pauseCommand()
   }
 
   get populationCount() {
@@ -72,32 +72,39 @@ class BoardComponent extends AbstractTreeComponent {
     this._populationCounts.push(this.populationCount)
   }
 
+  get root() {
+    return this.getParent()
+  }
+
   spawn(subject, command) {
-    this.appendLine(`${command.getWord(1)} ${yodash.getRandomLocationHash(this.rows, this.cols)}`)
+    this.appendLine(
+      `${command.getWord(1)} ${yodash.getRandomLocationHash(
+        this.rows,
+        this.cols,
+        undefined,
+        this.root.randomNumberGenerator
+      )}`
+    )
   }
 
   handleExtinctions() {
-    this.getParent()
-      .simojiProgram.findNodes("onExtinct")
-      .forEach(commands => {
-        const emoji = commands.getWord(1)
-        if (emoji && this.has(emoji)) return
-        commands.forEach(instruction => {
-          this[instruction.getWord(0)](this, instruction)
-        })
+    this.root.simojiProgram.findNodes("onExtinct").forEach(commands => {
+      const emoji = commands.getWord(1)
+      if (emoji && this.has(emoji)) return
+      commands.forEach(instruction => {
+        this[instruction.getWord(0)](this, instruction)
       })
+    })
   }
 
   executeBoardCommands(key) {
-    this.getParent()
-      .simojiProgram.findNodes(key)
-      .forEach(commands => {
-        const probability = commands.getWord(1)
-        if (probability && Math.random() > parseFloat(probability)) return
-        commands.forEach(instruction => {
-          this[instruction.getWord(0)](this, instruction)
-        })
+    this.root.simojiProgram.findNodes(key).forEach(commands => {
+      const probability = commands.getWord(1)
+      if (probability && this.root.randomNumberGenerator() > parseFloat(probability)) return
+      commands.forEach(instruction => {
+        this[instruction.getWord(0)](this, instruction)
       })
+    })
   }
 
   isSolidAgent(position) {
