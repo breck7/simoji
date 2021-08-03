@@ -156,18 +156,18 @@ body {
 }
 
 .PlayButtonComponent,
-.ReportButton {
+.ReportButtonComponent {
 	cursor: pointer;
 	user-select: none;
 	width: 30px;
 	display: inline-block;
 }
 
-.ReportButton {
+.ReportButtonComponent {
 	float: right;
 	opacity: 0.2;
 }
-.ReportButton:hover {
+.ReportButtonComponent:hover {
 	opacity: 1;
 }
 

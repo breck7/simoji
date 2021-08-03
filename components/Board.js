@@ -21,7 +21,17 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   get populationCsv() {
-    return new TreeNode(this._populationCounts).toCsv()
+    const csv = new TreeNode(this._populationCounts).toCsv()
+    // add 0's for missing values
+    return csv
+      .split("\n")
+      .map(line =>
+        line
+          .split(",")
+          .map(value => (value === "" ? "0" : value))
+          .join(",")
+      )
+      .join("\n")
   }
 
   // todo: cleanup board vs agent commands

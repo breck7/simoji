@@ -215,7 +215,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     this.willowBrowser.downloadFile(str, filename + "." + extension, type)
   }
 
-  async openInOhayoCommand() {
+  async openReportInOhayoCommand() {
     this.willowBrowser.openUrl(this.ohayoLink)
   }
 
@@ -225,9 +225,14 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     return "#" + encodeURIComponent(tree.toString())
   }
 
+  get report() {
+    const report = this.simojiProgram.getNode("report")
+    return report ? report.childrenToString() : "roughjs.line"
+  }
+
   get ohayoLink() {
     const program = `data.inline
- roughjs.line
+ ${this.report.replace(/\n/g, "\n ")}
  content
   ${this.board.populationCsv.replace(/\n/g, "\n  ")}`
 
@@ -291,15 +296,10 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
   _getKeyboardShortcuts() {
     return {
       space: () => this.togglePlayCommand(),
-      d: () => {
-        this.toggleTreeComponentFrameworkDebuggerCommand()
-      },
-      c: () => {
-        this.exportDataCommand()
-      },
-      r: () => {
-        this.resetCommand()
-      },
+      d: () => this.toggleTreeComponentFrameworkDebuggerCommand(),
+      c: () => this.exportDataCommand(),
+      o: () => this.openReportInOhayoCommand(),
+      r: () => this.resetCommand(),
       up: () => this.moveSelection("North"),
       down: () => this.moveSelection("South"),
       right: () => this.moveSelection("East"),
@@ -318,7 +318,7 @@ TopBarComponent
  ExamplesComponent
 BottomBarComponent
  PlayButtonComponent
- AnalyzeDataButtonComponent
+ ReportButtonComponent
 RightBarComponent
  AgentPaletteComponent
 SimEditorComponent

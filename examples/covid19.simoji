@@ -1,9 +1,3 @@
-comment
- See Also
- - http://modelingcommons.org/browse/one_model/6282#model_tabs_browse_info
- - https://github.com/maplerainresearch/covid19-sim-mesa/blob/master/model.py
- - https://www.frontiersin.org/articles/10.3389/fpubh.2020.563247/full
-
 🧟
  health 100
  onTick .03
@@ -32,9 +26,9 @@ comment
 
 insertCluster 100 🙍
 insertCluster 100 🙍
+insertCluster 100 🙍
 insertCluster 30 🙍
 insertCluster 30 🙍
-insertCluster 10 🙍
 insertCluster 10 🙍
 
 insert 2 🧟
@@ -45,9 +39,20 @@ onExtinct 🧟
 
 
 🪦
- comment Dead Person
-💉
 
 size 15
 ticksPerSecond 10
 
+report
+ roughjs.line
+ columns.keep 🧟
+  roughjs.line Active Cases
+ columns.keep 🪦
+  roughjs.line Cumulative Deaths
+
+
+comment
+ See Also
+ - http://modelingcommons.org/browse/one_model/6282#model_tabs_browse_info
+ - https://github.com/maplerainresearch/covid19-sim-mesa/blob/master/model.py
+ - https://www.frontiersin.org/articles/10.3389/fpubh.2020.563247/full

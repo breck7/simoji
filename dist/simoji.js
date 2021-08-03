@@ -575,7 +575,17 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   get populationCsv() {
-    return new TreeNode(this._populationCounts).toCsv()
+    const csv = new TreeNode(this._populationCounts).toCsv()
+    // add 0's for missing values
+    return csv
+      .split("\n")
+      .map(line =>
+        line
+          .split(",")
+          .map(value => (value === "" ? "0" : value))
+          .join(",")
+      )
+      .join("\n")
   }
 
   // todo: cleanup board vs agent commands
@@ -743,21 +753,13 @@ window.BoardComponent = BoardComponent
 
 
 
+
 class BottomBarComponent extends AbstractTreeComponent {
   createParser() {
     return new jtree.TreeNode.Parser(undefined, {
       PlayButtonComponent,
-      AnalyzeDataButtonComponent
+      ReportButtonComponent
     })
-  }
-}
-
-class AnalyzeDataButtonComponent extends AbstractTreeComponent {
-  toStumpCode() {
-    return `span Δ
- title Open Report
- class ReportButton
- clickCommand openInOhayoCommand`
   }
 }
 
@@ -914,6 +916,20 @@ class PlayButtonComponent extends AbstractTreeComponent {
 }
 
 window.PlayButtonComponent = PlayButtonComponent
+
+
+
+
+class ReportButtonComponent extends AbstractTreeComponent {
+  toStumpCode() {
+    return `span Δ
+ title Generate Report
+ class ReportButtonComponent
+ clickCommand openReportInOhayoCommand`
+  }
+}
+
+window.ReportButtonComponent = ReportButtonComponent
 
 
 
@@ -1289,7 +1305,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     this.willowBrowser.downloadFile(str, filename + "." + extension, type)
   }
 
-  async openInOhayoCommand() {
+  async openReportInOhayoCommand() {
     this.willowBrowser.openUrl(this.ohayoLink)
   }
 
@@ -1299,9 +1315,14 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     return "#" + encodeURIComponent(tree.toString())
   }
 
+  get report() {
+    const report = this.simojiProgram.getNode("report")
+    return report ? report.childrenToString() : "roughjs.line"
+  }
+
   get ohayoLink() {
     const program = `data.inline
- roughjs.line
+ ${this.report.replace(/\n/g, "\n ")}
  content
   ${this.board.populationCsv.replace(/\n/g, "\n  ")}`
 
@@ -1365,15 +1386,10 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
   _getKeyboardShortcuts() {
     return {
       space: () => this.togglePlayCommand(),
-      d: () => {
-        this.toggleTreeComponentFrameworkDebuggerCommand()
-      },
-      c: () => {
-        this.exportDataCommand()
-      },
-      r: () => {
-        this.resetCommand()
-      },
+      d: () => this.toggleTreeComponentFrameworkDebuggerCommand(),
+      c: () => this.exportDataCommand(),
+      o: () => this.openReportInOhayoCommand(),
+      r: () => this.resetCommand(),
       up: () => this.moveSelection("North"),
       down: () => this.moveSelection("South"),
       right: () => this.moveSelection("East"),
@@ -1392,7 +1408,7 @@ TopBarComponent
  ExamplesComponent
 BottomBarComponent
  PlayButtonComponent
- AnalyzeDataButtonComponent
+ ReportButtonComponent
 RightBarComponent
  AgentPaletteComponent
 SimEditorComponent

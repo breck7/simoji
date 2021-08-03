@@ -9,6 +9,8 @@ htmlCell
  highlightScope string
 emojiCell
  highlightScope string
+ohayoCell
+ highlightScope string
 blankCell
 codeCell
  highlightScope comment
@@ -34,7 +36,7 @@ simojiNode
  extensions simoji
  description A Tree Language that compiles to a TreeComponentFramework app.
  root
- inScope blankLineNode commentNode abstractSetupNumberNode abstractDrawNode styleNode onTickNode onExtinctNode
+ inScope blankLineNode commentNode abstractSetupNumberNode abstractDrawNode styleNode onTickNode onExtinctNode reportNode
  catchAllNodeType agentNode
  compilesTo javascript
  javascript
@@ -199,6 +201,18 @@ ticksPerSecondNode
  description Time in milliseconds of one step.
  extends abstractSetupNumberNode
  crux ticksPerSecond
+reportNode
+ crux report
+ description Define a custom report template.
+ catchAllNodeType ohayoLineNode
+ cells keywordCell
+ javascript
+  compile() {
+   return ""
+  }
+ohayoLineNode
+ description Data visualization code written for Ohayo.
+ catchAllCellType ohayoCell
 styleNode
  description Optional CSS to load in BoardStyleComponent
  cells keywordCell
