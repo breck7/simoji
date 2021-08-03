@@ -209,9 +209,17 @@ abstractSetupNumberNode
    return ""
   }
 sizeNode
- description Size of the sim squares in pixels. Min is 10. Max is 200.
+ description Size of a grid cell in pixels. Min is 10. Max is 200.
  extends abstractSetupNumberNode
  crux size
+rowsNode
+ description Number of rows in the grid. Default is based on screen size.
+ extends abstractSetupNumberNode
+ crux rows
+columnsNode
+ description Number of columns in the grid. Default is based on screen size.
+ extends abstractSetupNumberNode
+ crux columns
 seedNode
  description If you'd like reproducible runs set a seed for the random number generator.
  extends abstractSetupNumberNode
