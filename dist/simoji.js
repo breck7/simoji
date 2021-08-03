@@ -170,8 +170,11 @@ yodash.getAllAvailableSpots = (rows, cols, occupiedSpots, rowStart = 0, colStart
 	return availablePositions
 }
 
+yodash.parsePercent = str => parseFloat(str.replace("%", "")) / 100
+
 yodash.insertRandomAgents = (randomNumberGenerator, amount, char, rows, cols, occupiedSpots) => {
 	const availableSpots = yodash.getAllAvailableSpots(rows, cols, occupiedSpots)
+	amount = amount.includes("%") ? yodash.parsePercent(amount) * (rows * cols) : parseInt(amount)
 	return sampleFrom(availableSpots, amount, randomNumberGenerator)
 		.map(spot => {
 			const { hash } = spot

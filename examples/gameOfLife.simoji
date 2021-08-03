@@ -12,6 +12,6 @@ comment
   javascript
    if (this.neighorCount["⬛️"] === 3) this._replaceWith("⬛️")
 
-insert 500 ⬛️
+insert 10% ⬛️
 fill ◻️
 size 15

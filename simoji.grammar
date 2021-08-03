@@ -22,6 +22,8 @@ textCell
  highlightScope string
 integerCell
  highlightScope constant.numeric
+integerOrPercentCell
+ highlightScope constant.numeric
 probabilityCell
  description A number between 0 and 1
  highlightScope constant.numeric
@@ -87,12 +89,12 @@ fillNode
   }
 insertNode
  extends abstractDrawNode
- cells keywordCell integerCell emojiCell
+ cells keywordCell integerOrPercentCell emojiCell
  crux insert
  javascript
   compile() {
     const {rows, cols, occupiedSpots, randomNumberGenerator} = this.getParent()
-     return yodash.insertRandomAgents(randomNumberGenerator, parseInt(this.getWord(1)), this.getWord(2), rows, cols,  occupiedSpots)
+     return yodash.insertRandomAgents(randomNumberGenerator, this.getWord(1), this.getWord(2), rows, cols,  occupiedSpots)
   }
 insertClusterNode
  extends insertNode
