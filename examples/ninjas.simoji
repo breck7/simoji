@@ -6,8 +6,11 @@
   move
 
 🥷
- health 110
- extends 🤺
+ health 100
+ onTick
+  decrease health
+  turnRandomly
+  move
 
 insert 50 🤺
 insert 50 🥷

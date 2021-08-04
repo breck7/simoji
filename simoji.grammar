@@ -142,8 +142,7 @@ agentNode
     const root = this.getRootNode()
     const name = root.agentKeywordMap[this.getWord(0)]
     const normal = super.compile()
-    const parentClass = this.has("extends") ? root.agentKeywordMap[this.get("extends")] : "Agent"
-    return `class ${name} extends ${parentClass} {
+    return `class ${name} extends Agent {
       icon = "${this.getWord(0)}"
       ${normal}
     }`
@@ -197,11 +196,6 @@ angleNode
  extends abstractStringAttributeNode
  cells keywordCell angleCell
  crux angle
-extendsNode
- extends abstractStringAttributeNode
- cells keywordCell emojiCell
- crux extends
- description Copy all the behaviors of one type of agent.
 agentStyleNode
  description Provide custom CSS for an agent type.
  extends abstractStringAttributeNode

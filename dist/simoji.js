@@ -238,29 +238,14 @@ window.yodash = yodash
 
 
 class Agent extends AbstractTreeComponent {
-  get icon() {
-    return this.agentDefinition.getWord(0)
-  }
-
   get name() {
     return this._name ?? this.icon
   }
 
-  get angle() {
-    return this._angle ?? this.agentDefinition.get("angle") ?? "South"
-  }
-
-  set angle(value) {
-    this._angle = value
-  }
+  angle = "South"
 
   get agentDefinition() {
     return this.root.simojiProgram.getNode(this.getWord(0))
-  }
-
-  _replaceWith(newObject) {
-    this.getParent().appendLine(`${newObject} ${this.positionHash}`)
-    this.unmountAndDestroy()
   }
 
   get touchMap() {
@@ -270,9 +255,9 @@ class Agent extends AbstractTreeComponent {
   handleCollisions(targets) {
     const commandMap = this.agentDefinition.getNode("onHit")
     if (!commandMap) return
-
     return yodash.applyCommandMap(commandMap, targets, this)
   }
+
   executeCommands(key) {
     this.agentDefinition.findNodes(key).forEach(commands => this.executeCommandSequence(commands))
   }
@@ -318,6 +303,11 @@ class Agent extends AbstractTreeComponent {
 
   markDirty() {
     this.setWord(5, Date.now())
+  }
+
+  _replaceWith(newObject) {
+    this.getParent().appendLine(`${newObject} ${this.positionHash}`)
+    this.unmountAndDestroy()
   }
 
   _move() {
@@ -428,8 +418,10 @@ class Agent extends AbstractTreeComponent {
     this.setWord(4, "")
   }
 
+  _startHealth
   get startHealth() {
-    return parseInt(this.agentDefinition.get("health"))
+    if (this._startHealth === undefined) this._startHealth = this.health
+    return this._startHealth
   }
 
   toStumpCode() {

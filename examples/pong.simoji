@@ -10,8 +10,9 @@
    kickIt
 🏸
  angle West
- extends 🏓
-
+ onHit
+  🏐
+   kickIt
 🪵
  solid
 

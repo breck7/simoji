@@ -9,22 +9,7 @@ class Agent extends AbstractTreeComponent {
   angle = "South"
 
   get agentDefinition() {
-    let defs = []
-    let def = this.root.simojiProgram.getNode(this.getWord(0))
-    if (!def.get("extends")) return def
-
-    defs.push(def)
-    while (def.get("extends")) {
-      def = this.root.simojiProgram.getNode(def.get("extends"))
-      defs.push(def)
-    }
-
-    return new jtree.TreeNode(defs.map(node => node.childrenToString()).join("\n"))
-  }
-
-  get inheritanceTree() {
-    const def = this.root.simojiProgram.getNode(this.getWord(0))
-    if (!def.has("extends")) return [def]
+    return this.root.simojiProgram.getNode(this.getWord(0))
   }
 
   get touchMap() {
