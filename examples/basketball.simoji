@@ -14,12 +14,7 @@
    pickItUp
 
 ⛹️‍♀️
- onTick
-  turnRandomly
-  move
- onHit
-  🏀
-   pickItUp
+ extends ⛹️‍♂️
 
 🥅
 

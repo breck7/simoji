@@ -2,29 +2,29 @@ const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework
 const { yodash } = require("../yodash.js")
 
 class Agent extends AbstractTreeComponent {
-  get icon() {
-    return this.agentDefinition.getWord(0)
-  }
-
   get name() {
     return this._name ?? this.icon
   }
 
-  get angle() {
-    return this._angle ?? this.agentDefinition.get("angle") ?? "South"
-  }
-
-  set angle(value) {
-    this._angle = value
-  }
+  angle = "South"
 
   get agentDefinition() {
-    return this.root.simojiProgram.getNode(this.getWord(0))
+    let defs = []
+    let def = this.root.simojiProgram.getNode(this.getWord(0))
+    if (!def.get("extends")) return def
+
+    defs.push(def)
+    while (def.get("extends")) {
+      def = this.root.simojiProgram.getNode(def.get("extends"))
+      defs.push(def)
+    }
+
+    return new jtree.TreeNode(defs.map(node => node.childrenToString()).join("\n"))
   }
 
-  _replaceWith(newObject) {
-    this.getParent().appendLine(`${newObject} ${this.positionHash}`)
-    this.unmountAndDestroy()
+  get inheritanceTree() {
+    const def = this.root.simojiProgram.getNode(this.getWord(0))
+    if (!def.has("extends")) return [def]
   }
 
   get touchMap() {
@@ -34,9 +34,9 @@ class Agent extends AbstractTreeComponent {
   handleCollisions(targets) {
     const commandMap = this.agentDefinition.getNode("onHit")
     if (!commandMap) return
-
     return yodash.applyCommandMap(commandMap, targets, this)
   }
+
   executeCommands(key) {
     this.agentDefinition.findNodes(key).forEach(commands => this.executeCommandSequence(commands))
   }
@@ -82,6 +82,11 @@ class Agent extends AbstractTreeComponent {
 
   markDirty() {
     this.setWord(5, Date.now())
+  }
+
+  _replaceWith(newObject) {
+    this.getParent().appendLine(`${newObject} ${this.positionHash}`)
+    this.unmountAndDestroy()
   }
 
   _move() {
@@ -192,8 +197,10 @@ class Agent extends AbstractTreeComponent {
     this.setWord(4, "")
   }
 
+  _startHealth
   get startHealth() {
-    return parseInt(this.agentDefinition.get("health"))
+    if (this._startHealth === undefined) this._startHealth = this.health
+    return this._startHealth
   }
 
   toStumpCode() {

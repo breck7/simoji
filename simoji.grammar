@@ -57,9 +57,10 @@ simojiNode
   compileAgentClassDeclarationsAndMap() {
     const clone = this.clone()
     clone.filter(node => node.getNodeTypeId() !== "agentNode").forEach(node => node.destroy())
-    clone.agentClassCount = 0
+    clone.agentKeywordMap = {}
+    clone.agentTypes.forEach((node, index) => clone.agentKeywordMap[node.getWord(0)] = `simAgent${index}`)
     const compiled = clone.compile()
-    const agentMap = clone.agentTypes.map((node, index) => `"${node.getWord(0)}":simAgent${index}`).join(",")
+    const agentMap = Object.keys(clone.agentKeywordMap).map((key) => `"${key}":${clone.agentKeywordMap[key]}`).join(",")
     return `${compiled}
     const map = {${agentMap}};
     map;`
@@ -139,10 +140,11 @@ agentNode
  javascript
   compile() {
     const root = this.getRootNode()
-    const name = `simAgent` + root.agentClassCount
-    root.agentClassCount++
+    const name = root.agentKeywordMap[this.getWord(0)]
     const normal = super.compile()
-    return `class ${name} extends Agent {
+    const parentClass = this.has("extends") ? root.agentKeywordMap[this.get("extends")] : "Agent"
+    return `class ${name} extends ${parentClass} {
+      icon = "${this.getWord(0)}"
       ${normal}
     }`
   }
@@ -195,6 +197,11 @@ angleNode
  extends abstractStringAttributeNode
  cells keywordCell angleCell
  crux angle
+extendsNode
+ extends abstractStringAttributeNode
+ cells keywordCell emojiCell
+ crux extends
+ description Copy all the behaviors of one type of agent.
 agentStyleNode
  description Provide custom CSS for an agent type.
  extends abstractStringAttributeNode
@@ -328,6 +335,9 @@ increaseCommandNode
  description Increase a property by 1.
  crux increase
  cells keywordCell propertyNameCell
+moveCommandNode
+ extends abstractCommandNode
+ crux move
 turnRandomlyCommandNode
  extends abstractCommandNode
  crux turnRandomly
@@ -349,9 +359,6 @@ commentNode
    return ""
   }
  catchAllNodeType commentLineNode
-iconNode
- crux icon
- cells keywordCell emojiCell
 blankLineNode
  description Blank lines compile do nothing.
  cells blankCell

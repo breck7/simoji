@@ -14,12 +14,8 @@
    kickIt
 
 ⛹️‍♀️
- onTick
-  turnRandomly
-  move
- onHit
-  ⚽️
-   kickIt
+ extends ⛹️‍♂️
+
 🥅
 🪵
  solid
