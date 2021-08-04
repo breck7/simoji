@@ -641,7 +641,7 @@ class BoardComponent extends AbstractTreeComponent {
       const emoji = commands.getWord(1)
       if (emoji && this.has(emoji)) return
       commands.forEach(instruction => {
-        this[instruction.getWord(0)](this, instruction)
+        this[instruction.getWord(0)](instruction)
       })
     })
   }
