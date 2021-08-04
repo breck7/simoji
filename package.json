@@ -10,10 +10,14 @@
     "printWidth": 120,
     "semi": false
   },
+  "bin": {
+    "simoji": "./cli.js"
+  },
   "dependencies": {
     "jtree": "^53.0.0",
     "lodash": "^4.17.21",
-    "mathjs": "^9.4.4"
+    "mathjs": "^9.4.4",
+    "minimist": "^1.2.5"
   },
   "devDependencies": {
     "tap": "^15.0.9"

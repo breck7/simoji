@@ -230,6 +230,16 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     })
   }
 
+  async runUntilPause() {
+    await this.start()
+    this.interval = true
+    while (this.isRunning) {
+      this.board.boardLoop()
+      if (this.board.tick % 100 === 0) console.log(`Tick ${this.board.tick}`)
+    }
+    console.log(`Finished on tick ${this.board.tick}`)
+  }
+
   interval = undefined
 
   get ticksPerSecond() {
@@ -263,6 +273,10 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
 
     console.log(str)
     this.willowBrowser.downloadFile(str, filename + "." + extension, type)
+  }
+
+  log(message) {
+    if (this.verbose) console.log(message)
   }
 
   async openReportInOhayoCommand() {

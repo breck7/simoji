@@ -46,15 +46,6 @@ class BoardComponent extends AbstractTreeComponent {
       .join("\n")
   }
 
-  // todo: cleanup board vs agent commands
-  alert(target, command) {
-    alert(command.getContent())
-  }
-
-  pause() {
-    this.root.pauseCommand()
-  }
-
   get populationCount() {
     const counts = {}
     this.agents.forEach(node => {
@@ -88,17 +79,6 @@ class BoardComponent extends AbstractTreeComponent {
     return this.getParent()
   }
 
-  spawn(subject, command) {
-    this.appendLine(
-      `${command.getWord(1)} ${yodash.getRandomLocationHash(
-        this.rows,
-        this.cols,
-        undefined,
-        this.root.randomNumberGenerator
-      )}`
-    )
-  }
-
   handleExtinctions() {
     this.root.simojiProgram.findNodes("onExtinct").forEach(commands => {
       const emoji = commands.getWord(1)
@@ -114,7 +94,7 @@ class BoardComponent extends AbstractTreeComponent {
       const probability = commands.getWord(1)
       if (probability && this.root.randomNumberGenerator() > parseFloat(probability)) return
       commands.forEach(instruction => {
-        this[instruction.getWord(0)](this, instruction)
+        this[instruction.getWord(0)](instruction)
       })
     })
   }
@@ -196,6 +176,39 @@ class BoardComponent extends AbstractTreeComponent {
         }
       }
     })
+  }
+
+  // Commands available to users:
+
+  spawn(command) {
+    this.appendLine(
+      `${command.getWord(1)} ${yodash.getRandomLocationHash(
+        this.rows,
+        this.cols,
+        undefined,
+        this.root.randomNumberGenerator
+      )}`
+    )
+  }
+
+  alert(command) {
+    const message = command.getContent()
+    if (typeof alert !== "undefined")
+      // todo: willow should shim this
+      alert(message)
+    else this.root.log(message)
+  }
+
+  pause() {
+    this.root.pauseCommand()
+  }
+
+  reset() {
+    this.getRootNode().resetCommand()
+  }
+
+  log(command) {
+    this.root.log(command.getContent())
   }
 }
 

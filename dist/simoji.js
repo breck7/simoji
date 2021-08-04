@@ -1,6 +1,7 @@
 const yodash = {}
 
 
+
 yodash.parseInts = (arr, start) => arr.map((item, index) => (index >= start ? parseInt(item) : item))
 
 yodash.getRandomAngle = randomNumberGenerator => {
@@ -257,71 +258,9 @@ class Agent extends AbstractTreeComponent {
     return this.root.simojiProgram.getNode(this.getWord(0))
   }
 
-  replaceWith(target, command) {
-    return this._replaceWith(command.getWord(1))
-  }
-
   _replaceWith(newObject) {
     this.getParent().appendLine(`${newObject} ${this.positionHash}`)
     this.unmountAndDestroy()
-  }
-
-  javascript(target, command) {
-    eval(command.childrenToString())
-  }
-
-  kickIt(target) {
-    target.angle = this.angle
-    target.tickStack = new jtree.TreeNode(`1
- move
- move
- move
-2
- move
- move
-3
- move
-4
- move`)
-    target._move()
-  }
-
-  pickItUp(target) {
-    target.owner = this
-    if (!this.holding) this.holding = []
-    this.holding.push(target)
-  }
-
-  bounce() {
-    this.angle = yodash.flipAngle(this.angle)
-  }
-
-  alert(target, command) {
-    alert(command.getContent())
-  }
-
-  reset() {
-    this.getRootNode().resetCommand()
-  }
-
-  log(target, command) {
-    console.log(command.getContent())
-  }
-
-  decrease(target, command) {
-    const property = command.getWord(1)
-    if (target[property] === undefined) target[property] = 0
-    target[property]--
-  }
-
-  increase(target, command) {
-    const property = command.getWord(1)
-    if (target[property] === undefined) target[property] = 0
-    target[property]++
-  }
-
-  pause() {
-    this.root.pauseCommand()
   }
 
   get touchMap() {
@@ -334,24 +273,6 @@ class Agent extends AbstractTreeComponent {
 
     return yodash.applyCommandMap(commandMap, targets, this)
   }
-
-  turnRandomly() {
-    this.angle = yodash.getRandomAngle(this.root.randomNumberGenerator)
-    return this
-  }
-
-  turnToward(target, instruction) {
-    const targets = this.board.agentTypeMap.get(instruction.getWord(1))
-    if (targets) this.angle = yodash.getBestAngle(targets, this.position)
-    return this
-  }
-
-  turnFrom(target, instruction) {
-    const targets = this.board.agentTypeMap.get(instruction.getWord(1))
-    if (targets) this.angle = yodash.flipAngle(yodash.getBestAngle(targets, this.position))
-    return this
-  }
-
   executeCommands(key) {
     this.agentDefinition.findNodes(key).forEach(commands => this.executeCommandSequence(commands))
   }
@@ -360,7 +281,10 @@ class Agent extends AbstractTreeComponent {
     const probability = commandSequence.getWord(1)
     if (probability && this.root.randomNumberGenerator() > parseFloat(probability)) return
     commandSequence.forEach(instruction => {
-      this[instruction.getWord(0)](this, instruction)
+      const commandName = instruction.getWord(0)
+      if (this[commandName]) this[commandName](this, instruction)
+      // board commands
+      else this.board[commandName](instruction)
     })
   }
 
@@ -373,10 +297,6 @@ class Agent extends AbstractTreeComponent {
 
     this.executeCommands("onTick")
     if (this.health === 0) this.onDeathCommand()
-  }
-
-  remove() {
-    this.unmountAndDestroy()
   }
 
   get neighorCount() {
@@ -398,15 +318,6 @@ class Agent extends AbstractTreeComponent {
 
   markDirty() {
     this.setWord(5, Date.now())
-  }
-
-  spawn(subject, command) {
-    this.board.appendLine(`${command.getWord(1)} ${subject.positionHash}`)
-  }
-
-  move() {
-    if (this.selected) return
-    return this._move()
   }
 
   _move() {
@@ -529,6 +440,84 @@ class Agent extends AbstractTreeComponent {
  style top:${this.top * gridSize}px;left:${this.left *
       gridSize}px;font-size:${gridSize}px;line-height: ${gridSize}px;${opacity};${this.style ?? ""}`
   }
+
+  // Commands available to users:
+
+  replaceWith(target, command) {
+    return this._replaceWith(command.getWord(1))
+  }
+
+  javascript(target, command) {
+    eval(command.childrenToString())
+  }
+
+  kickIt(target) {
+    target.angle = this.angle
+    target.tickStack = new jtree.TreeNode(`1
+ move
+ move
+ move
+2
+ move
+ move
+3
+ move
+4
+ move`)
+    target._move()
+  }
+
+  pickItUp(target) {
+    target.owner = this
+    if (!this.holding) this.holding = []
+    this.holding.push(target)
+  }
+
+  bounce() {
+    this.angle = yodash.flipAngle(this.angle)
+  }
+
+  decrease(target, command) {
+    const property = command.getWord(1)
+    if (target[property] === undefined) target[property] = 0
+    target[property]--
+  }
+
+  increase(target, command) {
+    const property = command.getWord(1)
+    if (target[property] === undefined) target[property] = 0
+    target[property]++
+  }
+
+  turnRandomly() {
+    this.angle = yodash.getRandomAngle(this.root.randomNumberGenerator)
+    return this
+  }
+
+  turnToward(target, instruction) {
+    const targets = this.board.agentTypeMap.get(instruction.getWord(1))
+    if (targets) this.angle = yodash.getBestAngle(targets, this.position)
+    return this
+  }
+
+  turnFrom(target, instruction) {
+    const targets = this.board.agentTypeMap.get(instruction.getWord(1))
+    if (targets) this.angle = yodash.flipAngle(yodash.getBestAngle(targets, this.position))
+    return this
+  }
+
+  remove() {
+    this.unmountAndDestroy()
+  }
+
+  spawn(subject, command) {
+    this.board.appendLine(`${command.getWord(1)} ${subject.positionHash}`)
+  }
+
+  move() {
+    if (this.selected) return
+    return this._move()
+  }
 }
 
 window.Agent = Agent
@@ -614,15 +603,6 @@ class BoardComponent extends AbstractTreeComponent {
       .join("\n")
   }
 
-  // todo: cleanup board vs agent commands
-  alert(target, command) {
-    alert(command.getContent())
-  }
-
-  pause() {
-    this.root.pauseCommand()
-  }
-
   get populationCount() {
     const counts = {}
     this.agents.forEach(node => {
@@ -656,17 +636,6 @@ class BoardComponent extends AbstractTreeComponent {
     return this.getParent()
   }
 
-  spawn(subject, command) {
-    this.appendLine(
-      `${command.getWord(1)} ${yodash.getRandomLocationHash(
-        this.rows,
-        this.cols,
-        undefined,
-        this.root.randomNumberGenerator
-      )}`
-    )
-  }
-
   handleExtinctions() {
     this.root.simojiProgram.findNodes("onExtinct").forEach(commands => {
       const emoji = commands.getWord(1)
@@ -682,7 +651,7 @@ class BoardComponent extends AbstractTreeComponent {
       const probability = commands.getWord(1)
       if (probability && this.root.randomNumberGenerator() > parseFloat(probability)) return
       commands.forEach(instruction => {
-        this[instruction.getWord(0)](this, instruction)
+        this[instruction.getWord(0)](instruction)
       })
     })
   }
@@ -764,6 +733,39 @@ class BoardComponent extends AbstractTreeComponent {
         }
       }
     })
+  }
+
+  // Commands available to users:
+
+  spawn(command) {
+    this.appendLine(
+      `${command.getWord(1)} ${yodash.getRandomLocationHash(
+        this.rows,
+        this.cols,
+        undefined,
+        this.root.randomNumberGenerator
+      )}`
+    )
+  }
+
+  alert(command) {
+    const message = command.getContent()
+    if (typeof alert !== "undefined")
+      // todo: willow should shim this
+      alert(message)
+    else this.root.log(message)
+  }
+
+  pause() {
+    this.root.pauseCommand()
+  }
+
+  reset() {
+    this.getRootNode().resetCommand()
+  }
+
+  log(command) {
+    this.root.log(command.getContent())
   }
 }
 
@@ -1399,6 +1401,16 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     })
   }
 
+  async runUntilPause() {
+    await this.start()
+    this.interval = true
+    while (this.isRunning) {
+      this.board.boardLoop()
+      if (this.board.tick % 100 === 0) console.log(`Tick ${this.board.tick}`)
+    }
+    console.log(`Finished on tick ${this.board.tick}`)
+  }
+
   interval = undefined
 
   get ticksPerSecond() {
@@ -1432,6 +1444,10 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
 
     console.log(str)
     this.willowBrowser.downloadFile(str, filename + "." + extension, type)
+  }
+
+  log(message) {
+    if (this.verbose) console.log(message)
   }
 
   async openReportInOhayoCommand() {

@@ -22,71 +22,9 @@ class Agent extends AbstractTreeComponent {
     return this.root.simojiProgram.getNode(this.getWord(0))
   }
 
-  replaceWith(target, command) {
-    return this._replaceWith(command.getWord(1))
-  }
-
   _replaceWith(newObject) {
     this.getParent().appendLine(`${newObject} ${this.positionHash}`)
     this.unmountAndDestroy()
-  }
-
-  javascript(target, command) {
-    eval(command.childrenToString())
-  }
-
-  kickIt(target) {
-    target.angle = this.angle
-    target.tickStack = new jtree.TreeNode(`1
- move
- move
- move
-2
- move
- move
-3
- move
-4
- move`)
-    target._move()
-  }
-
-  pickItUp(target) {
-    target.owner = this
-    if (!this.holding) this.holding = []
-    this.holding.push(target)
-  }
-
-  bounce() {
-    this.angle = yodash.flipAngle(this.angle)
-  }
-
-  alert(target, command) {
-    alert(command.getContent())
-  }
-
-  reset() {
-    this.getRootNode().resetCommand()
-  }
-
-  log(target, command) {
-    console.log(command.getContent())
-  }
-
-  decrease(target, command) {
-    const property = command.getWord(1)
-    if (target[property] === undefined) target[property] = 0
-    target[property]--
-  }
-
-  increase(target, command) {
-    const property = command.getWord(1)
-    if (target[property] === undefined) target[property] = 0
-    target[property]++
-  }
-
-  pause() {
-    this.root.pauseCommand()
   }
 
   get touchMap() {
@@ -99,24 +37,6 @@ class Agent extends AbstractTreeComponent {
 
     return yodash.applyCommandMap(commandMap, targets, this)
   }
-
-  turnRandomly() {
-    this.angle = yodash.getRandomAngle(this.root.randomNumberGenerator)
-    return this
-  }
-
-  turnToward(target, instruction) {
-    const targets = this.board.agentTypeMap.get(instruction.getWord(1))
-    if (targets) this.angle = yodash.getBestAngle(targets, this.position)
-    return this
-  }
-
-  turnFrom(target, instruction) {
-    const targets = this.board.agentTypeMap.get(instruction.getWord(1))
-    if (targets) this.angle = yodash.flipAngle(yodash.getBestAngle(targets, this.position))
-    return this
-  }
-
   executeCommands(key) {
     this.agentDefinition.findNodes(key).forEach(commands => this.executeCommandSequence(commands))
   }
@@ -125,7 +45,10 @@ class Agent extends AbstractTreeComponent {
     const probability = commandSequence.getWord(1)
     if (probability && this.root.randomNumberGenerator() > parseFloat(probability)) return
     commandSequence.forEach(instruction => {
-      this[instruction.getWord(0)](this, instruction)
+      const commandName = instruction.getWord(0)
+      if (this[commandName]) this[commandName](this, instruction)
+      // board commands
+      else this.board[commandName](instruction)
     })
   }
 
@@ -138,10 +61,6 @@ class Agent extends AbstractTreeComponent {
 
     this.executeCommands("onTick")
     if (this.health === 0) this.onDeathCommand()
-  }
-
-  remove() {
-    this.unmountAndDestroy()
   }
 
   get neighorCount() {
@@ -163,15 +82,6 @@ class Agent extends AbstractTreeComponent {
 
   markDirty() {
     this.setWord(5, Date.now())
-  }
-
-  spawn(subject, command) {
-    this.board.appendLine(`${command.getWord(1)} ${subject.positionHash}`)
-  }
-
-  move() {
-    if (this.selected) return
-    return this._move()
   }
 
   _move() {
@@ -293,6 +203,84 @@ class Agent extends AbstractTreeComponent {
  class Agent ${this.selected ? "selected" : ""}
  style top:${this.top * gridSize}px;left:${this.left *
       gridSize}px;font-size:${gridSize}px;line-height: ${gridSize}px;${opacity};${this.style ?? ""}`
+  }
+
+  // Commands available to users:
+
+  replaceWith(target, command) {
+    return this._replaceWith(command.getWord(1))
+  }
+
+  javascript(target, command) {
+    eval(command.childrenToString())
+  }
+
+  kickIt(target) {
+    target.angle = this.angle
+    target.tickStack = new jtree.TreeNode(`1
+ move
+ move
+ move
+2
+ move
+ move
+3
+ move
+4
+ move`)
+    target._move()
+  }
+
+  pickItUp(target) {
+    target.owner = this
+    if (!this.holding) this.holding = []
+    this.holding.push(target)
+  }
+
+  bounce() {
+    this.angle = yodash.flipAngle(this.angle)
+  }
+
+  decrease(target, command) {
+    const property = command.getWord(1)
+    if (target[property] === undefined) target[property] = 0
+    target[property]--
+  }
+
+  increase(target, command) {
+    const property = command.getWord(1)
+    if (target[property] === undefined) target[property] = 0
+    target[property]++
+  }
+
+  turnRandomly() {
+    this.angle = yodash.getRandomAngle(this.root.randomNumberGenerator)
+    return this
+  }
+
+  turnToward(target, instruction) {
+    const targets = this.board.agentTypeMap.get(instruction.getWord(1))
+    if (targets) this.angle = yodash.getBestAngle(targets, this.position)
+    return this
+  }
+
+  turnFrom(target, instruction) {
+    const targets = this.board.agentTypeMap.get(instruction.getWord(1))
+    if (targets) this.angle = yodash.flipAngle(yodash.getBestAngle(targets, this.position))
+    return this
+  }
+
+  remove() {
+    this.unmountAndDestroy()
+  }
+
+  spawn(subject, command) {
+    this.board.appendLine(`${command.getWord(1)} ${subject.positionHash}`)
+  }
+
+  move() {
+    if (this.selected) return
+    return this._move()
   }
 }
 
