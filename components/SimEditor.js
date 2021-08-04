@@ -6,6 +6,16 @@ const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework
 
 const { SIZES } = require("./Sizes.js")
 
+class CodeMirrorShim {
+  setSize() {}
+  setValue(value) {
+    this.value = value
+  }
+  getValue() {
+    return this.value
+  }
+}
+
 class SimEditorComponent extends AbstractTreeComponent {
   toStumpCode() {
     return `div
@@ -93,6 +103,7 @@ class SimEditorComponent extends AbstractTreeComponent {
   }
 
   _initCodeMirror() {
+    if (typeof CodeMirror === "undefined") return (this.codeMirrorInstance = new CodeMirrorShim())
     this.codeMirrorInstance = new jtree.TreeNotationCodeMirrorMode(
       "custom",
       () => simojiCompiler,

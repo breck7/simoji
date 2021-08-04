@@ -2,10 +2,22 @@ const { jtree } = require("jtree")
 const { yodash } = require("../yodash.js")
 const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework.node.js")
 const { GridComponent } = require("./Grid.js")
+const { Agent } = require("./Agent.js")
+
+class BoardErrorNode extends AbstractTreeComponent {
+  _isErrorNodeType() {
+    return true
+  }
+  toStumpCode() {
+    console.error(`Warning: Board does not have a node type for "${this.getLine()}"`)
+    return `span
+ style display: none;`
+  }
+}
 
 class BoardComponent extends AbstractTreeComponent {
   createParser() {
-    return new jtree.TreeNode.Parser(undefined, { ...this.root.agentMap, GridComponent, BoardStyleComponent })
+    return new jtree.TreeNode.Parser(BoardErrorNode, { ...this.root.agentMap, GridComponent, BoardStyleComponent })
   }
 
   get gridSize() {

@@ -235,6 +235,7 @@ window.yodash = yodash
 
 
 
+
 class Agent extends AbstractTreeComponent {
   get icon() {
     return this.agentDefinition.getWord(0)
@@ -570,9 +571,21 @@ window.AgentPaletteComponent = AgentPaletteComponent
 
 
 
+
+class BoardErrorNode extends AbstractTreeComponent {
+  _isErrorNodeType() {
+    return true
+  }
+  toStumpCode() {
+    console.error(`Warning: Board does not have a node type for "${this.getLine()}"`)
+    return `span
+ style display: none;`
+  }
+}
+
 class BoardComponent extends AbstractTreeComponent {
   createParser() {
-    return new jtree.TreeNode.Parser(undefined, { ...this.root.agentMap, GridComponent, BoardStyleComponent })
+    return new jtree.TreeNode.Parser(BoardErrorNode, { ...this.root.agentMap, GridComponent, BoardStyleComponent })
   }
 
   get gridSize() {
@@ -790,10 +803,20 @@ window.BottomBarComponent = BottomBarComponent
 
 
 
+const ExampleSims = new jtree.TreeNode()
+
+// prettier-ignore
+
+window.ExampleSims = ExampleSims
+
+
+
+
+
+
 class ExamplesComponent extends AbstractTreeComponent {
   toStumpCode() {
-    const sims = exampleSims
-      .getFirstWords()
+    const sims = ExampleSims.getFirstWords()
       .map(
         item => ` a ${jtree.Utils.ucfirst(item)}
   href index.html#example%20${item}
@@ -807,6 +830,7 @@ ${sims}`
 }
 
 window.ExamplesComponent = ExamplesComponent
+
 
 
 
@@ -1005,7 +1029,7 @@ class ShareComponent extends AbstractTreeComponent {
   }
 
   get link() {
-    const url = new URL(location.href)
+    const url = new URL(this.willowBrowser.location.href ?? "http://localhost/") // todo: TCF should provide shim for this
     url.hash = ""
     return url.toString() + this.getRootNode().urlHash
   }
@@ -1020,6 +1044,16 @@ window.ShareComponent = ShareComponent
 // prettier-ignore
 
 
+
+class CodeMirrorShim {
+  setSize() {}
+  setValue(value) {
+    this.value = value
+  }
+  getValue() {
+    return this.value
+  }
+}
 
 class SimEditorComponent extends AbstractTreeComponent {
   toStumpCode() {
@@ -1108,6 +1142,7 @@ class SimEditorComponent extends AbstractTreeComponent {
   }
 
   _initCodeMirror() {
+    if (typeof CodeMirror === "undefined") return (this.codeMirrorInstance = new CodeMirrorShim())
     this.codeMirrorInstance = new jtree.TreeNotationCodeMirrorMode(
       "custom",
       () => simojiCompiler,
@@ -1136,6 +1171,7 @@ window.SimEditorComponent = SimEditorComponent
 
 
 // prettier-ignore
+
 
 
 
@@ -1182,6 +1218,16 @@ class ErrorNode extends AbstractTreeComponent {
   }
 }
 
+let _defaultSeed = Date.now()
+const newSeed = () => {
+  _defaultSeed++
+  return _defaultSeed
+}
+
+let nodeJsPrefix = ""
+
+// prettier-ignore
+
 class SimojiApp extends AbstractTreeComponent {
   createParser() {
     return new jtree.TreeNode.Parser(ErrorNode, {
@@ -1199,11 +1245,12 @@ class SimojiApp extends AbstractTreeComponent {
   get agentMap() {
     if (!this._agentMap) {
       this.compiledCode = this.simojiProgram.compileAgentClassDeclarationsAndMap()
-      //console.log(this.compiledCode)
       let evaled = {}
       try {
-        evaled = eval(this.compiledCode)
-      } catch {}
+        evaled = eval(nodeJsPrefix + this.compiledCode)
+      } catch (err) {
+        console.error(err)
+      }
       this._agentMap = evaled
     }
     return this._agentMap
@@ -1234,17 +1281,27 @@ class SimojiApp extends AbstractTreeComponent {
     return { gridSize, cols, rows }
   }
 
+  verbose = true
+
+  compiledStartState = ""
+
   appendBoard() {
     const { simojiProgram, windowWidth, windowHeight } = this
     const { gridSize, cols, rows } = this.makeGrid(simojiProgram, windowWidth, windowHeight)
-    const seed = simojiProgram.has("seed") ? parseInt(simojiProgram.get("seed")) : Date.now()
+    const seed = simojiProgram.has("seed") ? parseInt(simojiProgram.get("seed")) : newSeed()
     this.randomNumberGenerator = yodash.getRandomNumberGenerator(seed)
 
-    const compiledStartState = simojiProgram.compileSetup(rows, cols, this.randomNumberGenerator).trim()
+    this.compiledStartState = ""
+    try {
+      this.compiledStartState = simojiProgram.compileSetup(rows, cols, this.randomNumberGenerator, yodash).trim()
+    } catch (err) {
+      if (this.verbose) console.error(err)
+    }
+
     const styleNode = simojiProgram.getNode("style") ?? undefined
     this.appendLineAndChildren(
       `BoardComponent ${gridSize} ${rows} ${cols}`,
-      `${compiledStartState.trim()}
+      `${this.compiledStartState.trim()}
 GridComponent
 ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}`.trim()
     )
@@ -1256,11 +1313,11 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
 
   loadExampleCommand(name) {
     const restart = this.isRunning
-    const simCode = exampleSims.getNode(name).childrenToString()
+    const simCode = ExampleSims.getNode(name).childrenToString()
     this.editor.setCodeMirrorValue(simCode)
     this.loadNewSim(simCode)
     if (restart) this.startInterval()
-    location.hash = ""
+    this.willowBrowser.setHash("")
   }
 
   get simCode() {
@@ -1272,7 +1329,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     delete this._agentMap
     delete this._simojiProgram
     delete this.compiledCode
-    TreeNode._parsers.delete(BoardComponent) // clear parser
+    jtree.TreeNode._parsers.delete(BoardComponent) // clear parser
 
     this.board.unmountAndDestroy()
     this.appendBoard()
@@ -1280,7 +1337,14 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     this.updateLocalStorage(simCode)
   }
 
+  // todo: cleanup
+  pasteCodeCommand(simCode) {
+    this.editor.setCodeMirrorValue(simCode)
+    this.loadNewSim(simCode)
+  }
+
   updateLocalStorage(simCode) {
+    if (typeof localStorage === "undefined") return "" // todo: tcf should shim this
     localStorage.setItem("simoji", simCode)
     console.log("Local storage updated...")
   }
@@ -1539,7 +1603,6 @@ const DEFAULT_SIM = "fire"
 
 
 
-let exampleSims = new jtree.TreeNode()
 
 class BrowserGlue extends AbstractTreeComponent {
   async fetchAndLoadSimCodeFromUrlCommand(url) {
@@ -1553,7 +1616,7 @@ class BrowserGlue extends AbstractTreeComponent {
   }
 
   async fetchSimCode() {
-    const hash = location.hash.substr(1)
+    const hash = this.willowBrowser.getHash().substr(1)
     const deepLink = new jtree.TreeNode(decodeURIComponent(hash))
     const example = deepLink.get("example")
     const fromUrl = deepLink.get("url")
@@ -1570,7 +1633,7 @@ class BrowserGlue extends AbstractTreeComponent {
   }
 
   getExample(id) {
-    return exampleSims.has(id) ? exampleSims.getNode(id).childrenToString() : `comment Example '${id}' not found.`
+    return ExampleSims.has(id) ? ExampleSims.getNode(id).childrenToString() : `comment Example '${id}' not found.`
   }
 
   async fetchSimGrammarAndExamplesAndInit() {
@@ -1583,7 +1646,7 @@ class BrowserGlue extends AbstractTreeComponent {
 
   async init(grammarCode, theExamples) {
     window.simojiCompiler = new jtree.HandGrammarProgram(grammarCode).compileAndReturnRootConstructor()
-    exampleSims = new jtree.TreeNode(theExamples)
+    ExampleSims.setChildren(theExamples)
 
     const simCode = await this.fetchSimCode()
 

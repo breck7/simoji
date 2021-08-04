@@ -1,8 +1,7 @@
 const DEFAULT_SIM = "fire"
 const { jtree } = require("jtree")
+const { ExampleSims } = require("./components/ExampleSims.js")
 const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework.node.js")
-
-let exampleSims = new jtree.TreeNode()
 
 class BrowserGlue extends AbstractTreeComponent {
   async fetchAndLoadSimCodeFromUrlCommand(url) {
@@ -16,7 +15,7 @@ class BrowserGlue extends AbstractTreeComponent {
   }
 
   async fetchSimCode() {
-    const hash = location.hash.substr(1)
+    const hash = this.willowBrowser.getHash().substr(1)
     const deepLink = new jtree.TreeNode(decodeURIComponent(hash))
     const example = deepLink.get("example")
     const fromUrl = deepLink.get("url")
@@ -33,7 +32,7 @@ class BrowserGlue extends AbstractTreeComponent {
   }
 
   getExample(id) {
-    return exampleSims.has(id) ? exampleSims.getNode(id).childrenToString() : `comment Example '${id}' not found.`
+    return ExampleSims.has(id) ? ExampleSims.getNode(id).childrenToString() : `comment Example '${id}' not found.`
   }
 
   async fetchSimGrammarAndExamplesAndInit() {
@@ -46,7 +45,7 @@ class BrowserGlue extends AbstractTreeComponent {
 
   async init(grammarCode, theExamples) {
     window.simojiCompiler = new jtree.HandGrammarProgram(grammarCode).compileAndReturnRootConstructor()
-    exampleSims = new jtree.TreeNode(theExamples)
+    ExampleSims.setChildren(theExamples)
 
     const simCode = await this.fetchSimCode()
 

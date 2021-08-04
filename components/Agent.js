@@ -1,4 +1,5 @@
 const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework.node.js")
+const { yodash } = require("../yodash.js")
 
 class Agent extends AbstractTreeComponent {
   get icon() {

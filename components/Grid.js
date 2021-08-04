@@ -1,3 +1,4 @@
+const { yodash } = require("../yodash.js")
 const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework.node.js")
 
 class GridComponent extends AbstractTreeComponent {

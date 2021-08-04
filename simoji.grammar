@@ -64,13 +64,14 @@ simojiNode
     const map = {${agentMap}};
     map;`
   }
-  compileSetup(rows, cols, randomNumberGenerator) {
+  compileSetup(rows, cols, randomNumberGenerator, yodash) {
     const clone = this.clone()
     clone.filter(node => node.getNodeTypeId() === "blankLineNode" || node.getNodeTypeId() === "agentNode").forEach(node => node.destroy())
     clone.occupiedSpots = new Set()
     clone.randomNumberGenerator = randomNumberGenerator
     clone.rows = rows
     clone.cols = cols
+    clone.yodash = yodash
     return clone.compile()
   }
   get agentTypes() {
@@ -84,7 +85,7 @@ fillNode
  crux fill
  javascript
   compile() {
-    const {rows, cols, occupiedSpots} = this.getParent()
+    const {rows, cols, occupiedSpots, yodash} = this.getParent()
      return yodash.fill(rows, cols, occupiedSpots, this.getWord(1))
   }
 insertNode
@@ -93,7 +94,7 @@ insertNode
  crux insert
  javascript
   compile() {
-    const {rows, cols, occupiedSpots, randomNumberGenerator} = this.getParent()
+    const {rows, cols, occupiedSpots, randomNumberGenerator, yodash} = this.getParent()
      return yodash.insertRandomAgents(randomNumberGenerator, this.getWord(1), this.getWord(2), rows, cols,  occupiedSpots)
   }
 insertClusterNode
@@ -102,7 +103,7 @@ insertClusterNode
  catchAllCellType integerCell
  javascript
   compile() {
-    const {rows, cols, occupiedSpots, randomNumberGenerator} = this.getParent()
+    const {rows, cols, occupiedSpots, randomNumberGenerator, yodash} = this.getParent()
      return yodash.insertClusteredRandomAgents(randomNumberGenerator, parseInt(this.getWord(1)), this.getWord(2), rows, cols,  occupiedSpots, this.getWord(3), this.getWord(4))
   }
 rectangleDrawNode
@@ -112,6 +113,7 @@ rectangleDrawNode
  crux rectangle
  javascript
   compile() {
+    const {yodash} = this.getParent()
     return yodash.makeRectangle(...yodash.parseInts(this.getWords().slice(1), 1))
   }
 pasteDrawNode
@@ -121,6 +123,7 @@ pasteDrawNode
  catchAllNodeType pasteLineNode
  javascript
   compile() {
+    const {yodash} = this.getParent()
     const board = this.childrenToString()
     yodash.updateOccupiedSpots(board, this.getParent().occupiedSpots)
     return board

@@ -4,6 +4,7 @@
 const { jtree } = require("jtree")
 const { yodash } = require("../yodash")
 
+const { ExampleSims } = require("./ExampleSims.js")
 const { TopBarComponent } = require("./TopBar.js")
 const { SimEditorComponent } = require("./SimEditor.js")
 const { HelpModalComponent } = require("./HelpModal.js")
@@ -47,6 +48,17 @@ class ErrorNode extends AbstractTreeComponent {
   }
 }
 
+let _defaultSeed = Date.now()
+const newSeed = () => {
+  _defaultSeed++
+  return _defaultSeed
+}
+
+let nodeJsPrefix = ""
+
+// prettier-ignore
+/*NODE_JS_ONLY*/ nodeJsPrefix = `const { Agent } = require("${__dirname}/Agent.js");`
+
 class SimojiApp extends AbstractTreeComponent {
   createParser() {
     return new jtree.TreeNode.Parser(ErrorNode, {
@@ -64,11 +76,12 @@ class SimojiApp extends AbstractTreeComponent {
   get agentMap() {
     if (!this._agentMap) {
       this.compiledCode = this.simojiProgram.compileAgentClassDeclarationsAndMap()
-      //console.log(this.compiledCode)
       let evaled = {}
       try {
-        evaled = eval(this.compiledCode)
-      } catch {}
+        evaled = eval(nodeJsPrefix + this.compiledCode)
+      } catch (err) {
+        console.error(err)
+      }
       this._agentMap = evaled
     }
     return this._agentMap
@@ -99,17 +112,27 @@ class SimojiApp extends AbstractTreeComponent {
     return { gridSize, cols, rows }
   }
 
+  verbose = true
+
+  compiledStartState = ""
+
   appendBoard() {
     const { simojiProgram, windowWidth, windowHeight } = this
     const { gridSize, cols, rows } = this.makeGrid(simojiProgram, windowWidth, windowHeight)
-    const seed = simojiProgram.has("seed") ? parseInt(simojiProgram.get("seed")) : Date.now()
+    const seed = simojiProgram.has("seed") ? parseInt(simojiProgram.get("seed")) : newSeed()
     this.randomNumberGenerator = yodash.getRandomNumberGenerator(seed)
 
-    const compiledStartState = simojiProgram.compileSetup(rows, cols, this.randomNumberGenerator).trim()
+    this.compiledStartState = ""
+    try {
+      this.compiledStartState = simojiProgram.compileSetup(rows, cols, this.randomNumberGenerator, yodash).trim()
+    } catch (err) {
+      if (this.verbose) console.error(err)
+    }
+
     const styleNode = simojiProgram.getNode("style") ?? undefined
     this.appendLineAndChildren(
       `BoardComponent ${gridSize} ${rows} ${cols}`,
-      `${compiledStartState.trim()}
+      `${this.compiledStartState.trim()}
 GridComponent
 ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}`.trim()
     )
@@ -121,11 +144,11 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
 
   loadExampleCommand(name) {
     const restart = this.isRunning
-    const simCode = exampleSims.getNode(name).childrenToString()
+    const simCode = ExampleSims.getNode(name).childrenToString()
     this.editor.setCodeMirrorValue(simCode)
     this.loadNewSim(simCode)
     if (restart) this.startInterval()
-    location.hash = ""
+    this.willowBrowser.setHash("")
   }
 
   get simCode() {
@@ -137,7 +160,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     delete this._agentMap
     delete this._simojiProgram
     delete this.compiledCode
-    TreeNode._parsers.delete(BoardComponent) // clear parser
+    jtree.TreeNode._parsers.delete(BoardComponent) // clear parser
 
     this.board.unmountAndDestroy()
     this.appendBoard()
@@ -145,7 +168,14 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     this.updateLocalStorage(simCode)
   }
 
+  // todo: cleanup
+  pasteCodeCommand(simCode) {
+    this.editor.setCodeMirrorValue(simCode)
+    this.loadNewSim(simCode)
+  }
+
   updateLocalStorage(simCode) {
+    if (typeof localStorage === "undefined") return "" // todo: tcf should shim this
     localStorage.setItem("simoji", simCode)
     console.log("Local storage updated...")
   }

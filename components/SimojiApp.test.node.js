@@ -36,6 +36,36 @@ testTree.SimojiApp = areEqual => {
 	areEqual(!!app, true)
 }
 
+testTree.loadNewSim = async areEqual => {
+	// Arrange
+	const app = SimojiApp.setupApp("")
+	app.verbose = false
+	await app.start()
+
+	// Act
+	app.pasteCodeCommand(`😃
+insert 200 😃`)
+	const boardState1 = app.board.toString()
+
+	areEqual(app.board.populationCount["😃"], 200)
+
+	// Act
+	app.resetCommand()
+
+	const boardState2 = app.board.toString()
+
+	// Race condition is possible but pigs more likely to fly first.
+	areEqual(boardState1 === boardState2, false, "Boards should have changed")
+	areEqual(app.compiledStartState === "", false, "valid start state compiles")
+
+	// Act
+	app.pasteCodeCommand(`😃
+insert
+insert 10 😃
+`)
+	areEqual(app.compiledStartState, "", "invalid start state compiles to blank")
+}
+
 module.exports = { testTree }
 const runTree = testTree => {
 	const tap = require("tap")

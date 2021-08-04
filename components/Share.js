@@ -15,7 +15,7 @@ class ShareComponent extends AbstractTreeComponent {
   }
 
   get link() {
-    const url = new URL(location.href)
+    const url = new URL(this.willowBrowser.location.href ?? "http://localhost/") // todo: TCF should provide shim for this
     url.hash = ""
     return url.toString() + this.getRootNode().urlHash
   }
