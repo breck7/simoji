@@ -81,18 +81,6 @@ yodash.fill = (rows, cols, occupiedSpots, emoji) => {
 	return board.join("\n")
 }
 
-yodash.applyCommandMap = (commandMap, targets, subject) => {
-	targets.forEach(target => {
-		const targetId = target.getWord(0)
-		const instructions = commandMap.getNode(targetId)
-		if (instructions) {
-			instructions.forEach(instruction => {
-				subject[instruction.getWord(0)](target, instruction)
-			})
-		}
-	})
-}
-
 yodash.positionsAdjacentTo = position => {
 	let { right, down } = position
 	const positions = []
@@ -244,43 +232,65 @@ class Agent extends AbstractTreeComponent {
 
   angle = "South"
 
-  get agentDefinition() {
-    return this.root.simojiProgram.getNode(this.getWord(0))
+  getCommandBlocks(eventName) {
+    return this.root.simojiProgram.getNode(this.getWord(0)).findNodes(eventName)
   }
 
-  get touchMap() {
-    return this.agentDefinition.getNode("onTouch")
+  get definitionWithBehaviors() {
+    if (!this.behaviors.length) return this.root.simojiProgram.getNode(this.getWord(0))
+    return flatten(pick(this.root.simojiProgram, [this.getWord(0), ...this.behaviors]))
+  }
+
+  handleTouches(agentPositionMap) {
+    this.getCommandBlocks("onTouch").forEach(touchMap => {
+      for (let pos of yodash.positionsAdjacentTo(this.position)) {
+        const hits = agentPositionMap.get(yodash.makePositionHash(pos)) ?? []
+        for (let target of hits) {
+          const targetId = target.getWord(0)
+          const commandBlock = touchMap.getNode(targetId)
+          if (commandBlock) {
+            commandBlock.forEach(command => this._executeCommand(target, command))
+            if (this.getIndex() === -1) return
+          }
+        }
+      }
+    })
   }
 
   handleCollisions(targets) {
-    const commandMap = this.agentDefinition.getNode("onHit")
-    if (!commandMap) return
-    return yodash.applyCommandMap(commandMap, targets, this)
-  }
-
-  executeCommands(key) {
-    this.agentDefinition.findNodes(key).forEach(commands => this.executeCommandSequence(commands))
-  }
-
-  executeCommandSequence(commandSequence) {
-    const probability = commandSequence.getWord(1)
-    if (probability && this.root.randomNumberGenerator() > parseFloat(probability)) return
-    commandSequence.forEach(instruction => {
-      const commandName = instruction.getWord(0)
-      if (this[commandName]) this[commandName](this, instruction)
-      // board commands
-      else this.board[commandName](instruction)
+    this.getCommandBlocks("onHit").forEach(hitMap => {
+      targets.forEach(target => {
+        const targetId = target.getWord(0)
+        const commandBlock = hitMap.getNode(targetId)
+        if (commandBlock) commandBlock.forEach(command => this._executeCommand(target, command))
+      })
     })
+  }
+
+  _executeCommand(target, instruction) {
+    const commandName = instruction.getWord(0)
+    if (this[commandName]) this[commandName](target, instruction)
+    // board commands
+    else this.board[commandName](instruction)
+  }
+
+  _executeCommandBlocks(key) {
+    this.getCommandBlocks(key).forEach(commandBlock => this._executeCommandBlock(commandBlock))
+  }
+
+  _executeCommandBlock(commandBlock) {
+    const probability = commandBlock.getWord(1)
+    if (probability && this.root.randomNumberGenerator() > parseFloat(probability)) return
+    commandBlock.forEach(instruction => this._executeCommand(this, instruction))
   }
 
   onTick() {
     if (this.tickStack) {
-      const next = this.tickStack.shift()
-      this.executeCommandSequence(next)
+      this._executeCommandBlock(this.tickStack.shift())
       if (!this.tickStack.length) this.tickStack = undefined
     }
 
-    this.executeCommands("onTick")
+    this._executeCommandBlocks("onTick")
     if (this.health === 0) this.onDeathCommand()
   }
 
@@ -298,7 +308,7 @@ class Agent extends AbstractTreeComponent {
   }
 
   onDeathCommand() {
-    this.executeCommands("onDeath")
+    this._executeCommandBlocks("onDeath")
   }
 
   markDirty() {
@@ -460,11 +470,34 @@ class Agent extends AbstractTreeComponent {
   }
 
   pickItUp(target) {
+    if (target.owner === this) return
+    if (target.owner) target.owner._dropIt(target)
+
     target.owner = this
     if (!this.holding) this.holding = []
     this.holding.push(target)
   }
 
+  _dropIt(target) {
+    target.owner = undefined
+    this.holding = this.holding.filter(item => item !== target)
+  }
+
+  dropIt(target) {
+    this._dropIt(target)
+  }
+
+  narrate(subject, command) {
+    this.root.log(`${this.getWord(0)} ${command.getContent()}`)
+  }
+
+  shoot() {
+    if (!this.holding) return
+    this.holding.forEach(agent => {
+      this._dropIt(agent)
+      this.kickIt(agent)
+    })
+  }
   bounce() {
     this.angle = yodash.flipAngle(this.angle)
   }
@@ -487,13 +520,17 @@ class Agent extends AbstractTreeComponent {
   }
 
   turnToward(target, instruction) {
-    const targets = this.board.agentTypeMap.get(instruction.getWord(1))
+    const targetId = instruction.getWord(1)
+    const kind = this[targetId] ?? targetId // can define a custom target
+    const targets = this.board.agentTypeMap.get(kind)
     if (targets) this.angle = yodash.getBestAngle(targets, this.position)
     return this
   }
 
   turnFrom(target, instruction) {
-    const targets = this.board.agentTypeMap.get(instruction.getWord(1))
+    const targetId = instruction.getWord(1)
+    const kind = this[targetId] ?? targetId // can define a custom target
+    const targets = this.board.agentTypeMap.get(kind)
     if (targets) this.angle = yodash.flipAngle(yodash.getBestAngle(targets, this.position))
     return this
   }
@@ -622,6 +659,11 @@ class BoardComponent extends AbstractTreeComponent {
 
     this.tick++
     this._populationCounts.push(this.populationCount)
+
+    if (this.resetAfterLoop) {
+      this.resetAfterLoop = false
+      this.getRootNode().resetCommand()
+    }
   }
 
   get root() {
@@ -698,33 +740,14 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   handleCollisions() {
-    const { agentPositionMap } = this
-    agentPositionMap.forEach(nodes => {
+    this.agentPositionMap.forEach(nodes => {
       if (nodes.length > 1) nodes.forEach(node => node.handleCollisions(nodes))
     })
   }
 
   handleTouches() {
     const agentPositionMap = this.agentPositionMap
-
-    this.agents.forEach(subject => {
-      const { touchMap } = subject
-      if (!touchMap) return
-
-      for (let pos of yodash.positionsAdjacentTo(subject.position)) {
-        const hits = agentPositionMap.get(yodash.makePositionHash(pos)) ?? []
-        for (let target of hits) {
-          const targetId = target.getWord(0)
-          const instructions = touchMap.getNode(targetId)
-          if (instructions) {
-            instructions.forEach(instruction => {
-              subject[instruction.getWord(0)](target, instruction)
-            })
-            if (subject.getIndex() === -1) return
-          }
-        }
-      }
-    })
+    this.agents.forEach(node => node.handleTouches(agentPositionMap))
   }
 
   // Commands available to users:
@@ -753,7 +776,7 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   reset() {
-    this.getRootNode().resetCommand()
+    this.resetAfterLoop = true
   }
 
   log(command) {
@@ -1243,6 +1266,7 @@ class SimojiApp extends AbstractTreeComponent {
       try {
         evaled = eval(nodeJsPrefix + this.compiledCode)
       } catch (err) {
+        console.log(this.compiledCode)
         console.error(err)
       }
       this._agentMap = evaled

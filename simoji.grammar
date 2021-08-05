@@ -156,6 +156,11 @@ spawnCommandNode
  crux spawn
  extends abstractCommandNode
  cells keywordCell emojiCell
+removeCommandNode
+ description Remove this agent from the board.
+ crux remove
+ extends abstractCommandNode
+ cells keywordCell
 abstractAttributeNode
  cells keywordCell
 abstractStringAttributeNode
