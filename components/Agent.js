@@ -8,43 +8,65 @@ class Agent extends AbstractTreeComponent {
 
   angle = "South"
 
-  get agentDefinition() {
-    return this.root.simojiProgram.getNode(this.getWord(0))
+  getCommandBlocks(eventName) {
+    return this.root.simojiProgram.getNode(this.getWord(0)).findNodes(eventName)
   }
 
-  get touchMap() {
-    return this.agentDefinition.getNode("onTouch")
+  get definitionWithBehaviors() {
+    if (!this.behaviors.length) return this.root.simojiProgram.getNode(this.getWord(0))
+    return flatten(pick(this.root.simojiProgram, [this.getWord(0), ...this.behaviors]))
+  }
+
+  handleTouches(agentPositionMap) {
+    this.getCommandBlocks("onTouch").forEach(touchMap => {
+      for (let pos of yodash.positionsAdjacentTo(this.position)) {
+        const hits = agentPositionMap.get(yodash.makePositionHash(pos)) ?? []
+        for (let target of hits) {
+          const targetId = target.getWord(0)
+          const commandBlock = touchMap.getNode(targetId)
+          if (commandBlock) {
+            commandBlock.forEach(command => this._executeCommand(target, command))
+            if (this.getIndex() === -1) return
+          }
+        }
+      }
+    })
   }
 
   handleCollisions(targets) {
-    const commandMap = this.agentDefinition.getNode("onHit")
-    if (!commandMap) return
-    return yodash.applyCommandMap(commandMap, targets, this)
-  }
-
-  executeCommands(key) {
-    this.agentDefinition.findNodes(key).forEach(commands => this.executeCommandSequence(commands))
-  }
-
-  executeCommandSequence(commandSequence) {
-    const probability = commandSequence.getWord(1)
-    if (probability && this.root.randomNumberGenerator() > parseFloat(probability)) return
-    commandSequence.forEach(instruction => {
-      const commandName = instruction.getWord(0)
-      if (this[commandName]) this[commandName](this, instruction)
-      // board commands
-      else this.board[commandName](instruction)
+    this.getCommandBlocks("onHit").forEach(hitMap => {
+      targets.forEach(target => {
+        const targetId = target.getWord(0)
+        const commandBlock = hitMap.getNode(targetId)
+        if (commandBlock) commandBlock.forEach(command => this._executeCommand(target, command))
+      })
     })
+  }
+
+  _executeCommand(target, instruction) {
+    const commandName = instruction.getWord(0)
+    if (this[commandName]) this[commandName](target, instruction)
+    // board commands
+    else this.board[commandName](instruction)
+  }
+
+  _executeCommandBlocks(key) {
+    this.getCommandBlocks(key).forEach(commandBlock => this._executeCommandBlock(commandBlock))
+  }
+
+  _executeCommandBlock(commandBlock) {
+    const probability = commandBlock.getWord(1)
+    if (probability && this.root.randomNumberGenerator() > parseFloat(probability)) return
+    commandBlock.forEach(instruction => this._executeCommand(this, instruction))
   }
 
   onTick() {
     if (this.tickStack) {
-      const next = this.tickStack.shift()
-      this.executeCommandSequence(next)
+      this._executeCommandBlock(this.tickStack.shift())
       if (!this.tickStack.length) this.tickStack = undefined
     }
 
-    this.executeCommands("onTick")
+    this._executeCommandBlocks("onTick")
     if (this.health === 0) this.onDeathCommand()
   }
 
@@ -62,7 +84,7 @@ class Agent extends AbstractTreeComponent {
   }
 
   onDeathCommand() {
-    this.executeCommands("onDeath")
+    this._executeCommandBlocks("onDeath")
   }
 
   markDirty() {

@@ -81,18 +81,6 @@ yodash.fill = (rows, cols, occupiedSpots, emoji) => {
 	return board.join("\n")
 }
 
-yodash.applyCommandMap = (commandMap, targets, subject) => {
-	targets.forEach(target => {
-		const targetId = target.getWord(0)
-		const instructions = commandMap.getNode(targetId)
-		if (instructions) {
-			instructions.forEach(instruction => {
-				subject[instruction.getWord(0)](target, instruction)
-			})
-		}
-	})
-}
-
 yodash.positionsAdjacentTo = position => {
 	let { right, down } = position
 	const positions = []

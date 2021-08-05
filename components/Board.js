@@ -161,25 +161,7 @@ class BoardComponent extends AbstractTreeComponent {
 
   handleTouches() {
     const agentPositionMap = this.agentPositionMap
-
-    this.agents.forEach(subject => {
-      const { touchMap } = subject
-      if (!touchMap) return
-
-      for (let pos of yodash.positionsAdjacentTo(subject.position)) {
-        const hits = agentPositionMap.get(yodash.makePositionHash(pos)) ?? []
-        for (let target of hits) {
-          const targetId = target.getWord(0)
-          const instructions = touchMap.getNode(targetId)
-          if (instructions) {
-            instructions.forEach(instruction => {
-              subject[instruction.getWord(0)](target, instruction)
-            })
-            if (subject.getIndex() === -1) return
-          }
-        }
-      }
-    })
+    this.agents.forEach(node => node.handleTouches(agentPositionMap))
   }
 
   // Commands available to users:
