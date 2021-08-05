@@ -117,26 +117,35 @@ class SimojiApp extends AbstractTreeComponent {
 
   compiledStartState = ""
 
+  appendBoards() {
+    let boardCount = this.simojiProgram.get("boards") ? parseInt(this.simojiProgram.get("boards")) : 1
+    while (boardCount) {
+      this.appendBoard()
+      boardCount--
+    }
+  }
+
   appendBoard() {
     const { simojiProgram, windowWidth, windowHeight } = this
     const { gridSize, cols, rows } = this.makeGrid(simojiProgram, windowWidth, windowHeight)
     const seed = simojiProgram.has("seed") ? parseInt(simojiProgram.get("seed")) : newSeed()
-    this.randomNumberGenerator = yodash.getRandomNumberGenerator(seed)
+    const randomNumberGenerator = yodash.getRandomNumberGenerator(seed)
 
     this.compiledStartState = ""
     try {
-      this.compiledStartState = simojiProgram.compileSetup(rows, cols, this.randomNumberGenerator, yodash).trim()
+      this.compiledStartState = simojiProgram.compileSetup(rows, cols, randomNumberGenerator, yodash).trim()
     } catch (err) {
       if (this.verbose) console.error(err)
     }
 
     const styleNode = simojiProgram.getNode("style") ?? undefined
-    this.appendLineAndChildren(
+    const board = this.appendLineAndChildren(
       `BoardComponent ${gridSize} ${rows} ${cols}`,
       `${this.compiledStartState.trim()}
 GridComponent
 ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}`.trim()
     )
+    board.randomNumberGenerator = randomNumberGenerator
   }
 
   get editor() {
@@ -163,8 +172,8 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     delete this.compiledCode
     jtree.TreeNode._parsers.delete(BoardComponent) // clear parser
 
-    this.board.unmountAndDestroy()
-    this.appendBoard()
+    this.boards.forEach(board => board.unmountAndDestroy())
+    this.appendBoards()
     this.renderAndGetRenderReport()
     this.updateLocalStorage(simCode)
   }
@@ -186,8 +195,12 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     console.log(new jtree.TreeNode(errs.map(err => err.toObject())).toFormattedTable(200))
   }
 
+  get boards() {
+    return this.findNodes("BoardComponent")
+  }
+
   get board() {
-    return this.getNode("BoardComponent")
+    return this.boards[0]
   }
 
   get simojiProgram() {
@@ -197,7 +210,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
 
   startInterval() {
     this.interval = setInterval(() => {
-      this.board.boardLoop()
+      this.boards.forEach(board => board.boardLoop())
     }, 1000 / this.ticksPerSecond)
   }
 
@@ -235,7 +248,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     await this.start()
     this.interval = true
     while (this.isRunning) {
-      this.board.boardLoop()
+      this.boards.forEach(board => board.boardLoop())
       if (this.board.tick % 100 === 0) console.log(`Tick ${this.board.tick}`)
     }
     console.log(`Finished on tick ${this.board.tick}`)
@@ -394,7 +407,7 @@ SimEditorComponent
   const app = new SimojiApp(startState.toString())
   app.windowWidth = windowWidth
   app.windowHeight = windowHeight
-  app.appendBoard()
+  app.appendBoards()
   return app
 }
 

@@ -97,7 +97,7 @@ class BoardComponent extends AbstractTreeComponent {
   executeBoardCommands(key) {
     this.root.simojiProgram.findNodes(key).forEach(commands => {
       const probability = commands.getWord(1)
-      if (probability && this.root.randomNumberGenerator() > parseFloat(probability)) return
+      if (probability && this.randomNumberGenerator() > parseFloat(probability)) return
       commands.forEach(instruction => {
         this[instruction.getWord(0)](instruction)
       })
@@ -172,7 +172,7 @@ class BoardComponent extends AbstractTreeComponent {
         this.rows,
         this.cols,
         undefined,
-        this.root.randomNumberGenerator
+        this.randomNumberGenerator
       )}`
     )
   }
@@ -195,6 +195,29 @@ class BoardComponent extends AbstractTreeComponent {
 
   log(command) {
     this.root.log(command.getContent())
+  }
+
+  get boardIndex() {
+    return this.multipleBoards.indexOf(this)
+  }
+
+  get multipleBoards() {
+    return this.root.findNodes("BoardComponent")
+  }
+
+  toStumpCode() {
+    if (this.multipleBoards.length === 1) return super.toStumpCode()
+
+    const positions = {
+      0: "top left",
+      1: "top right",
+      2: "bottom left",
+      3: "bottom right"
+    }
+    const translate = positions[this.boardIndex]
+    return `div
+ style transform:scale(0.5);transform-origin: ${translate};
+ class ${this.getCssClassNames().join(" ")}`
   }
 }
 

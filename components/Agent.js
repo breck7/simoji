@@ -56,7 +56,7 @@ class Agent extends AbstractTreeComponent {
 
   _executeCommandBlock(commandBlock) {
     const probability = commandBlock.getWord(1)
-    if (probability && this.root.randomNumberGenerator() > parseFloat(probability)) return
+    if (probability && this.board.randomNumberGenerator() > parseFloat(probability)) return
     commandBlock.forEach(instruction => this._executeCommand(this, instruction))
   }
 
@@ -291,7 +291,7 @@ class Agent extends AbstractTreeComponent {
   }
 
   turnRandomly() {
-    this.angle = yodash.getRandomAngle(this.root.randomNumberGenerator)
+    this.angle = yodash.getRandomAngle(this.board.randomNumberGenerator)
     return this
   }
 
