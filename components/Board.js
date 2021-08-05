@@ -73,6 +73,11 @@ class BoardComponent extends AbstractTreeComponent {
 
     this.tick++
     this._populationCounts.push(this.populationCount)
+
+    if (this.resetAfterLoop) {
+      this.resetAfterLoop = false
+      this.getRootNode().resetCommand()
+    }
   }
 
   get root() {
@@ -149,8 +154,7 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   handleCollisions() {
-    const { agentPositionMap } = this
-    agentPositionMap.forEach(nodes => {
+    this.agentPositionMap.forEach(nodes => {
       if (nodes.length > 1) nodes.forEach(node => node.handleCollisions(nodes))
     })
   }
@@ -204,7 +208,7 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   reset() {
-    this.getRootNode().resetCommand()
+    this.resetAfterLoop = true
   }
 
   log(command) {

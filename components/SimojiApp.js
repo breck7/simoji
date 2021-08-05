@@ -80,6 +80,7 @@ class SimojiApp extends AbstractTreeComponent {
       try {
         evaled = eval(nodeJsPrefix + this.compiledCode)
       } catch (err) {
+        console.log(this.compiledCode)
         console.error(err)
       }
       this._agentMap = evaled

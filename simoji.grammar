@@ -135,6 +135,7 @@ pasteLineNode
 agentNode
  inScope commentNode abstractEventNode abstractAttributeNode
  cells keywordCell
+ catchAllNodeType errorNode
  compiler
   stringTemplate 
  javascript
@@ -159,6 +160,7 @@ abstractAttributeNode
  cells keywordCell
 abstractStringAttributeNode
  extends abstractAttributeNode
+ pattern ^\w+ .+$
  javascript
   compile() {
     return `${this.getWord(0)} = "${this.getWord(1)}"`
@@ -305,6 +307,9 @@ javascriptCommandNode
 kickItCommandNode
  extends abstractSubjectObjectCommandNode
  crux kickIt
+shootCommandNode
+ extends abstractSubjectObjectCommandNode
+ crux shoot
 pickItUpCommandNode
  extends abstractSubjectObjectCommandNode
  crux pickItUp
@@ -315,6 +320,10 @@ alertCommandNode
 logCommandNode
  extends abstractCommandNode
  crux log
+ catchAllCellType stringCell
+narrateCommandNode
+ extends abstractCommandNode
+ crux narrate
  catchAllCellType stringCell
 pauseCommandNode
  extends abstractCommandNode

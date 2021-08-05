@@ -224,11 +224,34 @@ class Agent extends AbstractTreeComponent {
   }
 
   pickItUp(target) {
+    if (target.owner === this) return
+    if (target.owner) target.owner._dropIt(target)
+
     target.owner = this
     if (!this.holding) this.holding = []
     this.holding.push(target)
   }
 
+  _dropIt(target) {
+    target.owner = undefined
+    this.holding = this.holding.filter(item => item !== target)
+  }
+
+  dropIt(target) {
+    this._dropIt(target)
+  }
+
+  narrate(subject, command) {
+    this.root.log(`${this.getWord(0)} ${command.getContent()}`)
+  }
+
+  shoot() {
+    if (!this.holding) return
+    this.holding.forEach(agent => {
+      this._dropIt(agent)
+      this.kickIt(agent)
+    })
+  }
   bounce() {
     this.angle = yodash.flipAngle(this.angle)
   }
@@ -251,13 +274,17 @@ class Agent extends AbstractTreeComponent {
   }
 
   turnToward(target, instruction) {
-    const targets = this.board.agentTypeMap.get(instruction.getWord(1))
+    const targetId = instruction.getWord(1)
+    const kind = this[targetId] ?? targetId // can define a custom target
+    const targets = this.board.agentTypeMap.get(kind)
     if (targets) this.angle = yodash.getBestAngle(targets, this.position)
     return this
   }
 
   turnFrom(target, instruction) {
-    const targets = this.board.agentTypeMap.get(instruction.getWord(1))
+    const targetId = instruction.getWord(1)
+    const kind = this[targetId] ?? targetId // can define a custom target
+    const targets = this.board.agentTypeMap.get(kind)
     if (targets) this.angle = yodash.flipAngle(yodash.getBestAngle(targets, this.position))
     return this
   }
