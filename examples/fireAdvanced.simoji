@@ -1,0 +1,43 @@
+treeDensitySetting 10%
+
+🌲
+ onHit
+  ⚡️
+   replaceWith 🔥
+ onTouch
+  🔥
+   replaceWith 🔥
+
+⚡️
+ health 10
+ onTick
+  decrease health
+ onDeath
+  remove
+
+🔥
+ health 50
+ onTick
+  decrease health
+ onDeath
+  replaceWith ⬛️
+
+
+⬛️
+ comment Burnt forest
+ html 🌲
+ style filter:grayscale(100%);
+
+
+insert treeDensitySetting 🌲
+onTick .3
+ spawn ⚡️
+
+experiment
+ treeDensitySetting 20%
+
+experiment
+ treeDensitySetting 40%
+
+experiment
+ treeDensitySetting 80%

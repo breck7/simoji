@@ -1,6 +1,8 @@
 anyCell
 stringCell
  highlightScope string
+settingValueCell
+ highlightScope constant.numeric
 cssCell
  highlightScope string
 javascriptCell
@@ -38,7 +40,7 @@ simojiNode
  extensions simoji
  description A Tree Language that compiles to a TreeComponentFramework app.
  root
- inScope blankLineNode commentNode abstractSetupNumberNode abstractDrawNode styleNode onTickNode onExtinctNode reportNode
+ inScope blankLineNode commentNode abstractSetupNumberNode abstractDrawNode styleNode onTickNode onExtinctNode reportNode experimentNode settingNode
  catchAllNodeType agentNode
  compilesTo javascript
  example
@@ -54,27 +56,6 @@ simojiNode
   insert 10 🦋
   insert 2 💡
  javascript
-  compileAgentClassDeclarationsAndMap() {
-    const clone = this.clone()
-    clone.filter(node => node.getNodeTypeId() !== "agentNode").forEach(node => node.destroy())
-    clone.agentKeywordMap = {}
-    clone.agentTypes.forEach((node, index) => clone.agentKeywordMap[node.getWord(0)] = `simAgent${index}`)
-    const compiled = clone.compile()
-    const agentMap = Object.keys(clone.agentKeywordMap).map((key) => `"${key}":${clone.agentKeywordMap[key]}`).join(",")
-    return `${compiled}
-    const map = {${agentMap}};
-    map;`
-  }
-  compileSetup(rows, cols, randomNumberGenerator, yodash) {
-    const clone = this.clone()
-    clone.filter(node => node.getNodeTypeId() === "blankLineNode" || node.getNodeTypeId() === "agentNode").forEach(node => node.destroy())
-    clone.occupiedSpots = new Set()
-    clone.randomNumberGenerator = randomNumberGenerator
-    clone.rows = rows
-    clone.cols = cols
-    clone.yodash = yodash
-    return clone.compile()
-  }
   get agentTypes() {
     return this.filter(node => node.getNodeTypeId() === "agentNode")
   }
@@ -117,6 +98,11 @@ rectangleDrawNode
     const {yodash} = this.getParent()
     return yodash.makeRectangle(...yodash.parseInts(this.getWords().slice(1), 1))
   }
+experimentNode
+ crux experiment
+ cells keywordCell
+ inScope settingNode
+ catchAllCellType stringCell
 pasteDrawNode
  extends abstractDrawNode
  cells keywordCell
@@ -196,6 +182,10 @@ abstractIntegerAttributeNode
 customIntegerAttributeNode
  pattern ^\w+ \d+$
  extends abstractIntegerAttributeNode
+settingNode
+ description Define a configurable input.
+ cells keywordCell settingValueCell
+ pattern ^\w+Setting .+$
 healthNode
  extends abstractIntegerAttributeNode
  crux health
