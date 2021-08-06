@@ -16,8 +16,30 @@ class BoardErrorNode extends AbstractTreeComponent {
 }
 
 class BoardComponent extends AbstractTreeComponent {
-  createParser() {
-    return new jtree.TreeNode.Parser(BoardErrorNode, { ...this.root.agentMap, GridComponent, BoardStyleComponent })
+  // override default parser creation.
+  _getParser() {
+    if (!this._parser)
+      this._parser = new jtree.TreeNode.Parser(BoardErrorNode, { ...this.agentMap, GridComponent, BoardStyleComponent })
+    return this._parser
+  }
+
+  get simojiProgram() {
+    return this.root.simojiPrograms[this.boardIndex]
+  }
+
+  get agentMap() {
+    if (!this._agentMap) {
+      this.compiledCode = yodash.compileAgentClassDeclarationsAndMap(this.simojiProgram.clone())
+      let evaled = {}
+      try {
+        evaled = eval(nodeJsPrefix + this.compiledCode)
+      } catch (err) {
+        console.log(this.compiledCode)
+        console.error(err)
+      }
+      this._agentMap = evaled
+    }
+    return this._agentMap
   }
 
   get gridSize() {
@@ -84,8 +106,13 @@ class BoardComponent extends AbstractTreeComponent {
     return this.getParent()
   }
 
+  get ticksPerSecond() {
+    const setTime = this.simojiProgram.get("ticksPerSecond")
+    return setTime ? parseInt(setTime) : 10
+  }
+
   handleExtinctions() {
-    this.root.simojiProgram.findNodes("onExtinct").forEach(commands => {
+    this.simojiProgram.findNodes("onExtinct").forEach(commands => {
       const emoji = commands.getWord(1)
       if (emoji && this.has(emoji)) return
       commands.forEach(instruction => {
@@ -95,7 +122,7 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   executeBoardCommands(key) {
-    this.root.simojiProgram.findNodes(key).forEach(commands => {
+    this.simojiProgram.findNodes(key).forEach(commands => {
       const probability = commands.getWord(1)
       if (probability && this.randomNumberGenerator() > parseFloat(probability)) return
       commands.forEach(instruction => {
@@ -198,15 +225,15 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   get boardIndex() {
-    return this.multipleBoards.indexOf(this)
+    return parseInt(this.getWord(4))
   }
 
-  get multipleBoards() {
-    return this.root.findNodes("BoardComponent")
+  get hasMultipleBoards() {
+    return this.root.simojiPrograms.length > 1
   }
 
   toStumpCode() {
-    if (this.multipleBoards.length === 1) return super.toStumpCode()
+    if (!this.hasMultipleBoards) return super.toStumpCode()
 
     const positions = {
       0: "top left",

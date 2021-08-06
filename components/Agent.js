@@ -9,12 +9,12 @@ class Agent extends AbstractTreeComponent {
   angle = "South"
 
   getCommandBlocks(eventName) {
-    return this.root.simojiProgram.getNode(this.getWord(0)).findNodes(eventName)
+    return this.board.simojiProgram.getNode(this.getWord(0)).findNodes(eventName)
   }
 
   get definitionWithBehaviors() {
-    if (!this.behaviors.length) return this.root.simojiProgram.getNode(this.getWord(0))
-    return flatten(pick(this.root.simojiProgram, [this.getWord(0), ...this.behaviors]))
+    if (!this.behaviors.length) return this.board.simojiProgram.getNode(this.getWord(0))
+    return flatten(pick(this.board.simojiProgram, [this.getWord(0), ...this.behaviors]))
   }
 
   handleTouches(agentPositionMap) {

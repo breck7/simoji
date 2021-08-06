@@ -20,6 +20,52 @@ yodash.flipAngle = angle => {
 	return newAngle
 }
 
+yodash.compileAgentClassDeclarationsAndMap = clone => {
+	clone.filter(node => node.getNodeTypeId() !== "agentNode").forEach(node => node.destroy())
+	clone.agentKeywordMap = {}
+	clone.agentTypes.forEach((node, index) => (clone.agentKeywordMap[node.getWord(0)] = `simAgent${index}`))
+	const compiled = clone.compile()
+	const agentMap = Object.keys(clone.agentKeywordMap)
+		.map(key => `"${key}":${clone.agentKeywordMap[key]}`)
+		.join(",")
+	return `${compiled}
+    const map = {${agentMap}};
+    map;`
+}
+
+yodash.prepareExperiment = (clone, experiment) => {
+	// drop experiment nodes
+	clone.filter(node => node.getNodeTypeId() === "experimentNode").forEach(node => node.destroy())
+	// Append current experiment
+	if (experiment) clone.concat(experiment.childrenToString())
+	// Build symbol table
+	const symbolTable = {}
+	clone
+		.filter(node => node.getNodeTypeId() === "settingNode")
+		.forEach(node => {
+			symbolTable[node.getWord(0)] = node.getContent()
+			node.destroy()
+		})
+	// Find and replace
+	let program = clone.toString()
+	Object.keys(symbolTable).forEach(key => {
+		program = program.replaceAll(key, symbolTable[key])
+	})
+	return program
+}
+
+yodash.compileBoardStartState = (clone, rows, cols, randomNumberGenerator) => {
+	clone
+		.filter(node => node.getNodeTypeId() === "blankLineNode" || node.getNodeTypeId() === "agentNode")
+		.forEach(node => node.destroy())
+	clone.occupiedSpots = new Set()
+	clone.randomNumberGenerator = randomNumberGenerator
+	clone.rows = rows
+	clone.cols = cols
+	clone.yodash = yodash
+	return clone.compile()
+}
+
 yodash.getBestAngle = (targets, position) => {
 	let closest = Infinity
 	let target
