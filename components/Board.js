@@ -29,7 +29,7 @@ class BoardComponent extends AbstractTreeComponent {
 
   get agentMap() {
     if (!this._agentMap) {
-      this.compiledCode = yodash.compileAgentClassDeclarationsAndMap(this.simojiProgram.clone())
+      this.compiledCode = yodash.compileAgentClassDeclarationsAndMap(this.simojiProgram)
       let evaled = {}
       try {
         evaled = eval(nodeJsPrefix + this.compiledCode)

@@ -20,7 +20,8 @@ yodash.flipAngle = angle => {
 	return newAngle
 }
 
-yodash.compileAgentClassDeclarationsAndMap = clone => {
+yodash.compileAgentClassDeclarationsAndMap = program => {
+	const clone = program.clone()
 	clone.filter(node => node.getNodeTypeId() !== "agentNode").forEach(node => node.destroy())
 	clone.agentKeywordMap = {}
 	clone.agentTypes.forEach((node, index) => (clone.agentKeywordMap[node.getWord(0)] = `simAgent${index}`))
@@ -33,7 +34,8 @@ yodash.compileAgentClassDeclarationsAndMap = clone => {
     map;`
 }
 
-yodash.prepareExperiment = (clone, experiment) => {
+yodash.patchExperimentAndReplaceSymbols = (program, experiment) => {
+	const clone = program.clone()
 	// drop experiment nodes
 	clone.filter(node => node.getNodeTypeId() === "experimentNode").forEach(node => node.destroy())
 	// Append current experiment
@@ -41,23 +43,23 @@ yodash.prepareExperiment = (clone, experiment) => {
 	// Build symbol table
 	const symbolTable = {}
 	clone
-		.filter(node => node.getNodeTypeId() === "settingNode")
+		.filter(node => node.getNodeTypeId() === "settingDefinitionNode")
 		.forEach(node => {
 			symbolTable[node.getWord(0)] = node.getContent()
 			node.destroy()
 		})
 	// Find and replace
-	let program = clone.toString()
+	let withVarsReplaced = clone.toString()
 	Object.keys(symbolTable).forEach(key => {
-		program = program.replaceAll(key, symbolTable[key])
+		withVarsReplaced = withVarsReplaced.replaceAll(key, symbolTable[key])
 	})
-	return program
+	return withVarsReplaced
 }
 
-yodash.compileBoardStartState = (clone, rows, cols, randomNumberGenerator) => {
-	clone
-		.filter(node => node.getNodeTypeId() === "blankLineNode" || node.getNodeTypeId() === "agentNode")
-		.forEach(node => node.destroy())
+yodash.compileBoardStartState = (program, rows, cols, randomNumberGenerator) => {
+	const clone = program.clone()
+	const excludeTypes = ["blankLineNode", "settingDefinitionNode", "agentNode"]
+	clone.filter(node => excludeTypes.includes(node.getNodeTypeId())).forEach(node => node.destroy())
 	clone.occupiedSpots = new Set()
 	clone.randomNumberGenerator = randomNumberGenerator
 	clone.rows = rows

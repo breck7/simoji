@@ -116,7 +116,7 @@ class SimojiApp extends AbstractTreeComponent {
 
     this.compiledStartState = ""
     try {
-      this.compiledStartState = yodash.compileBoardStartState(program.clone(), rows, cols, randomNumberGenerator).trim()
+      this.compiledStartState = yodash.compileBoardStartState(program, rows, cols, randomNumberGenerator).trim()
     } catch (err) {
       if (this.verbose) console.error(err)
     }
@@ -184,13 +184,18 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     return this.boards[0]
   }
 
+  get mainProgram() {
+    return new simojiCompiler(this.simCode)
+  }
+
   get simojiPrograms() {
     if (!this._simojiPrograms) {
-      const masterCode = new simojiCompiler(this.simCode)
-      this._simojiPrograms = [yodash.prepareExperiment(masterCode.clone())]
-      const experiments = masterCode.findNodes("experiment").forEach(node => {
-        this._simojiPrograms.push(yodash.prepareExperiment(masterCode, node))
+      const { mainProgram } = this
+      this._simojiPrograms = [yodash.patchExperimentAndReplaceSymbols(mainProgram)]
+      mainProgram.findNodes("experiment").forEach(experiment => {
+        this._simojiPrograms.push(yodash.patchExperimentAndReplaceSymbols(mainProgram, experiment))
       })
+      // Evaluate the variables
       this._simojiPrograms = this._simojiPrograms.map(program => new simojiCompiler(program.toString()))
     }
     return this._simojiPrograms

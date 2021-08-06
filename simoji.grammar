@@ -40,7 +40,7 @@ simojiNode
  extensions simoji
  description A Tree Language that compiles to a TreeComponentFramework app.
  root
- inScope blankLineNode commentNode abstractSetupNumberNode abstractDrawNode styleNode onTickNode onExtinctNode reportNode experimentNode settingNode
+ inScope blankLineNode commentNode abstractSetupNumberNode abstractDrawNode styleNode onTickNode onExtinctNode reportNode experimentNode settingDefinitionNode
  catchAllNodeType agentNode
  compilesTo javascript
  example
@@ -59,6 +59,11 @@ simojiNode
   get agentTypes() {
     return this.filter(node => node.getNodeTypeId() === "agentNode")
   }
+experimentNode
+ crux experiment
+ cells keywordCell
+ inScope blankLineNode commentNode abstractSetupNumberNode abstractDrawNode styleNode onTickNode onExtinctNode reportNode settingDefinitionNode
+ catchAllCellType stringCell
 abstractDrawNode
 fillNode
  description Fill all blank cells with this agent.
@@ -98,11 +103,6 @@ rectangleDrawNode
     const {yodash} = this.getParent()
     return yodash.makeRectangle(...yodash.parseInts(this.getWords().slice(1), 1))
   }
-experimentNode
- crux experiment
- cells keywordCell
- inScope settingNode
- catchAllCellType stringCell
 pasteDrawNode
  extends abstractDrawNode
  cells keywordCell
@@ -182,7 +182,7 @@ abstractIntegerAttributeNode
 customIntegerAttributeNode
  pattern ^\w+ \d+$
  extends abstractIntegerAttributeNode
-settingNode
+settingDefinitionNode
  description Define a configurable input.
  cells keywordCell settingValueCell
  pattern ^\w+Setting .+$
