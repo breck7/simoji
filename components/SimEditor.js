@@ -79,7 +79,14 @@ class SimEditorComponent extends AbstractTreeComponent {
       if (info.top + info.clientHeight < after) this.codeMirrorInstance.scrollTo(null, after - info.clientHeight + 3)
     })
 
-    root.loadNewSim(code)
+    clearTimeout(this._timeout)
+    this._timeout = setTimeout(() => {
+      this.loadFromEditor()
+    }, 200)
+  }
+
+  loadFromEditor() {
+    this.getRootNode().loadNewSim(this._code)
   }
 
   get simCode() {
