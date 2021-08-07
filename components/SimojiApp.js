@@ -54,11 +54,6 @@ const newSeed = () => {
   return _defaultSeed
 }
 
-let nodeJsPrefix = ""
-
-// prettier-ignore
-/*NODE_JS_ONLY*/ nodeJsPrefix = `const { Agent } = require("${__dirname}/Agent.js");`
-
 class SimojiApp extends AbstractTreeComponent {
   createParser() {
     return new jtree.TreeNode.Parser(ErrorNode, {
@@ -104,6 +99,9 @@ class SimojiApp extends AbstractTreeComponent {
 
   appendExperiments() {
     this.simojiPrograms.forEach((program, index) => {
+      if (index > 3)
+        // currently max out at 4 experiments. just need to update CSS transform code.
+        return
       this._appendExperiment(program, index)
     })
   }
@@ -202,26 +200,15 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
   }
 
   startAllIntervals() {
-    this.intervals = this.boards.map(board => setInterval(() => board.boardLoop(), 1000 / board.ticksPerSecond))
-  }
-
-  pauseInterval(index) {
-    clearInterval(this.intervals[index])
-    this.intervals[index] = undefined
+    this.boards.forEach(board => board.startInterval())
   }
 
   stopAllIntervals() {
-    this.intervals.forEach(interval => {
-      clearInterval(interval)
-    })
-
-    this.intervals = []
+    this.boards.forEach(board => board.stopInterval())
   }
 
-  intervals = []
-
   get isRunning() {
-    return this.intervals.length > 0
+    return this.boards.some(board => board.isRunning)
   }
 
   async start() {
@@ -248,10 +235,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
   // todo: fix for boards
   async runUntilPause() {
     await this.start()
-    while (this.isRunning) {
-      this.boards.forEach(board => board.boardLoop())
-      if (this.board.tick % 100 === 0) console.log(`Tick ${this.board.tick}`)
-    }
+    this.boards.forEach(board => board.runUntilPause())
     console.log(`Finished on tick ${this.board.tick}`)
   }
 
@@ -315,7 +299,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
 
   updatePlayButtonComponentHack() {
     this.getNode("BottomBarComponent PlayButtonComponent")
-      .setContent(this.intervals[0])
+      .setContent(Date.now())
       .renderAndGetRenderReport()
   }
 

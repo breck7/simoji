@@ -20,6 +20,54 @@ yodash.flipAngle = angle => {
 	return newAngle
 }
 
+yodash.compileAgentClassDeclarationsAndMap = program => {
+	const clone = program.clone()
+	clone.filter(node => node.getNodeTypeId() !== "agentNode").forEach(node => node.destroy())
+	clone.agentKeywordMap = {}
+	clone.agentTypes.forEach((node, index) => (clone.agentKeywordMap[node.getWord(0)] = `simAgent${index}`))
+	const compiled = clone.compile()
+	const agentMap = Object.keys(clone.agentKeywordMap)
+		.map(key => `"${key}":${clone.agentKeywordMap[key]}`)
+		.join(",")
+	return `${compiled}
+    const map = {${agentMap}};
+    map;`
+}
+
+yodash.patchExperimentAndReplaceSymbols = (program, experiment) => {
+	const clone = program.clone()
+	// drop experiment nodes
+	clone.filter(node => node.getNodeTypeId() === "experimentNode").forEach(node => node.destroy())
+	// Append current experiment
+	if (experiment) clone.concat(experiment.childrenToString())
+	// Build symbol table
+	const symbolTable = {}
+	clone
+		.filter(node => node.getNodeTypeId() === "settingDefinitionNode")
+		.forEach(node => {
+			symbolTable[node.getWord(0)] = node.getContent()
+			node.destroy()
+		})
+	// Find and replace
+	let withVarsReplaced = clone.toString()
+	Object.keys(symbolTable).forEach(key => {
+		withVarsReplaced = withVarsReplaced.replaceAll(key, symbolTable[key])
+	})
+	return withVarsReplaced
+}
+
+yodash.compileBoardStartState = (program, rows, cols, randomNumberGenerator) => {
+	const clone = program.clone()
+	const excludeTypes = ["blankLineNode", "settingDefinitionNode", "agentNode"]
+	clone.filter(node => excludeTypes.includes(node.getNodeTypeId())).forEach(node => node.destroy())
+	clone.occupiedSpots = new Set()
+	clone.randomNumberGenerator = randomNumberGenerator
+	clone.rows = rows
+	clone.cols = cols
+	clone.yodash = yodash
+	return clone.compile()
+}
+
 yodash.getBestAngle = (targets, position) => {
 	let closest = Infinity
 	let target
@@ -233,16 +281,22 @@ class Agent extends AbstractTreeComponent {
   angle = "South"
 
   getCommandBlocks(eventName) {
-    return this.root.simojiProgram.getNode(this.getWord(0)).findNodes(eventName)
+    return this.board.simojiProgram.getNode(this.getWord(0)).findNodes(eventName)
   }
 
   get definitionWithBehaviors() {
-    if (!this.behaviors.length) return this.root.simojiProgram.getNode(this.getWord(0))
-    return flatten(pick(this.root.simojiProgram, [this.getWord(0), ...this.behaviors]))
+    if (!this.behaviors.length) return this.board.simojiProgram.getNode(this.getWord(0))
+    return flatten(pick(this.board.simojiProgram, [this.getWord(0), ...this.behaviors]))
+  }
+
+  skip(probability) {
+    return probability !== undefined && this.board.randomNumberGenerator() > parseFloat(probability)
   }
 
   handleTouches(agentPositionMap) {
     this.getCommandBlocks("onTouch").forEach(touchMap => {
+      if (this.skip(touchMap.getWord(1))) return
+
       for (let pos of yodash.positionsAdjacentTo(this.position)) {
         const hits = agentPositionMap.get(yodash.makePositionHash(pos)) ?? []
         for (let target of hits) {
@@ -259,6 +313,7 @@ class Agent extends AbstractTreeComponent {
 
   handleCollisions(targets) {
     this.getCommandBlocks("onHit").forEach(hitMap => {
+      if (this.skip(hitMap.getWord(1))) return
       targets.forEach(target => {
         const targetId = target.getWord(0)
         const commandBlock = hitMap.getNode(targetId)
@@ -279,8 +334,7 @@ class Agent extends AbstractTreeComponent {
   }
 
   _executeCommandBlock(commandBlock) {
-    const probability = commandBlock.getWord(1)
-    if (probability && this.root.randomNumberGenerator() > parseFloat(probability)) return
+    if (this.skip(commandBlock.getWord(1))) return
     commandBlock.forEach(instruction => this._executeCommand(this, instruction))
   }
 
@@ -515,7 +569,7 @@ class Agent extends AbstractTreeComponent {
   }
 
   turnRandomly() {
-    this.angle = yodash.getRandomAngle(this.root.randomNumberGenerator)
+    this.angle = yodash.getRandomAngle(this.board.randomNumberGenerator)
     return this
   }
 
@@ -558,7 +612,7 @@ class AgentPaletteComponent extends AbstractTreeComponent {
   toStumpCode() {
     const root = this.getRootNode()
     const activeObject = root.agentToInsert
-    const items = root.simojiProgram.agentTypes
+    const items = root.simojiPrograms[0].agentTypes
       .map(item => item.getWord(0))
       .map(
         word => ` div ${word}
@@ -590,6 +644,10 @@ window.AgentPaletteComponent = AgentPaletteComponent
 
 
 
+let nodeJsPrefix = ""
+
+// prettier-ignore
+
 class BoardErrorNode extends AbstractTreeComponent {
   _isErrorNodeType() {
     return true
@@ -602,8 +660,30 @@ class BoardErrorNode extends AbstractTreeComponent {
 }
 
 class BoardComponent extends AbstractTreeComponent {
-  createParser() {
-    return new jtree.TreeNode.Parser(BoardErrorNode, { ...this.root.agentMap, GridComponent, BoardStyleComponent })
+  // override default parser creation.
+  _getParser() {
+    if (!this._parser)
+      this._parser = new jtree.TreeNode.Parser(BoardErrorNode, { ...this.agentMap, GridComponent, BoardStyleComponent })
+    return this._parser
+  }
+
+  get simojiProgram() {
+    return this.root.simojiPrograms[this.boardIndex]
+  }
+
+  get agentMap() {
+    if (!this._agentMap) {
+      this.compiledCode = yodash.compileAgentClassDeclarationsAndMap(this.simojiProgram)
+      let evaled = {}
+      try {
+        evaled = eval(nodeJsPrefix + this.compiledCode)
+      } catch (err) {
+        console.log(this.compiledCode)
+        console.error(err)
+      }
+      this._agentMap = evaled
+    }
+    return this._agentMap
   }
 
   get gridSize() {
@@ -662,7 +742,7 @@ class BoardComponent extends AbstractTreeComponent {
 
     if (this.resetAfterLoop) {
       this.resetAfterLoop = false
-      this.getRootNode().resetCommand()
+      this.getRootNode().resetAllCommand()
     }
   }
 
@@ -670,8 +750,13 @@ class BoardComponent extends AbstractTreeComponent {
     return this.getParent()
   }
 
+  get ticksPerSecond() {
+    const setTime = this.simojiProgram.get("ticksPerSecond")
+    return setTime ? parseInt(setTime) : 10
+  }
+
   handleExtinctions() {
-    this.root.simojiProgram.findNodes("onExtinct").forEach(commands => {
+    this.simojiProgram.findNodes("onExtinct").forEach(commands => {
       const emoji = commands.getWord(1)
       if (emoji && this.has(emoji)) return
       commands.forEach(instruction => {
@@ -681,9 +766,9 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   executeBoardCommands(key) {
-    this.root.simojiProgram.findNodes(key).forEach(commands => {
+    this.simojiProgram.findNodes(key).forEach(commands => {
       const probability = commands.getWord(1)
-      if (probability && this.root.randomNumberGenerator() > parseFloat(probability)) return
+      if (probability && this.randomNumberGenerator() > parseFloat(probability)) return
       commands.forEach(instruction => {
         this[instruction.getWord(0)](instruction)
       })
@@ -750,6 +835,50 @@ class BoardComponent extends AbstractTreeComponent {
     this.agents.forEach(node => node.handleTouches(agentPositionMap))
   }
 
+  get boardIndex() {
+    return parseInt(this.getWord(4))
+  }
+
+  get hasMultipleBoards() {
+    return this.root.simojiPrograms.length > 1
+  }
+
+  toStumpCode() {
+    if (!this.hasMultipleBoards) return super.toStumpCode()
+
+    const positions = {
+      0: "top left",
+      1: "top right",
+      2: "bottom left",
+      3: "bottom right"
+    }
+    const translate = positions[this.boardIndex]
+    return `div
+ style transform:scale(0.5);transform-origin: ${translate};
+ class ${this.getCssClassNames().join(" ")}`
+  }
+
+  startInterval() {
+    this.interval = setInterval(() => this.boardLoop(), 1000 / this.ticksPerSecond)
+  }
+
+  stopInterval() {
+    clearInterval(this.interval)
+    this.interval = undefined
+  }
+
+  get isRunning() {
+    return !!this.interval
+  }
+
+  runUntilPause() {
+    this.interval = true
+    while (this.interval) {
+      this.boardLoop()
+      if (this.tick % 100 === 0) console.log(`Tick ${this.tick}`)
+    }
+  }
+
   // Commands available to users:
 
   spawn(command) {
@@ -758,7 +887,7 @@ class BoardComponent extends AbstractTreeComponent {
         this.rows,
         this.cols,
         undefined,
-        this.root.randomNumberGenerator
+        this.randomNumberGenerator
       )}`
     )
   }
@@ -772,7 +901,7 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   pause() {
-    this.root.pauseCommand()
+    this.stopInterval()
   }
 
   reset() {
@@ -974,7 +1103,7 @@ class PlayButtonComponent extends AbstractTreeComponent {
   toStumpCode() {
     return `span ${this.isStarted ? "&#10074;&#10074;" : "▶︎"}
  class PlayButtonComponent
- clickCommand togglePlayCommand`
+ clickCommand togglePlayAllCommand`
   }
 }
 
@@ -1002,12 +1131,12 @@ class ResetButtonComponent extends AbstractTreeComponent {
     return `span ≪
  title Clear and reset
  class ResetButtonComponent
- clickCommand resetCommand`
+ clickCommand resetAllCommand`
   }
 
-  resetCommand() {
-    this.getRootNode().pauseCommand()
-    this.getRootNode().resetCommand()
+  resetAllCommand() {
+    this.getRootNode().pauseAllCommand()
+    this.getRootNode().resetAllCommand()
   }
 }
 
@@ -1042,7 +1171,7 @@ class ShareComponent extends AbstractTreeComponent {
   }
 
   getDependencies() {
-    return [this.getRootNode().simojiProgram]
+    return [this.getRootNode().simojiPrograms[0]]
   }
 
   get link() {
@@ -1101,7 +1230,7 @@ class SimEditorComponent extends AbstractTreeComponent {
     if (this._code === code) return
     this._code = code
     const root = this.getRootNode()
-    root.pauseCommand()
+    root.pauseAllCommand()
     // this._updateLocalStorage()
 
     this.program = new simojiCompiler(code)
@@ -1135,7 +1264,14 @@ class SimEditorComponent extends AbstractTreeComponent {
       if (info.top + info.clientHeight < after) this.codeMirrorInstance.scrollTo(null, after - info.clientHeight + 3)
     })
 
-    root.loadNewSim(code)
+    clearTimeout(this._timeout)
+    this._timeout = setTimeout(() => {
+      this.loadFromEditor()
+    }, 200)
+  }
+
+  loadFromEditor() {
+    this.getRootNode().loadNewSim(this._code)
   }
 
   get simCode() {
@@ -1241,10 +1377,6 @@ const newSeed = () => {
   return _defaultSeed
 }
 
-let nodeJsPrefix = ""
-
-// prettier-ignore
-
 class SimojiApp extends AbstractTreeComponent {
   createParser() {
     return new jtree.TreeNode.Parser(ErrorNode, {
@@ -1259,25 +1391,10 @@ class SimojiApp extends AbstractTreeComponent {
     })
   }
 
-  get agentMap() {
-    if (!this._agentMap) {
-      this.compiledCode = this.simojiProgram.compileAgentClassDeclarationsAndMap()
-      let evaled = {}
-      try {
-        evaled = eval(nodeJsPrefix + this.compiledCode)
-      } catch (err) {
-        console.log(this.compiledCode)
-        console.error(err)
-      }
-      this._agentMap = evaled
-    }
-    return this._agentMap
-  }
-
-  resetCommand() {
+  resetAllCommand() {
     const restart = this.isRunning
-    this.loadNewSim(this.simojiProgram.toString())
-    if (restart) this.startInterval()
+    this.loadNewSim(this.simCode)
+    if (restart) this.startAllIntervals()
   }
 
   makeGrid(simojiProgram, windowWidth, windowHeight) {
@@ -1303,26 +1420,36 @@ class SimojiApp extends AbstractTreeComponent {
 
   compiledStartState = ""
 
-  appendBoard() {
-    const { simojiProgram, windowWidth, windowHeight } = this
-    const { gridSize, cols, rows } = this.makeGrid(simojiProgram, windowWidth, windowHeight)
-    const seed = simojiProgram.has("seed") ? parseInt(simojiProgram.get("seed")) : newSeed()
-    this.randomNumberGenerator = yodash.getRandomNumberGenerator(seed)
+  appendExperiments() {
+    this.simojiPrograms.forEach((program, index) => {
+      if (index > 3)
+        // currently max out at 4 experiments. just need to update CSS transform code.
+        return
+      this._appendExperiment(program, index)
+    })
+  }
+
+  _appendExperiment(program, index) {
+    const { windowWidth, windowHeight } = this
+    const { gridSize, cols, rows } = this.makeGrid(program, windowWidth, windowHeight)
+    const seed = program.has("seed") ? parseInt(program.get("seed")) : newSeed()
+    const randomNumberGenerator = yodash.getRandomNumberGenerator(seed)
 
     this.compiledStartState = ""
     try {
-      this.compiledStartState = simojiProgram.compileSetup(rows, cols, this.randomNumberGenerator, yodash).trim()
+      this.compiledStartState = yodash.compileBoardStartState(program, rows, cols, randomNumberGenerator).trim()
     } catch (err) {
       if (this.verbose) console.error(err)
     }
 
-    const styleNode = simojiProgram.getNode("style") ?? undefined
-    this.appendLineAndChildren(
-      `BoardComponent ${gridSize} ${rows} ${cols}`,
+    const styleNode = program.getNode("style") ?? undefined
+    const board = this.appendLineAndChildren(
+      `BoardComponent ${gridSize} ${rows} ${cols} ${index}`,
       `${this.compiledStartState.trim()}
 GridComponent
 ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}`.trim()
     )
+    board.randomNumberGenerator = randomNumberGenerator
   }
 
   get editor() {
@@ -1334,7 +1461,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     const simCode = ExampleSims.getNode(name).childrenToString()
     this.editor.setCodeMirrorValue(simCode)
     this.loadNewSim(simCode)
-    if (restart) this.startInterval()
+    if (restart) this.startAllIntervals()
     this.willowBrowser.setHash("")
   }
 
@@ -1343,14 +1470,12 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
   }
 
   loadNewSim(simCode) {
-    this.stopInterval()
-    delete this._agentMap
-    delete this._simojiProgram
-    delete this.compiledCode
-    jtree.TreeNode._parsers.delete(BoardComponent) // clear parser
+    this.stopAllIntervals()
+    this.boards.forEach(board => board.unmountAndDestroy())
 
-    this.board.unmountAndDestroy()
-    this.appendBoard()
+    delete this._simojiPrograms
+
+    this.appendExperiments()
     this.renderAndGetRenderReport()
     this.updateLocalStorage(simCode)
   }
@@ -1368,32 +1493,45 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
   }
 
   dumpErrorsCommand() {
-    const errs = this._simojiProgram.getAllErrors()
+    const errs = new simojiCompiler(this.simCode).getAllErrors()
     console.log(new jtree.TreeNode(errs.map(err => err.toObject())).toFormattedTable(200))
   }
 
+  get boards() {
+    return this.findNodes("BoardComponent")
+  }
+
   get board() {
-    return this.getNode("BoardComponent")
+    return this.boards[0]
   }
 
-  get simojiProgram() {
-    if (!this._simojiProgram) this._simojiProgram = new simojiCompiler(this.simCode)
-    return this._simojiProgram
+  get mainProgram() {
+    return new simojiCompiler(this.simCode)
   }
 
-  startInterval() {
-    this.interval = setInterval(() => {
-      this.board.boardLoop()
-    }, 1000 / this.ticksPerSecond)
+  get simojiPrograms() {
+    if (!this._simojiPrograms) {
+      const { mainProgram } = this
+      this._simojiPrograms = [yodash.patchExperimentAndReplaceSymbols(mainProgram)]
+      mainProgram.findNodes("experiment").forEach(experiment => {
+        this._simojiPrograms.push(yodash.patchExperimentAndReplaceSymbols(mainProgram, experiment))
+      })
+      // Evaluate the variables
+      this._simojiPrograms = this._simojiPrograms.map(program => new simojiCompiler(program.toString()))
+    }
+    return this._simojiPrograms
   }
 
-  stopInterval() {
-    clearInterval(this.interval)
-    delete this.interval
+  startAllIntervals() {
+    this.boards.forEach(board => board.startInterval())
+  }
+
+  stopAllIntervals() {
+    this.boards.forEach(board => board.stopInterval())
   }
 
   get isRunning() {
-    return !!this.interval
+    return this.boards.some(board => board.isRunning)
   }
 
   async start() {
@@ -1417,25 +1555,15 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     })
   }
 
+  // todo: fix for boards
   async runUntilPause() {
     await this.start()
-    this.interval = true
-    while (this.isRunning) {
-      this.board.boardLoop()
-      if (this.board.tick % 100 === 0) console.log(`Tick ${this.board.tick}`)
-    }
+    this.boards.forEach(board => board.runUntilPause())
     console.log(`Finished on tick ${this.board.tick}`)
   }
 
-  interval = undefined
-
-  get ticksPerSecond() {
-    const setTime = this.simojiProgram.get("ticksPerSecond")
-    return setTime ? parseInt(setTime) : 10
-  }
-
   ensureRender() {
-    if (this.interval) return this
+    if (this.isRunning) return this
     this.renderAndGetRenderReport()
   }
 
@@ -1472,12 +1600,12 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
 
   get urlHash() {
     const tree = new jtree.TreeNode()
-    tree.appendLineAndChildren("simoji", this.simojiProgram?.childrenToString() ?? "")
+    tree.appendLineAndChildren("simoji", this.simCode ?? "")
     return "#" + encodeURIComponent(tree.toString())
   }
 
   get report() {
-    const report = this.simojiProgram.getNode("report")
+    const report = this.mainProgram.getNode("report")
     return report ? report.childrenToString() : "roughjs.line"
   }
 
@@ -1494,18 +1622,18 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
 
   updatePlayButtonComponentHack() {
     this.getNode("BottomBarComponent PlayButtonComponent")
-      .setContent(this.interval)
+      .setContent(Date.now())
       .renderAndGetRenderReport()
   }
 
-  togglePlayCommand() {
-    this.isRunning ? this.stopInterval() : this.startInterval()
+  togglePlayAllCommand() {
+    this.isRunning ? this.stopAllIntervals() : this.startAllIntervals()
     this.updatePlayButtonComponentHack()
   }
 
-  pauseCommand() {
+  pauseAllCommand() {
     if (this.isRunning) {
-      this.stopInterval()
+      this.stopAllIntervals()
       this.updatePlayButtonComponentHack()
     }
   }
@@ -1546,11 +1674,11 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
 
   _getKeyboardShortcuts() {
     return {
-      space: () => this.togglePlayCommand(),
+      space: () => this.togglePlayAllCommand(),
       d: () => this.toggleTreeComponentFrameworkDebuggerCommand(),
       c: () => this.exportDataCommand(),
       o: () => this.openReportInOhayoCommand(),
-      r: () => this.resetCommand(),
+      r: () => this.resetAllCommand(),
       up: () => this.moveSelection("North"),
       down: () => this.moveSelection("South"),
       right: () => this.moveSelection("East"),
@@ -1580,7 +1708,7 @@ SimEditorComponent
   const app = new SimojiApp(startState.toString())
   app.windowWidth = windowWidth
   app.windowHeight = windowHeight
-  app.appendBoard()
+  app.appendExperiments()
   return app
 }
 

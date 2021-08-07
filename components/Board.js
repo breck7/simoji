@@ -4,6 +4,11 @@ const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework
 const { GridComponent } = require("./Grid.js")
 const { Agent } = require("./Agent.js")
 
+let nodeJsPrefix = ""
+
+// prettier-ignore
+/*NODE_JS_ONLY*/ nodeJsPrefix = `const { Agent } = require("${__dirname}/Agent.js");`
+
 class BoardErrorNode extends AbstractTreeComponent {
   _isErrorNodeType() {
     return true
@@ -214,6 +219,27 @@ class BoardComponent extends AbstractTreeComponent {
  class ${this.getCssClassNames().join(" ")}`
   }
 
+  startInterval() {
+    this.interval = setInterval(() => this.boardLoop(), 1000 / this.ticksPerSecond)
+  }
+
+  stopInterval() {
+    clearInterval(this.interval)
+    this.interval = undefined
+  }
+
+  get isRunning() {
+    return !!this.interval
+  }
+
+  runUntilPause() {
+    this.interval = true
+    while (this.interval) {
+      this.boardLoop()
+      if (this.tick % 100 === 0) console.log(`Tick ${this.tick}`)
+    }
+  }
+
   // Commands available to users:
 
   spawn(command) {
@@ -236,7 +262,7 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   pause() {
-    this.root.pauseInterval(this.boardIndex)
+    this.stopInterval()
   }
 
   reset() {
