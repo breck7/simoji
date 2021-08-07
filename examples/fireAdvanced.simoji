@@ -1,10 +1,14 @@
 treeDensitySetting 10%
+catchFireSetting .3
+fireSpreadSetting .7
+fireLifetimeSetting 10
+lightningFrequencySetting .1
 
 🌲
- onHit
+ onHit catchFireSetting
   ⚡️
    replaceWith 🔥
- onTouch
+ onTouch fireSpreadSetting
   🔥
    replaceWith 🔥
 
@@ -16,7 +20,7 @@ treeDensitySetting 10%
   remove
 
 🔥
- health 50
+ health fireLifetimeSetting
  onTick
   decrease health
  onDeath
@@ -30,7 +34,7 @@ treeDensitySetting 10%
 
 
 insert treeDensitySetting 🌲
-onTick .3
+onTick lightningFrequencySetting
  spawn ⚡️
 
 experiment

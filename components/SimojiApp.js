@@ -73,10 +73,10 @@ class SimojiApp extends AbstractTreeComponent {
     })
   }
 
-  resetCommand() {
+  resetAllCommand() {
     const restart = this.isRunning
     this.loadNewSim(this.simCode)
-    if (restart) this.startIntervals()
+    if (restart) this.startAllIntervals()
   }
 
   makeGrid(simojiProgram, windowWidth, windowHeight) {
@@ -140,7 +140,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     const simCode = ExampleSims.getNode(name).childrenToString()
     this.editor.setCodeMirrorValue(simCode)
     this.loadNewSim(simCode)
-    if (restart) this.startIntervals()
+    if (restart) this.startAllIntervals()
     this.willowBrowser.setHash("")
   }
 
@@ -149,7 +149,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
   }
 
   loadNewSim(simCode) {
-    this.stopIntervals()
+    this.stopAllIntervals()
     this.boards.forEach(board => board.unmountAndDestroy())
 
     delete this._simojiPrograms
@@ -201,11 +201,16 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     return this._simojiPrograms
   }
 
-  startIntervals() {
+  startAllIntervals() {
     this.intervals = this.boards.map(board => setInterval(() => board.boardLoop(), 1000 / board.ticksPerSecond))
   }
 
-  stopIntervals() {
+  pauseInterval(index) {
+    clearInterval(this.intervals[index])
+    this.intervals[index] = undefined
+  }
+
+  stopAllIntervals() {
     this.intervals.forEach(interval => {
       clearInterval(interval)
     })
@@ -243,15 +248,12 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
   // todo: fix for boards
   async runUntilPause() {
     await this.start()
-    this.interval = true
     while (this.isRunning) {
       this.boards.forEach(board => board.boardLoop())
       if (this.board.tick % 100 === 0) console.log(`Tick ${this.board.tick}`)
     }
     console.log(`Finished on tick ${this.board.tick}`)
   }
-
-  interval = undefined
 
   ensureRender() {
     if (this.isRunning) return this
@@ -296,7 +298,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
   }
 
   get report() {
-    const report = this.simCode.getNode("report")
+    const report = this.mainProgram.getNode("report")
     return report ? report.childrenToString() : "roughjs.line"
   }
 
@@ -317,14 +319,14 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
       .renderAndGetRenderReport()
   }
 
-  togglePlayCommand() {
-    this.isRunning ? this.stopIntervals() : this.startIntervals()
+  togglePlayAllCommand() {
+    this.isRunning ? this.stopAllIntervals() : this.startAllIntervals()
     this.updatePlayButtonComponentHack()
   }
 
-  pauseCommand() {
+  pauseAllCommand() {
     if (this.isRunning) {
-      this.stopIntervals()
+      this.stopAllIntervals()
       this.updatePlayButtonComponentHack()
     }
   }
@@ -365,11 +367,11 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
 
   _getKeyboardShortcuts() {
     return {
-      space: () => this.togglePlayCommand(),
+      space: () => this.togglePlayAllCommand(),
       d: () => this.toggleTreeComponentFrameworkDebuggerCommand(),
       c: () => this.exportDataCommand(),
       o: () => this.openReportInOhayoCommand(),
-      r: () => this.resetCommand(),
+      r: () => this.resetAllCommand(),
       up: () => this.moveSelection("North"),
       down: () => this.moveSelection("South"),
       right: () => this.moveSelection("East"),

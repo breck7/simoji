@@ -5,12 +5,12 @@ class ResetButtonComponent extends AbstractTreeComponent {
     return `span ≪
  title Clear and reset
  class ResetButtonComponent
- clickCommand resetCommand`
+ clickCommand resetAllCommand`
   }
 
-  resetCommand() {
-    this.getRootNode().pauseCommand()
-    this.getRootNode().resetCommand()
+  resetAllCommand() {
+    this.getRootNode().pauseAllCommand()
+    this.getRootNode().resetAllCommand()
   }
 }
 

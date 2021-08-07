@@ -98,7 +98,7 @@ class BoardComponent extends AbstractTreeComponent {
 
     if (this.resetAfterLoop) {
       this.resetAfterLoop = false
-      this.getRootNode().resetCommand()
+      this.getRootNode().resetAllCommand()
     }
   }
 
@@ -191,6 +191,29 @@ class BoardComponent extends AbstractTreeComponent {
     this.agents.forEach(node => node.handleTouches(agentPositionMap))
   }
 
+  get boardIndex() {
+    return parseInt(this.getWord(4))
+  }
+
+  get hasMultipleBoards() {
+    return this.root.simojiPrograms.length > 1
+  }
+
+  toStumpCode() {
+    if (!this.hasMultipleBoards) return super.toStumpCode()
+
+    const positions = {
+      0: "top left",
+      1: "top right",
+      2: "bottom left",
+      3: "bottom right"
+    }
+    const translate = positions[this.boardIndex]
+    return `div
+ style transform:scale(0.5);transform-origin: ${translate};
+ class ${this.getCssClassNames().join(" ")}`
+  }
+
   // Commands available to users:
 
   spawn(command) {
@@ -213,7 +236,7 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   pause() {
-    this.root.pauseCommand()
+    this.root.pauseInterval(this.boardIndex)
   }
 
   reset() {
@@ -222,29 +245,6 @@ class BoardComponent extends AbstractTreeComponent {
 
   log(command) {
     this.root.log(command.getContent())
-  }
-
-  get boardIndex() {
-    return parseInt(this.getWord(4))
-  }
-
-  get hasMultipleBoards() {
-    return this.root.simojiPrograms.length > 1
-  }
-
-  toStumpCode() {
-    if (!this.hasMultipleBoards) return super.toStumpCode()
-
-    const positions = {
-      0: "top left",
-      1: "top right",
-      2: "bottom left",
-      3: "bottom right"
-    }
-    const translate = positions[this.boardIndex]
-    return `div
- style transform:scale(0.5);transform-origin: ${translate};
- class ${this.getCssClassNames().join(" ")}`
   }
 }
 

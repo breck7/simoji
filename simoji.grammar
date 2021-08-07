@@ -258,6 +258,7 @@ targetEmojiNode
  cells emojiCell
 abstractEventNode
  cells keywordCell
+ catchAllCellType probabilityCell
  javascript
   compile() { return ``}
 abstractInteractionEventNode
@@ -280,7 +281,6 @@ onTickNode
  extends abstractEventNode
  crux onTick
  inScope abstractCommandNode
- catchAllCellType probabilityCell
  description Define what happens each tick.
 onExtinctNode
  crux onExtinct

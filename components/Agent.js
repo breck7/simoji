@@ -17,8 +17,14 @@ class Agent extends AbstractTreeComponent {
     return flatten(pick(this.board.simojiProgram, [this.getWord(0), ...this.behaviors]))
   }
 
+  skip(probability) {
+    return probability !== undefined && this.board.randomNumberGenerator() > parseFloat(probability)
+  }
+
   handleTouches(agentPositionMap) {
     this.getCommandBlocks("onTouch").forEach(touchMap => {
+      if (this.skip(touchMap.getWord(1))) return
+
       for (let pos of yodash.positionsAdjacentTo(this.position)) {
         const hits = agentPositionMap.get(yodash.makePositionHash(pos)) ?? []
         for (let target of hits) {
@@ -35,6 +41,7 @@ class Agent extends AbstractTreeComponent {
 
   handleCollisions(targets) {
     this.getCommandBlocks("onHit").forEach(hitMap => {
+      if (this.skip(hitMap.getWord(1))) return
       targets.forEach(target => {
         const targetId = target.getWord(0)
         const commandBlock = hitMap.getNode(targetId)
@@ -55,8 +62,7 @@ class Agent extends AbstractTreeComponent {
   }
 
   _executeCommandBlock(commandBlock) {
-    const probability = commandBlock.getWord(1)
-    if (probability && this.board.randomNumberGenerator() > parseFloat(probability)) return
+    if (this.skip(commandBlock.getWord(1))) return
     commandBlock.forEach(instruction => this._executeCommand(this, instruction))
   }
 

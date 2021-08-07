@@ -34,7 +34,7 @@ insertCluster 10 🙍
 insert 2 🧟
 
 onExtinct 🧟
- alert No more cases.
+ log No more cases.
  pause
 
 
@@ -53,6 +53,10 @@ report
 
 comment
  See Also
+ - http://covidsim.eu/
  - http://modelingcommons.org/browse/one_model/6282#model_tabs_browse_info
  - https://github.com/maplerainresearch/covid19-sim-mesa/blob/master/model.py
  - https://www.frontiersin.org/articles/10.3389/fpubh.2020.563247/full
+ - https://ncase.me/covid-19/
+ - https://en.wikipedia.org/wiki/List_of_COVID-19_simulation_models
+ 

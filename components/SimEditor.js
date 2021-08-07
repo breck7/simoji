@@ -45,7 +45,7 @@ class SimEditorComponent extends AbstractTreeComponent {
     if (this._code === code) return
     this._code = code
     const root = this.getRootNode()
-    root.pauseCommand()
+    root.pauseAllCommand()
     // this._updateLocalStorage()
 
     this.program = new simojiCompiler(code)

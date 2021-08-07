@@ -50,7 +50,7 @@ insert 200 😃`)
 	areEqual(app.board.populationCount["😃"], 200)
 
 	// Act
-	app.resetCommand()
+	app.resetAllCommand()
 
 	const boardState2 = app.board.toString()
 
