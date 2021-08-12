@@ -273,7 +273,8 @@ window.yodash = yodash
 
 
 
-class Agent extends AbstractTreeComponent {
+
+class Agent extends jtree.TreeNode {
   get name() {
     return this._name ?? this.icon
   }
@@ -371,7 +372,8 @@ class Agent extends AbstractTreeComponent {
 
   _replaceWith(newObject) {
     this.getParent().appendLine(`${newObject} ${this.positionHash}`)
-    this.unmountAndDestroy()
+
+    this.remove()
   }
 
   _move() {
@@ -488,13 +490,48 @@ class Agent extends AbstractTreeComponent {
     return this._startHealth
   }
 
-  toStumpCode() {
+  // DOM operations
+
+  nuke() {
+    this.element.remove()
+    this.destroy()
+  }
+
+  get element() {
+    return document.getElementById(`agent${this._getUid()}`)
+  }
+
+  _updateHtml() {
+    this.element.setAttribute("style", this.inlineStyle)
+    if (this.selected) this.element.classList.add("selected")
+  }
+
+  get inlineStyle() {
     const { gridSize, health } = this
     const opacity = health === undefined ? "" : `opacity:${this.health / this.startHealth};`
-    return `div ${this.html ?? this.icon}
- class Agent ${this.selected ? "selected" : ""}
- style top:${this.top * gridSize}px;left:${this.left *
+    return `top:${this.top * gridSize}px;left:${this.left *
       gridSize}px;font-size:${gridSize}px;line-height: ${gridSize}px;${opacity};${this.style ?? ""}`
+  }
+
+  toElement() {
+    const elem = document.createElement("div")
+    elem.setAttribute("id", `agent${this._getUid()}`)
+    elem.innerHTML = this.html ?? this.icon
+    elem.classList.add("Agent")
+    if (this.selected) elem.classList.add("selected")
+    elem.setAttribute("style", this.inlineStyle)
+    return elem
+  }
+
+  toStumpCode() {
+    return `div ${this.html ?? this.icon}
+ id agent${this._getUid()}
+ class Agent ${this.selected ? "selected" : ""}
+ style ${this.inlineStyle}`
+  }
+
+  needsUpdate(lastRenderedTime = 0) {
+    return this.getLineModifiedTime() - lastRenderedTime > 0
   }
 
   // Commands available to users:
@@ -590,7 +627,7 @@ class Agent extends AbstractTreeComponent {
   }
 
   remove() {
-    this.unmountAndDestroy()
+    this.nuke()
   }
 
   spawn(subject, command) {
@@ -744,6 +781,31 @@ class BoardComponent extends AbstractTreeComponent {
       this.resetAfterLoop = false
       this.getRootNode().resetAllCommand()
     }
+  }
+
+  renderAndGetRenderReport(stumpNode, index) {
+    const isMounted = this.isMounted()
+    const report = super.renderAndGetRenderReport(stumpNode, index)
+    if (!isMounted) this.appendAgents(this.agents)
+    else this.updateAgents()
+    return report
+  }
+
+  appendAgents(agents) {
+    if (!agents.length) return this
+
+    const fragment = document.createDocumentFragment()
+    agents.forEach(agent => fragment.appendChild(agent.toElement()))
+    this._htmlStumpNode.getShadow().element.prepend(fragment)
+    agents.forEach(agent => (agent.painted = true))
+  }
+
+  updateAgents() {
+    const lastRenderedTime = this._getLastRenderedTime()
+    this.agents
+      .filter(agent => agent.painted && agent.needsUpdate(lastRenderedTime))
+      .forEach(agent => agent._updateHtml())
+    this.appendAgents(this.agents.filter(agent => !agent.painted))
   }
 
   get root() {
@@ -1337,6 +1399,12 @@ window.SimEditorComponent = SimEditorComponent
 
 
 
+const MIN_GRID_SIZE = 10
+const MAX_GRID_SIZE = 200
+const DEFAULT_GRID_SIZE = 20
+const MIN_GRID_COLUMNS = 10
+const MIN_GRID_ROWS = 10
+
 // prettier-ignore
 
 class githubTriangleComponent extends AbstractTreeComponent {
@@ -1399,19 +1467,16 @@ class SimojiApp extends AbstractTreeComponent {
 
   makeGrid(simojiProgram, windowWidth, windowHeight) {
     const setSize = simojiProgram.get("size")
-    const gridSize = Math.min(Math.max(setSize ? parseInt(setSize) : 20, 10), 200)
+    const gridSize = Math.min(Math.max(setSize ? parseInt(setSize) : DEFAULT_GRID_SIZE, MIN_GRID_SIZE), MAX_GRID_SIZE)
 
     const maxAvailableCols = Math.floor((windowWidth - SIZES.CHROME_WIDTH) / gridSize) - 1
     const maxAvailableRows = Math.floor((windowHeight - SIZES.CHROME_HEIGHT) / gridSize) - 1
 
-    const minRequiredCols = 10
-    const minRequiredRows = 10
-
     const setCols = simojiProgram.get("columns")
-    const cols = Math.max(1, setCols ? parseInt(setCols) : Math.max(minRequiredCols, maxAvailableCols))
+    const cols = Math.max(1, setCols ? parseInt(setCols) : Math.max(MIN_GRID_COLUMNS, maxAvailableCols))
 
     const setRows = simojiProgram.get("rows")
-    const rows = Math.max(1, setRows ? parseInt(setRows) : Math.max(minRequiredRows, maxAvailableRows))
+    const rows = Math.max(1, setRows ? parseInt(setRows) : Math.max(MIN_GRID_ROWS, maxAvailableRows))
 
     return { gridSize, cols, rows }
   }
@@ -1474,6 +1539,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     this.boards.forEach(board => board.unmountAndDestroy())
 
     delete this._simojiPrograms
+    this.selection = []
 
     this.appendExperiments()
     this.renderAndGetRenderReport()
@@ -1665,7 +1731,8 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
   }
 
   deleteSelectionCommand() {
-    this.selection.forEach(node => node.unmountAndDestroy())
+    this.selection.forEach(node => node.nuke())
+    this.selection = []
   }
 
   async toggleHelpCommand() {

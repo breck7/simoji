@@ -1,7 +1,8 @@
 const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework.node.js")
 const { yodash } = require("../yodash.js")
+const { jtree } = require("jtree")
 
-class Agent extends AbstractTreeComponent {
+class Agent extends jtree.TreeNode {
   get name() {
     return this._name ?? this.icon
   }
@@ -99,7 +100,8 @@ class Agent extends AbstractTreeComponent {
 
   _replaceWith(newObject) {
     this.getParent().appendLine(`${newObject} ${this.positionHash}`)
-    this.unmountAndDestroy()
+
+    this.remove()
   }
 
   _move() {
@@ -216,13 +218,48 @@ class Agent extends AbstractTreeComponent {
     return this._startHealth
   }
 
-  toStumpCode() {
+  // DOM operations
+
+  nuke() {
+    this.element.remove()
+    this.destroy()
+  }
+
+  get element() {
+    return document.getElementById(`agent${this._getUid()}`)
+  }
+
+  _updateHtml() {
+    this.element.setAttribute("style", this.inlineStyle)
+    if (this.selected) this.element.classList.add("selected")
+  }
+
+  get inlineStyle() {
     const { gridSize, health } = this
     const opacity = health === undefined ? "" : `opacity:${this.health / this.startHealth};`
-    return `div ${this.html ?? this.icon}
- class Agent ${this.selected ? "selected" : ""}
- style top:${this.top * gridSize}px;left:${this.left *
+    return `top:${this.top * gridSize}px;left:${this.left *
       gridSize}px;font-size:${gridSize}px;line-height: ${gridSize}px;${opacity};${this.style ?? ""}`
+  }
+
+  toElement() {
+    const elem = document.createElement("div")
+    elem.setAttribute("id", `agent${this._getUid()}`)
+    elem.innerHTML = this.html ?? this.icon
+    elem.classList.add("Agent")
+    if (this.selected) elem.classList.add("selected")
+    elem.setAttribute("style", this.inlineStyle)
+    return elem
+  }
+
+  toStumpCode() {
+    return `div ${this.html ?? this.icon}
+ id agent${this._getUid()}
+ class Agent ${this.selected ? "selected" : ""}
+ style ${this.inlineStyle}`
+  }
+
+  needsUpdate(lastRenderedTime = 0) {
+    return this.getLineModifiedTime() - lastRenderedTime > 0
   }
 
   // Commands available to users:
@@ -318,7 +355,7 @@ class Agent extends AbstractTreeComponent {
   }
 
   remove() {
-    this.unmountAndDestroy()
+    this.nuke()
   }
 
   spawn(subject, command) {

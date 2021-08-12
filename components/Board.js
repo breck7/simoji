@@ -107,6 +107,33 @@ class BoardComponent extends AbstractTreeComponent {
     }
   }
 
+  renderAndGetRenderReport(stumpNode, index) {
+    const isMounted = this.isMounted()
+    const report = super.renderAndGetRenderReport(stumpNode, index)
+    if (!isMounted) this.appendAgents(this.agents)
+    else this.updateAgents()
+    return report
+  }
+
+  appendAgents(agents) {
+    if (!agents.length) return this
+
+    if (typeof document === "undefined") return
+
+    const fragment = document.createDocumentFragment()
+    agents.forEach(agent => fragment.appendChild(agent.toElement()))
+    this._htmlStumpNode.getShadow().element.prepend(fragment)
+    agents.forEach(agent => (agent.painted = true))
+  }
+
+  updateAgents() {
+    const lastRenderedTime = this._getLastRenderedTime()
+    this.agents
+      .filter(agent => agent.painted && agent.needsUpdate(lastRenderedTime))
+      .forEach(agent => agent._updateHtml())
+    this.appendAgents(this.agents.filter(agent => !agent.painted))
+  }
+
   get root() {
     return this.getParent()
   }

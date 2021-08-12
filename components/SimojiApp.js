@@ -154,6 +154,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     this.boards.forEach(board => board.unmountAndDestroy())
 
     delete this._simojiPrograms
+    this.selection = []
 
     this.appendExperiments()
     this.renderAndGetRenderReport()
@@ -345,7 +346,8 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
   }
 
   deleteSelectionCommand() {
-    this.selection.forEach(node => node.unmountAndDestroy())
+    this.selection.forEach(node => node.nuke())
+    this.selection = []
   }
 
   async toggleHelpCommand() {
