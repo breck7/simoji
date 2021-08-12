@@ -13,6 +13,12 @@ const { BottomBarComponent } = require("./BottomBar.js")
 const { RightBarComponent } = require("./RightBar.js")
 const { SIZES } = require("./Sizes.js")
 
+const MIN_GRID_SIZE = 10
+const MAX_GRID_SIZE = 200
+const DEFAULT_GRID_SIZE = 20
+const MIN_GRID_COLUMNS = 10
+const MIN_GRID_ROWS = 10
+
 // prettier-ignore
 /*NODE_JS_ONLY*/ const simojiCompiler = jtree.compileGrammarFileAtPathAndReturnRootConstructor(   __dirname + "/../simoji.grammar")
 
@@ -76,19 +82,16 @@ class SimojiApp extends AbstractTreeComponent {
 
   makeGrid(simojiProgram, windowWidth, windowHeight) {
     const setSize = simojiProgram.get("size")
-    const gridSize = Math.min(Math.max(setSize ? parseInt(setSize) : 20, 10), 200)
+    const gridSize = Math.min(Math.max(setSize ? parseInt(setSize) : DEFAULT_GRID_SIZE, MIN_GRID_SIZE), MAX_GRID_SIZE)
 
     const maxAvailableCols = Math.floor((windowWidth - SIZES.CHROME_WIDTH) / gridSize) - 1
     const maxAvailableRows = Math.floor((windowHeight - SIZES.CHROME_HEIGHT) / gridSize) - 1
 
-    const minRequiredCols = 10
-    const minRequiredRows = 10
-
     const setCols = simojiProgram.get("columns")
-    const cols = Math.max(1, setCols ? parseInt(setCols) : Math.max(minRequiredCols, maxAvailableCols))
+    const cols = Math.max(1, setCols ? parseInt(setCols) : Math.max(MIN_GRID_COLUMNS, maxAvailableCols))
 
     const setRows = simojiProgram.get("rows")
-    const rows = Math.max(1, setRows ? parseInt(setRows) : Math.max(minRequiredRows, maxAvailableRows))
+    const rows = Math.max(1, setRows ? parseInt(setRows) : Math.max(MIN_GRID_ROWS, maxAvailableRows))
 
     return { gridSize, cols, rows }
   }
