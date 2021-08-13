@@ -1,8 +1,9 @@
-comment
- Conway's Game of Life
+# Conway's Game of Life
 
+neighborSetting 2
 
-neighborSetting 3
+experiment
+ neighborSetting 3
 
 experiment
  neighborSetting 4
@@ -11,15 +12,16 @@ experiment
  neighborSetting 5
 
 ⬛️
- onTick
-  javascript
-   if (this.neighorCount["⬛️"] > 1 && this.neighorCount["⬛️"] < neighborSetting) {}
-   else this._replaceWith("◻️")
+ onNeighbors
+  ⬛️ < 2
+   replaceWith ◻️
+  ⬛️ > neighborSetting
+   replaceWith ◻️
 
 ◻️
- onTick
-  javascript
-   if (this.neighorCount["⬛️"] === 3) this._replaceWith("⬛️")
+ onNeighbors
+  ⬛️ = 3
+   replaceWith ⬛️
 
 insert 10% ⬛️
 fill ◻️

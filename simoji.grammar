@@ -24,6 +24,13 @@ textCell
  highlightScope string
 integerCell
  highlightScope constant.numeric
+conditionalOperatorCell
+ highlightScope keyword
+ enum < > = <= >=
+neighborCountCell
+ extends integerCell
+ min 0
+ max 8
 integerOrPercentCell
  highlightScope constant.numeric
 probabilityCell
@@ -272,6 +279,15 @@ onTouchNode
  extends abstractInteractionEventNode
  crux onTouch
  description Define what happens when this agent is adjacent to other agents.
+emojiAndNeighborConditionNode
+ inScope abstractCommandNode
+ pattern ^.+ (<|>|=|<=|>=)+ .+$
+ cells emojiCell conditionalOperatorCell neighborCountCell
+onNeighborsNode
+ description Define what happens when a certain amount of neighbors are nearby.
+ extends abstractInteractionEventNode
+ inScope emojiAndNeighborConditionNode
+ crux onNeighbors
 onDeathNode
  extends abstractEventNode
  crux onDeath

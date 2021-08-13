@@ -20,6 +20,16 @@ yodash.flipAngle = angle => {
 	return newAngle
 }
 
+yodash.compare = (left, operator, right) => {
+	if (operator === "=") return left == right
+	if (operator === "<") return left < right
+	if (operator === ">") return left > right
+	if (operator === "<=") return left <= right
+	if (operator === ">=") return left >= right
+
+	return false
+}
+
 yodash.compileAgentClassDeclarationsAndMap = program => {
 	const clone = program.clone()
 	clone.filter(node => node.getNodeTypeId() !== "agentNode").forEach(node => node.destroy())

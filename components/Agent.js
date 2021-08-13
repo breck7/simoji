@@ -22,6 +22,23 @@ class Agent extends jtree.TreeNode {
     return probability !== undefined && this.board.randomNumberGenerator() > parseFloat(probability)
   }
 
+  handleNeighbors() {
+    this.getCommandBlocks("onNeighbors").forEach(neighborConditions => {
+      if (this.skip(neighborConditions.getWord(1))) return
+
+      const { neighorCount } = this
+
+      neighborConditions.forEach(conditionAndCommandsBlock => {
+        const [emoji, operator, count] = conditionAndCommandsBlock.getWords()
+        const actual = neighorCount[emoji]
+        if (!yodash.compare(actual ?? 0, operator, count)) return
+        conditionAndCommandsBlock.forEach(command => this._executeCommand(this, command))
+
+        if (this.getIndex() === -1) return {}
+      })
+    })
+  }
+
   handleTouches(agentPositionMap) {
     this.getCommandBlocks("onTouch").forEach(touchMap => {
       if (this.skip(touchMap.getWord(1))) return

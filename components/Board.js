@@ -103,6 +103,7 @@ class BoardComponent extends AbstractTreeComponent {
     this._agentPositionMap = this.makeAgentPositionMap()
     this.handleCollisions()
     this.handleTouches()
+    this.handleNeighbors()
 
     this.executeBoardCommands("onTick")
     this.handleExtinctions()
@@ -232,6 +233,10 @@ class BoardComponent extends AbstractTreeComponent {
   handleTouches() {
     const agentPositionMap = this.agentPositionMap
     this.agents.forEach(node => node.handleTouches(agentPositionMap))
+  }
+
+  handleNeighbors() {
+    this.agents.forEach(node => node.handleNeighbors())
   }
 
   get boardIndex() {
