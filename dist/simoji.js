@@ -794,6 +794,8 @@ class BoardComponent extends AbstractTreeComponent {
   appendAgents(agents) {
     if (!agents.length) return this
 
+    if (typeof document === "undefined") return
+
     const fragment = document.createDocumentFragment()
     agents.forEach(agent => fragment.appendChild(agent.toElement()))
     this._htmlStumpNode.getShadow().element.prepend(fragment)
@@ -1514,6 +1516,7 @@ class SimojiApp extends AbstractTreeComponent {
 GridComponent
 ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}`.trim()
     )
+    board.seed = seed
     board.randomNumberGenerator = randomNumberGenerator
   }
 
@@ -1735,6 +1738,26 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     this.selection = []
   }
 
+  // Save the current random play for reproducibility and shareability
+  snapShotCommand() {
+    const newCode = new jtree.TreeNode(this.simCode)
+    const boards = this.boards
+    const board = boards[0]
+    console.log(board.seed, board.rows, board.cols)
+    newCode.set("seed", board.seed.toString())
+    newCode.set("rows", board.rows.toString())
+    newCode.set("columns", board.cols.toString())
+    newCode.findNodes("experiment").forEach((experiment, index) => {
+      const board = boards[index + 1]
+      experiment.set("seed", board.seed.toString())
+      experiment.set("rows", board.rows.toString())
+      experiment.set("columns", board.cols.toString())
+    })
+
+    this.editor.setCodeMirrorValue(newCode.toString())
+    this.loadNewSim(newCode)
+  }
+
   async toggleHelpCommand() {
     this.toggleAndRender("HelpModalComponent")
   }
@@ -1746,6 +1769,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
       c: () => this.exportDataCommand(),
       o: () => this.openReportInOhayoCommand(),
       r: () => this.resetAllCommand(),
+      s: () => this.snapShotCommand(),
       up: () => this.moveSelection("North"),
       down: () => this.moveSelection("South"),
       right: () => this.moveSelection("East"),
