@@ -20,6 +20,16 @@ yodash.flipAngle = angle => {
 	return newAngle
 }
 
+yodash.compare = (left, operator, right) => {
+	if (operator === "=") return left == right
+	if (operator === "<") return left < right
+	if (operator === ">") return left > right
+	if (operator === "<=") return left <= right
+	if (operator === ">=") return left >= right
+
+	return false
+}
+
 yodash.compileAgentClassDeclarationsAndMap = program => {
 	const clone = program.clone()
 	clone.filter(node => node.getNodeTypeId() !== "agentNode").forEach(node => node.destroy())
@@ -292,6 +302,23 @@ class Agent extends jtree.TreeNode {
 
   skip(probability) {
     return probability !== undefined && this.board.randomNumberGenerator() > parseFloat(probability)
+  }
+
+  handleNeighbors() {
+    this.getCommandBlocks("onNeighbors").forEach(neighborConditions => {
+      if (this.skip(neighborConditions.getWord(1))) return
+
+      const { neighorCount } = this
+
+      neighborConditions.forEach(conditionAndCommandsBlock => {
+        const [emoji, operator, count] = conditionAndCommandsBlock.getWords()
+        const actual = neighorCount[emoji]
+        if (!yodash.compare(actual ?? 0, operator, count)) return
+        conditionAndCommandsBlock.forEach(command => this._executeCommand(this, command))
+
+        if (this.getIndex() === -1) return {}
+      })
+    })
   }
 
   handleTouches(agentPositionMap) {
@@ -779,6 +806,7 @@ class BoardComponent extends AbstractTreeComponent {
     this._agentPositionMap = this.makeAgentPositionMap()
     this.handleCollisions()
     this.handleTouches()
+    this.handleNeighbors()
 
     this.executeBoardCommands("onTick")
     this.handleExtinctions()
@@ -908,6 +936,10 @@ class BoardComponent extends AbstractTreeComponent {
   handleTouches() {
     const agentPositionMap = this.agentPositionMap
     this.agents.forEach(node => node.handleTouches(agentPositionMap))
+  }
+
+  handleNeighbors() {
+    this.agents.forEach(node => node.handleNeighbors())
   }
 
   get boardIndex() {
