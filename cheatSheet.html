@@ -19,7 +19,7 @@
   <meta name="description" content="Design quick simulations with Emojis"></meta>
   <meta name="generator" content="Scroll v22.1.0"></meta>
   <meta property="og:title" content="Simoji Quickstart Guide"></meta>
-  <meta property="og:description" content="Simoji is a language and tool for creatives to write shareable simulations using 😃's. You write your simulations in a simple language using mostly Emojis and then click play. Simoji is public domain, open source and just a few days old."></meta>
+  <meta property="og:description" content="Simoji is a language and tool for thinkers to write shareable simulations using 😃's. You write your simulations in a simple language using mostly Emojis and then click play. Simoji is public domain, open source and suggestions welcome!"></meta>
   <meta property="og:image" content=""></meta>
   <meta name="twitter:card" content="summary_large_image"></meta>
   <style>html,body,div,span,h1,h2,h3,h4,p,ol,ul,table {
@@ -211,7 +211,7 @@ html {
 
 
 
-<p class="scrollParagraphComponent">Simoji is a language and tool for creatives to write shareable simulations using 😃's. You write your simulations in a simple language using mostly Emojis and then click play. Simoji is public domain, open <a href="https://github.com/publicdomaincompany/simoji">source</a> and just a few days old.</p>
+<p class="scrollParagraphComponent">Simoji is a language and tool for thinkers to write shareable simulations using 😃's. You write your simulations in a simple language using mostly Emojis and then click play. Simoji is public domain, open <a href="https://github.com/publicdomaincompany/simoji">source</a> and suggestions welcome!</p>
 
 <h4 class="scrollSubsectionComponent">Example Program</h4>
 
@@ -250,6 +250,36 @@ insert 1 ⛰</code>
 
 <p class="scrollParagraphComponent">Agents are the key concept in Simoji. Everything you see on your board is an agent. In the code above, the ant, hill, and food are all agent types.</p>
 
+<h4 class="scrollSubsectionComponent">Events</h4>
+
+<p class="scrollParagraphComponent">Events are blocks of commands that execute during the running of the experiments. Probabilities can be assigned so blocks run stochastically.</p>
+
+<ul class="scrollUnorderedListComponent">
+<li>onTick</li>
+<li>onHit</li>
+<li>onTouch</li>
+<li>onDeath</li>
+</ul>
+
+<p class="scrollParagraphComponent">Some events can also happen on the board level:</p>
+
+<ul class="scrollUnorderedListComponent">
+<li>onTick</li>
+<li>onExtinct</li>
+</ul>
+
+<h4 class="scrollSubsectionComponent">Commands</h4>
+
+<ul class="scrollUnorderedListComponent">
+<li>kickIt</li>
+<li>replaceWith</li>
+<li>spawn</li>
+<li>remove</li>
+<li>pickItUp</li>
+<li>turnRandomly</li>
+<li>turnToward</li>
+</ul>
+
 <h4 class="scrollSubsectionComponent">Attributes</h4>
 
 <p class="scrollParagraphComponent">Agents can have attributes. You can define your own. Some are built in like:</p>
@@ -265,28 +295,23 @@ insert 1 ⛰</code>
 <li>bouncy</li>
 </ul>
 
-<h4 class="scrollSubsectionComponent">Events</h4>
+<h4 class="scrollSubsectionComponent">Experiments</h4>
 
-<p class="scrollParagraphComponent">Events are things that can happen to agents.</p>
+<p class="scrollParagraphComponent">You can run multiple boards at the same time using the `experiment` keyword. You can tweak any words in your experiments. Usually you want to change Settings. The maximum boards at one time is currently 4.</p>
 
-<ul class="scrollUnorderedListComponent">
-<li>onTick</li>
-<li>onHit</li>
-<li>onTouch</li>
-<li>onDeath</li>
-</ul>
+<h4 class="scrollSubsectionComponent">Parameters</h4>
 
-<h4 class="scrollSubsectionComponent">Commands</h4>
+<p class="scrollParagraphComponent">You can define parameters that you use throughout your simulation code. This makes it easy to tweak them in experiments. For example:</p>
 
-<ul class="scrollUnorderedListComponent">
-<li>kickIt</li>
-<li>replaceWith</li>
-<li>spawn</li>
-<li>remove</li>
-<li>pickItUp</li>
-<li>turnRandomly</li>
-<li>turnToward</li>
-</ul>
+<code class="scrollCodeBlockComponent">lightningFrequencySetting .1
+
+experiment
+ comment Lots of lightning
+ lightningFrequencySetting .5</code>
+
+<h4 class="scrollSubsectionComponent">Reports</h4>
+
+<p class="scrollParagraphComponent">Data is collected during the running of every experiment. You can export this data to CSV and/or start analyizing it immediately in the Ohayo app.</p>
 
 <h3 class="scrollSectionComponent">Board Setup</h3>
 
@@ -311,14 +336,32 @@ insert 1 ⛰</code>
 
 <th>Command</th>
 </tr></thead>
-<tbody><tr><td>?</td>
+<tbody><tr><td>Spacebar</td>
+<td>Play/Pause</td>
+</tr>
+<tr><td>?</td>
 <td>Toggle Help</td>
 </tr>
 <tr><td>r</td>
-<td>Reset</td>
+<td>Reset Experiments</td>
 </tr>
-<tr><td>Spacebar</td>
-<td>Play/Pause</td>
+<tr><td>s</td>
+<td>Snapshot Current Starting Params</td>
+</tr>
+<tr><td>o</td>
+<td>Open Reports</td>
+</tr>
+<tr><td>c</td>
+<td>Export CSV data</td>
+</tr>
+<tr><td>d</td>
+<td>Toggle Debugger</td>
+</tr>
+<tr><td>Arrows</td>
+<td>Move selection</td>
+</tr>
+<tr><td>Backspace</td>
+<td>Delete selection</td>
 </tr></tbody></table>
 
 <h3 class="scrollSectionComponent">Sharing Your Simulations</h3>

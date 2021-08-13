@@ -4,7 +4,7 @@ header
 footer
 
 paragraph
- Simoji is a language and tool for creatives to write shareable simulations using 😃's. You write your simulations in a simple language using mostly Emojis and then click play. Simoji is public domain, open source🔗github.com/publicdomaincompany/simoji and just a few days old.
+ Simoji is a language and tool for thinkers to write shareable simulations using 😃's. You write your simulations in a simple language using mostly Emojis and then click play. Simoji is public domain, open source🔗github.com/publicdomaincompany/simoji and suggestions welcome!
 
 subsection Example Program
 
@@ -46,6 +46,35 @@ subsection Agents
 paragraph
  Agents are the key concept in Simoji. Everything you see on your board is an agent. In the code above, the ant, hill, and food are all agent types.
 
+subsection Events
+
+paragraph
+ Events are blocks of commands that execute during the running of the experiments. Probabilities can be assigned so blocks run stochastically.
+
+list
+ - onTick
+ - onHit
+ - onTouch
+ - onDeath
+
+paragraph
+ Some events can also happen on the board level:
+
+list
+ - onTick
+ - onExtinct
+
+subsection Commands
+
+list
+ - kickIt
+ - replaceWith
+ - spawn
+ - remove
+ - pickItUp
+ - turnRandomly
+ - turnToward
+
 subsection Attributes
 
 paragraph
@@ -61,27 +90,27 @@ list
  - solid
  - bouncy
 
-subsection Events
+subsection Experiments
 
 paragraph
- Events are things that can happen to agents.
+ You can run multiple boards at the same time using the `experiment` keyword. You can tweak any words in your experiments. Usually you want to change Settings. The maximum boards at one time is currently 4.
 
-list
- - onTick
- - onHit
- - onTouch
- - onDeath
+subsection Parameters
 
-subsection Commands
+paragraph
+ You can define parameters that you use throughout your simulation code. This makes it easy to tweak them in experiments. For example:
 
-list
- - kickIt
- - replaceWith
- - spawn
- - remove
- - pickItUp
- - turnRandomly
- - turnToward
+code
+ lightningFrequencySetting .1
+ 
+ experiment
+  comment Lots of lightning
+  lightningFrequencySetting .5
+
+subsection Reports
+
+paragraph
+ Data is collected during the running of every experiment. You can export this data to CSV and/or start analyizing it immediately in the Ohayo app.
 
 section Board Setup
 
@@ -106,9 +135,15 @@ section Keyboard shortcuts
 
 pipeTable
  Combo|Command
- ?|Toggle Help
- r|Reset
  Spacebar|Play/Pause
+ ?|Toggle Help
+ r|Reset Experiments
+ s|Snapshot Current Starting Params
+ o|Open Reports
+ c|Export CSV data
+ d|Toggle Debugger
+ Arrows|Move selection
+ Backspace|Delete selection
 
 section Sharing Your Simulations
 
