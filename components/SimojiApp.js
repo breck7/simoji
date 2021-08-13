@@ -11,7 +11,6 @@ const { HelpModalComponent } = require("./HelpModal.js")
 const { BoardComponent } = require("./Board.js")
 const { BottomBarComponent } = require("./BottomBar.js")
 const { RightBarComponent } = require("./RightBar.js")
-const { SIZES } = require("./Sizes.js")
 
 const MIN_GRID_SIZE = 10
 const MAX_GRID_SIZE = 200
@@ -84,7 +83,8 @@ class SimojiApp extends AbstractTreeComponent {
     const setSize = simojiProgram.get("size")
     const gridSize = Math.min(Math.max(setSize ? parseInt(setSize) : DEFAULT_GRID_SIZE, MIN_GRID_SIZE), MAX_GRID_SIZE)
 
-    const maxAvailableCols = Math.floor((windowWidth - SIZES.CHROME_WIDTH) / gridSize) - 1
+    const chromeWidth = this.editorWidth + SIZES.RIGHT_BAR_WIDTH + SIZES.BOARD_MARGIN
+    const maxAvailableCols = Math.floor((windowWidth - chromeWidth) / gridSize) - 1
     const maxAvailableRows = Math.floor((windowHeight - SIZES.CHROME_HEIGHT) / gridSize) - 1
 
     const setCols = simojiProgram.get("columns")
@@ -125,12 +125,16 @@ class SimojiApp extends AbstractTreeComponent {
     const styleNode = program.getNode("style") ?? undefined
     const board = this.appendLineAndChildren(
       `BoardComponent ${gridSize} ${rows} ${cols} ${index}`,
-      `${this.compiledStartState.trim()}
+      `editorWidth ${this.editorWidth}\n${this.compiledStartState.trim()}
 GridComponent
 ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}`.trim()
     )
     board.seed = seed
     board.randomNumberGenerator = randomNumberGenerator
+  }
+
+  get editorWidth() {
+    return this.editor.width
   }
 
   get editor() {
@@ -393,6 +397,16 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
   }
 }
 
+const SIZES = {}
+
+SIZES.BOARD_MARGIN = 20
+SIZES.TOP_BAR_HEIGHT = 28
+SIZES.BOTTOM_BAR_HEIGHT = 40
+SIZES.CHROME_HEIGHT = SIZES.TOP_BAR_HEIGHT + SIZES.BOTTOM_BAR_HEIGHT + SIZES.BOARD_MARGIN
+
+SIZES.EDITOR_WIDTH = 250
+SIZES.RIGHT_BAR_WIDTH = 30
+
 SimojiApp.setupApp = (simojiCode, windowWidth = 1000, windowHeight = 1000) => {
   const startState = new jtree.TreeNode(`githubTriangleComponent
 TopBarComponent
@@ -405,7 +419,7 @@ BottomBarComponent
  ReportButtonComponent
 RightBarComponent
  AgentPaletteComponent
-SimEditorComponent
+SimEditorComponent ${SIZES.EDITOR_WIDTH} ${SIZES.CHROME_HEIGHT}
  value
   ${simojiCode.replace(/\n/g, "\n  ")}`)
 

@@ -20,11 +20,22 @@ class BoardErrorNode extends AbstractTreeComponent {
   }
 }
 
+class editorWidth extends TreeNode {
+  get width() {
+    return parseInt(this.getWord(1))
+  }
+}
+
 class BoardComponent extends AbstractTreeComponent {
   // override default parser creation.
   _getParser() {
     if (!this._parser)
-      this._parser = new jtree.TreeNode.Parser(BoardErrorNode, { ...this.agentMap, GridComponent, BoardStyleComponent })
+      this._parser = new jtree.TreeNode.Parser(BoardErrorNode, {
+        ...this.agentMap,
+        GridComponent,
+        BoardStyleComponent,
+        editorWidth
+      })
     return this._parser
   }
 
@@ -231,8 +242,12 @@ class BoardComponent extends AbstractTreeComponent {
     return this.root.simojiPrograms.length > 1
   }
 
-  toStumpCode() {
-    if (!this.hasMultipleBoards) return super.toStumpCode()
+  get editorWidth() {
+    return this.getNode("editorWidth")?.width ?? 250
+  }
+
+  get multiboardTransforms() {
+    if (!this.hasMultipleBoards) return ""
 
     const positions = {
       0: "top left",
@@ -241,8 +256,16 @@ class BoardComponent extends AbstractTreeComponent {
       3: "bottom right"
     }
     const translate = positions[this.boardIndex]
+    return `transform:scale(0.5);transform-origin:${translate};`
+  }
+
+  get style() {
+    return `left:calc(10px + ${this.editorWidth}px);${this.multiboardTransforms}`
+  }
+
+  toStumpCode() {
     return `div
- style transform:scale(0.5);transform-origin: ${translate};
+ style ${this.style}
  class ${this.getCssClassNames().join(" ")}`
   }
 

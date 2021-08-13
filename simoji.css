@@ -58,7 +58,6 @@ body {
 .SimEditorComponent {
 	position: absolute;
 	top: var(--topBarHeight);
-	width: var(--editorWidth);
 	bottom: var(--bottomBarHeight);
 	border: 0;
 	left: 0;
@@ -78,7 +77,6 @@ body {
 .BoardComponent {
 	position: absolute;
 	top: calc(10px + var(--topBarHeight));
-	left: calc(10px + var(--editorWidth));
 	bottom: calc(10px + var(--bottomBarHeight));
 	right: calc(10px + var(--rightBarWidth));
 	box-shadow: 0 3px 10px rgb(0 0 0 / 0.2);
