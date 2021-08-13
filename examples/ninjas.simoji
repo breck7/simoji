@@ -2,15 +2,13 @@
  health 100
  onTick
   decrease health
-  turnRandomly
-  move
+  jitter
 
 🥷
  health 100
  onTick
   decrease health
-  turnRandomly
-  move
+  jitter
 
 insert 50 🤺
 insert 50 🥷

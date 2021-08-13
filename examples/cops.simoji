@@ -1,7 +1,6 @@
 🚗
  onTick .5
-  turnRandomly
-  move
+  jitter
   move
 🚓
  onHit

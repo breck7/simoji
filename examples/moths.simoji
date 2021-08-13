@@ -3,8 +3,7 @@ comment
 
 🦋
  onTick .1
-  turnRandomly
-  move
+  jitter
   move
  onTick .2
   turnToward 💡

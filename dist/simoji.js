@@ -665,6 +665,11 @@ class Agent extends jtree.TreeNode {
     if (this.selected) return
     return this._move()
   }
+
+  jitter() {
+    this.turnRandomly()
+    this.move()
+  }
 }
 
 window.Agent = Agent

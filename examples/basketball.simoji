@@ -7,16 +7,14 @@
 
 ⛹️‍♂️
  onTick
-  turnRandomly
-  move
+  jitter
  onHit
   🏀
    pickItUp
 
 ⛹️‍♀️
  onTick
-  turnRandomly
-  move
+  jitter
  onHit
   🏀
    pickItUp

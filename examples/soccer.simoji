@@ -7,16 +7,14 @@
 
 ⛹️‍♂️
  onTick
-  turnRandomly
-  move
+  jitter
  onHit
   ⚽️
    kickIt
 
 ⛹️‍♀️
  onTick
-  turnRandomly
-  move
+  jitter
  onHit
   ⚽️
    kickIt

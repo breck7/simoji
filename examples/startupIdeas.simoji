@@ -1,20 +1,17 @@
 👨‍💼🔖
  comment person with an idea
  onTick
-  turnRandomly
-  move
+  jitter
 
 👨‍💼💰
  comment peron with an idea
   that is making money
  onTick
-  turnRandomly
-  move
+  jitter
 
 👨‍
  onTick .1
-  turnRandomly
-  move
+  jitter
  onTick .1
   turnToward 👨‍💼💰
   move

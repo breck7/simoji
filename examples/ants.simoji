@@ -6,8 +6,7 @@ comment
   spawn 🐜
 🐜
  onTick
-  turnRandomly
-  move
+  jitter
  onHit
   🥖
    pickItUp

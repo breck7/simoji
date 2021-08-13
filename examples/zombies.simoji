@@ -17,8 +17,7 @@
 
 🧟‍♂️
  onTick
-  turnRandomly
-  move
+  jitter
  onHit
   🪃
    replaceWith 🪦

@@ -355,6 +355,9 @@ moveCommandNode
 turnRandomlyCommandNode
  extends abstractCommandNode
  crux turnRandomly
+jitterCommandNode
+ extends abstractCommandNode
+ crux jitter
 turnTowardCommandNode
  description Turn to the closest agent of a certain type.
  extends abstractCommandNode

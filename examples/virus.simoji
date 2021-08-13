@@ -5,15 +5,13 @@ comment
  health 30
  onTick
   decrease health
-  turnRandomly
-  move
+  jitter
  onDeath
   remove
 
 🙍
  onTick
-  turnRandomly
-  move
+  jitter
   move
  onTouch
   🧟

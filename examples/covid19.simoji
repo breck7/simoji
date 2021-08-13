@@ -5,21 +5,18 @@
   replaceWith 🦸‍♂️
  onTick
   decrease health
-  turnRandomly
-  move
+  jitter
  onDeath
   replaceWith 🪦
 
 🦸‍♂️
  comment immune
  onTick
-  turnRandomly
-  move
+  jitter
 
 🙍
  onTick
-  turnRandomly
-  move
+  jitter
  onTouch
   🧟
    replaceWith 🧟
