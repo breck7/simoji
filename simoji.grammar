@@ -357,6 +357,10 @@ commentNode
    return ""
   }
  catchAllNodeType commentLineNode
+commentAliasNode
+ description Alternate alias for a comment.
+ crux #
+ extends commentNode
 blankLineNode
  description Blank lines compile do nothing.
  cells blankCell
