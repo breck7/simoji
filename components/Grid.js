@@ -16,6 +16,7 @@ class GridComponent extends AbstractTreeComponent {
 
     board.prependLine(`${agentToInsert} ${positionHash}`)
     board.renderAndGetRenderReport()
+    board.resetAgentPositionMap()
   }
 
   makeBlock(down, right, gridSize) {

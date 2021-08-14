@@ -353,6 +353,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
   deleteSelectionCommand() {
     this.selection.forEach(node => node.nuke())
     this.selection = []
+    this.boards.forEach(board => board.resetAgentPositionMap())
   }
 
   // Save the current random play for reproducibility and shareability

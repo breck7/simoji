@@ -728,7 +728,7 @@ class BoardErrorNode extends AbstractTreeComponent {
   }
 }
 
-class editorWidth extends TreeNode {
+class editorWidth extends jtree.TreeNode {
   get width() {
     return parseInt(this.getWord(1))
   }
@@ -808,7 +808,7 @@ class BoardComponent extends AbstractTreeComponent {
   boardLoop() {
     this.agents.forEach(node => node.onTick())
 
-    this._agentPositionMap = this.makeAgentPositionMap()
+    this.resetAgentPositionMap()
     this.handleCollisions()
     this.handleTouches()
     this.handleNeighbors()
@@ -903,8 +903,12 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   get agentPositionMap() {
-    if (!this._agentPositionMap) this._agentPositionMap = this.makeAgentPositionMap()
+    if (!this._agentPositionMap) this.resetAgentPositionMap()
     return this._agentPositionMap
+  }
+
+  resetAgentPositionMap() {
+    this._agentPositionMap = this.makeAgentPositionMap()
   }
 
   makeAgentPositionMap() {
@@ -1120,6 +1124,7 @@ class GridComponent extends AbstractTreeComponent {
 
     board.prependLine(`${agentToInsert} ${positionHash}`)
     board.renderAndGetRenderReport()
+    board.resetAgentPositionMap()
   }
 
   makeBlock(down, right, gridSize) {
@@ -1807,6 +1812,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
   deleteSelectionCommand() {
     this.selection.forEach(node => node.nuke())
     this.selection = []
+    this.boards.forEach(board => board.resetAgentPositionMap())
   }
 
   // Save the current random play for reproducibility and shareability
