@@ -680,12 +680,12 @@ window.Agent = Agent
 class AgentPaletteComponent extends AbstractTreeComponent {
   toStumpCode() {
     const root = this.getRootNode()
-    const activeObject = root.agentToInsert
+    const { agentToInsert } = root
     const items = root.simojiPrograms[0].agentTypes
       .map(item => item.getWord(0))
       .map(
         word => ` div ${word}
-  class ${activeObject === word ? "ActiveObject" : ""}
+  class ${agentToInsert === word ? "ActiveAgent" : ""}
   clickCommand changeAgentBrushCommand ${word}`
       )
       .join("\n")
