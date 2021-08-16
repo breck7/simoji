@@ -1090,13 +1090,15 @@ window.ExampleSims = ExampleSims
 
 class ExamplesComponent extends AbstractTreeComponent {
   toStumpCode() {
-    const sims = ExampleSims.getFirstWords()
-      .map(
-        item => ` a ${jtree.Utils.ucfirst(item)}
-  href index.html#example%20${item}
-  clickCommand loadExampleCommand ${item}`
-      )
-      .join("\n")
+    const sims = ExampleSims.map(item => {
+      const name = item.getFirstWord()
+      const properName = jtree.Utils.ucfirst(name)
+      const icon = item.childrenToString().match(/(\p{Extended_Pictographic}+)/u)[1]
+      return ` a ${icon}
+  href index.html#example%20${name}
+  title ${properName}
+  clickCommand loadExampleCommand ${name}`
+    }).join("\n")
     return `div
  class ExamplesComponent
 ${sims}`
@@ -1910,7 +1912,8 @@ class TopBarComponent extends AbstractTreeComponent {
 
 class LogoComponent extends AbstractTreeComponent {
   toStumpCode() {
-    return `span Simoji
+    return `a ❔
+ href cheatSheet.html
  class LogoComponent
  clickCommand toggleHelpCommand`
   }

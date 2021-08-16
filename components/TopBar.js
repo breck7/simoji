@@ -15,7 +15,8 @@ class TopBarComponent extends AbstractTreeComponent {
 
 class LogoComponent extends AbstractTreeComponent {
   toStumpCode() {
-    return `span Simoji
+    return `a ❔
+ href cheatSheet.html
  class LogoComponent
  clickCommand toggleHelpCommand`
   }

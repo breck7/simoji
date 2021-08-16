@@ -33,10 +33,6 @@ body {
 	width: 100%;
 }
 
-.ExamplesComponent a {
-	padding-right: 5px;
-}
-
 .helpIframe {
 	border: 0;
 	height: 100%;
@@ -113,7 +109,6 @@ body {
 	font-size: 14px;
 	line-height: var(--topBarHeight);
 	height: var(--topBarHeight);
-	padding-left: 5px;
 	white-space: nowrap;
 }
 .ShareComponent {
@@ -125,13 +120,17 @@ body {
 	border-radius: 5px;
 	color: white;
 	border: 0;
-	width: 210px;
+	width: 230px;
 }
 
 .LogoComponent {
+	text-decoration: none;
 	display: inline-block;
 	cursor: pointer;
-	width: 45px;
+	width: 26px;
+	text-align: center;
+	margin-left: 2px;
+	margin-right: 2px;
 }
 
 .BottomBarComponent {
@@ -194,15 +193,19 @@ body {
 .Agent {
 	position: absolute;
 }
-.ExamplesComponent a {
-	color: white;
-	text-decoration: none;
-	opacity: 0.4;
-}
-.ExamplesComponent a:hover {
-	opacity: 1;
-}
+
 .ExamplesComponent {
 	padding-left: 10px;
 	display: inline-block;
+}
+
+.ExamplesComponent a {
+	text-decoration: none;
+	display: inline-block;
+	text-align: center;
+	width: 30px;
+}
+.ExamplesComponent a:hover,
+.LogoComponent:hover {
+	background-color: rgba(255, 255, 255, 0.2);
 }

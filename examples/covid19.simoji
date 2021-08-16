@@ -1,3 +1,10 @@
+🦠
+ health 10
+ onTick
+  decrease health
+ onDeath
+  remove
+
 🧟
  health 100
  onTick .03
@@ -18,6 +25,8 @@
  onTick
   jitter
  onTouch
+  🦠
+   replaceWith 🧟
   🧟
    replaceWith 🧟
 
@@ -28,7 +37,7 @@ insertCluster 30 🙍
 insertCluster 30 🙍
 insertCluster 10 🙍
 
-insert 2 🧟
+insert 1 🦠
 
 onExtinct 🧟
  log No more cases.

@@ -1,3 +1,15 @@
+🧟‍♂️
+ onTick
+  jitter
+ onHit
+  🪃
+   replaceWith 🪦
+  💣
+   replaceWith 🪦
+  👨‍👩‍👧‍👦
+   pause
+   alert TheyGotYou!
+
 🧱
  solid
 
@@ -15,17 +27,6 @@
 🪦
  comment Dead zombie
 
-🧟‍♂️
- onTick
-  jitter
- onHit
-  🪃
-   replaceWith 🪦
-  💣
-   replaceWith 🪦
-  👨‍👩‍👧‍👦
-   pause
-   alert TheyGotYou!
 👨‍👩‍👧‍👦
 
 size 30
