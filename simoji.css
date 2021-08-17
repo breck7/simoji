@@ -25,12 +25,19 @@ body {
 	--topBarHeight: 28px;
 	--bottomBarHeight: 40px;
 	--chromeColor: rgb(47, 47, 51);
-	--editorWidth: 250px;
 }
 
 .SimojiApp {
 	height: 100%;
 	width: 100%;
+}
+
+.EditorHandleComponent {
+	width: 10px;
+	position: absolute;
+	top: var(--topBarHeight);
+	bottom: var(--bottomBarHeight);
+	cursor: ew-resize;
 }
 
 .helpIframe {

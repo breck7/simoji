@@ -103,13 +103,19 @@ class SimEditorComponent extends AbstractTreeComponent {
     super.treeComponentDidUpdate()
   }
 
+  renderAndGetRenderReport(stumpNode, index) {
+    if (!this.isMounted()) return super.renderAndGetRenderReport(stumpNode, index)
+    this.setSize()
+    return ""
+  }
+
   setCodeMirrorValue(value) {
     this.codeMirrorInstance.setValue(value)
     this._code = value
   }
 
   _initCodeMirror() {
-    if (typeof CodeMirror === "undefined") return (this.codeMirrorInstance = new CodeMirrorShim())
+    if (this.isNodeJs()) return (this.codeMirrorInstance = new CodeMirrorShim())
     this.codeMirrorInstance = new jtree.TreeNotationCodeMirrorMode(
       "custom",
       () => simojiCompiler,
@@ -134,6 +140,7 @@ class SimEditorComponent extends AbstractTreeComponent {
   }
 
   setSize() {
+    if (this.isNodeJs()) return
     this.codeMirrorInstance.setSize(this.width, window.innerHeight - this.chromeHeight)
   }
 

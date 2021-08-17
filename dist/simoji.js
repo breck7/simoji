@@ -728,7 +728,7 @@ class BoardErrorNode extends AbstractTreeComponent {
   }
 }
 
-class editorWidth extends jtree.TreeNode {
+class leftStartPosition extends jtree.TreeNode {
   get width() {
     return parseInt(this.getWord(1))
   }
@@ -742,7 +742,7 @@ class BoardComponent extends AbstractTreeComponent {
         ...this.agentMap,
         GridComponent,
         BoardStyleComponent,
-        editorWidth
+        leftStartPosition
       })
     return this._parser
   }
@@ -838,7 +838,7 @@ class BoardComponent extends AbstractTreeComponent {
   appendAgents(agents) {
     if (!agents.length) return this
 
-    if (typeof document === "undefined") return
+    if (this.isNodeJs()) return
 
     const fragment = document.createDocumentFragment()
     agents.forEach(agent => fragment.appendChild(agent.toElement()))
@@ -959,8 +959,8 @@ class BoardComponent extends AbstractTreeComponent {
     return this.root.simojiPrograms.length > 1
   }
 
-  get editorWidth() {
-    return this.getNode("editorWidth")?.width ?? 250
+  get leftStartPosition() {
+    return this.getNode("leftStartPosition")?.width ?? 250
   }
 
   get multiboardTransforms() {
@@ -977,7 +977,7 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   get style() {
-    return `left:calc(10px + ${this.editorWidth}px);${this.multiboardTransforms}`
+    return `left:calc(10px + ${this.leftStartPosition}px);${this.multiboardTransforms}`
   }
 
   toStumpCode() {
@@ -1022,7 +1022,7 @@ class BoardComponent extends AbstractTreeComponent {
 
   alert(command) {
     const message = command.getContent()
-    if (typeof alert !== "undefined")
+    if (!this.isNodeJs())
       // todo: willow should shim this
       alert(message)
     else this.root.log(message)
@@ -1075,6 +1075,71 @@ class BottomBarComponent extends AbstractTreeComponent {
 }
 
 window.BottomBarComponent = BottomBarComponent
+
+
+
+
+const makeResizableDiv = (element, callback, stopResizeCallback) => {
+  // Based off an entertaining read:
+  // medium.com/the-z/making-a-resizable-div-in-js-is-not-easy-as-you-think-bda19a1bc53d
+  let originalLeft = 0
+  let originalMouseX = 0
+
+  element.addEventListener("mousedown", evt => {
+    evt.preventDefault()
+    originalLeft = element.getBoundingClientRect().left
+    originalMouseX = evt.pageX
+    window.addEventListener("mousemove", resize)
+    window.addEventListener("mouseup", stopResize)
+  })
+
+  const resize = evt => {
+    const dragAmount = evt.pageX - originalMouseX
+    const newLeft = originalLeft + dragAmount
+    callback(newLeft)
+  }
+
+  const stopResize = () => {
+    window.removeEventListener("mousemove", resize)
+    window.removeEventListener("mouseup", stopResize)
+    stopResizeCallback()
+  }
+}
+
+class EditorHandleComponent extends AbstractTreeComponent {
+  get left() {
+    return this.getRootNode().editor.width
+  }
+
+  makeDraggable() {
+    if (this.isNodeJs()) return
+    makeResizableDiv(
+      this.getStumpNode().getShadow().element,
+      newLeft => this.getRootNode().resizeEditorCommand(Math.max(newLeft, 5) + ""),
+      () => this.getRootNode().resetAllCommand()
+    )
+  }
+
+  treeComponentDidMount() {
+    this.makeDraggable()
+  }
+
+  treeComponentDidUpdate() {
+    this.makeDraggable()
+  }
+
+  toStumpCode() {
+    return `div
+ class EditorHandleComponent
+ style left:${this.left}px;`
+  }
+
+  getDependencies() {
+    return [this.getRootNode().editor]
+  }
+}
+
+window.EditorHandleComponent = EditorHandleComponent
 
 
 
@@ -1421,13 +1486,19 @@ class SimEditorComponent extends AbstractTreeComponent {
     super.treeComponentDidUpdate()
   }
 
+  renderAndGetRenderReport(stumpNode, index) {
+    if (!this.isMounted()) return super.renderAndGetRenderReport(stumpNode, index)
+    this.setSize()
+    return ""
+  }
+
   setCodeMirrorValue(value) {
     this.codeMirrorInstance.setValue(value)
     this._code = value
   }
 
   _initCodeMirror() {
-    if (typeof CodeMirror === "undefined") return (this.codeMirrorInstance = new CodeMirrorShim())
+    if (this.isNodeJs()) return (this.codeMirrorInstance = new CodeMirrorShim())
     this.codeMirrorInstance = new jtree.TreeNotationCodeMirrorMode(
       "custom",
       () => simojiCompiler,
@@ -1452,6 +1523,7 @@ class SimEditorComponent extends AbstractTreeComponent {
   }
 
   setSize() {
+    if (this.isNodeJs()) return
     this.codeMirrorInstance.setSize(this.width, window.innerHeight - this.chromeHeight)
   }
 
@@ -1464,6 +1536,7 @@ window.SimEditorComponent = SimEditorComponent
 
 
 // prettier-ignore
+
 
 
 
@@ -1532,7 +1605,8 @@ class SimojiApp extends AbstractTreeComponent {
       BoardComponent,
       TreeComponentFrameworkDebuggerComponent,
       BottomBarComponent,
-      RightBarComponent
+      RightBarComponent,
+      EditorHandleComponent
     })
   }
 
@@ -1546,7 +1620,7 @@ class SimojiApp extends AbstractTreeComponent {
     const setSize = simojiProgram.get("size")
     const gridSize = Math.min(Math.max(setSize ? parseInt(setSize) : DEFAULT_GRID_SIZE, MIN_GRID_SIZE), MAX_GRID_SIZE)
 
-    const chromeWidth = this.editorWidth + SIZES.RIGHT_BAR_WIDTH + SIZES.BOARD_MARGIN
+    const chromeWidth = this.leftStartPosition + SIZES.RIGHT_BAR_WIDTH + SIZES.BOARD_MARGIN
     const maxAvailableCols = Math.floor((windowWidth - chromeWidth) / gridSize) - 1
     const maxAvailableRows = Math.floor((windowHeight - SIZES.CHROME_HEIGHT) / gridSize) - 1
 
@@ -1588,7 +1662,7 @@ class SimojiApp extends AbstractTreeComponent {
     const styleNode = program.getNode("style") ?? undefined
     const board = this.appendLineAndChildren(
       `BoardComponent ${gridSize} ${rows} ${cols} ${index}`,
-      `editorWidth ${this.editorWidth}\n${this.compiledStartState.trim()}
+      `leftStartPosition ${this.leftStartPosition}\n${this.compiledStartState.trim()}
 GridComponent
 ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}`.trim()
     )
@@ -1596,7 +1670,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     board.randomNumberGenerator = randomNumberGenerator
   }
 
-  get editorWidth() {
+  get leftStartPosition() {
     return this.editor.width
   }
 
@@ -1636,7 +1710,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
   }
 
   updateLocalStorage(simCode) {
-    if (typeof localStorage === "undefined") return "" // todo: tcf should shim this
+    if (this.isNodeJs()) return // todo: tcf should shim this
     localStorage.setItem("simoji", simCode)
     console.log("Local storage updated...")
   }
@@ -1868,6 +1942,14 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
       backspace: () => this.deleteSelectionCommand()
     }
   }
+
+  resizeEditorCommand(newSize = "100") {
+    this.editor.setWord(1, newSize)
+    this.boards.forEach(board => board.set("leftStartPosition", newSize))
+
+    if (!this.isNodeJs()) localStorage.setItem("editorStartWidth", newSize)
+    this.renderAndGetRenderReport()
+  }
 }
 
 const SIZES = {}
@@ -1881,6 +1963,10 @@ SIZES.EDITOR_WIDTH = 250
 SIZES.RIGHT_BAR_WIDTH = 30
 
 SimojiApp.setupApp = (simojiCode, windowWidth = 1000, windowHeight = 1000) => {
+  const editorStartWidth =
+    typeof localStorage !== "undefined"
+      ? localStorage.getItem("editorStartWidth") ?? SIZES.EDITOR_WIDTH
+      : SIZES.EDITOR_WIDTH
   const startState = new jtree.TreeNode(`githubTriangleComponent
 TopBarComponent
  LogoComponent
@@ -1892,9 +1978,10 @@ BottomBarComponent
  ReportButtonComponent
 RightBarComponent
  AgentPaletteComponent
-SimEditorComponent ${SIZES.EDITOR_WIDTH} ${SIZES.CHROME_HEIGHT}
+SimEditorComponent ${editorStartWidth} ${SIZES.CHROME_HEIGHT}
  value
-  ${simojiCode.replace(/\n/g, "\n  ")}`)
+  ${simojiCode.replace(/\n/g, "\n  ")}
+EditorHandleComponent`)
 
   const app = new SimojiApp(startState.toString())
   app.windowWidth = windowWidth

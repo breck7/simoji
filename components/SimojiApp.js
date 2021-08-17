@@ -11,6 +11,7 @@ const { HelpModalComponent } = require("./HelpModal.js")
 const { BoardComponent } = require("./Board.js")
 const { BottomBarComponent } = require("./BottomBar.js")
 const { RightBarComponent } = require("./RightBar.js")
+const { EditorHandleComponent } = require("./EditorHandle.js")
 
 const MIN_GRID_SIZE = 10
 const MAX_GRID_SIZE = 200
@@ -69,7 +70,8 @@ class SimojiApp extends AbstractTreeComponent {
       BoardComponent,
       TreeComponentFrameworkDebuggerComponent,
       BottomBarComponent,
-      RightBarComponent
+      RightBarComponent,
+      EditorHandleComponent
     })
   }
 
@@ -83,7 +85,7 @@ class SimojiApp extends AbstractTreeComponent {
     const setSize = simojiProgram.get("size")
     const gridSize = Math.min(Math.max(setSize ? parseInt(setSize) : DEFAULT_GRID_SIZE, MIN_GRID_SIZE), MAX_GRID_SIZE)
 
-    const chromeWidth = this.editorWidth + SIZES.RIGHT_BAR_WIDTH + SIZES.BOARD_MARGIN
+    const chromeWidth = this.leftStartPosition + SIZES.RIGHT_BAR_WIDTH + SIZES.BOARD_MARGIN
     const maxAvailableCols = Math.floor((windowWidth - chromeWidth) / gridSize) - 1
     const maxAvailableRows = Math.floor((windowHeight - SIZES.CHROME_HEIGHT) / gridSize) - 1
 
@@ -125,7 +127,7 @@ class SimojiApp extends AbstractTreeComponent {
     const styleNode = program.getNode("style") ?? undefined
     const board = this.appendLineAndChildren(
       `BoardComponent ${gridSize} ${rows} ${cols} ${index}`,
-      `editorWidth ${this.editorWidth}\n${this.compiledStartState.trim()}
+      `leftStartPosition ${this.leftStartPosition}\n${this.compiledStartState.trim()}
 GridComponent
 ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}`.trim()
     )
@@ -133,7 +135,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     board.randomNumberGenerator = randomNumberGenerator
   }
 
-  get editorWidth() {
+  get leftStartPosition() {
     return this.editor.width
   }
 
@@ -173,7 +175,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
   }
 
   updateLocalStorage(simCode) {
-    if (typeof localStorage === "undefined") return "" // todo: tcf should shim this
+    if (this.isNodeJs()) return // todo: tcf should shim this
     localStorage.setItem("simoji", simCode)
     console.log("Local storage updated...")
   }
@@ -405,6 +407,14 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
       backspace: () => this.deleteSelectionCommand()
     }
   }
+
+  resizeEditorCommand(newSize = "100") {
+    this.editor.setWord(1, newSize)
+    this.boards.forEach(board => board.set("leftStartPosition", newSize))
+
+    if (!this.isNodeJs()) localStorage.setItem("editorStartWidth", newSize)
+    this.renderAndGetRenderReport()
+  }
 }
 
 const SIZES = {}
@@ -418,6 +428,10 @@ SIZES.EDITOR_WIDTH = 250
 SIZES.RIGHT_BAR_WIDTH = 30
 
 SimojiApp.setupApp = (simojiCode, windowWidth = 1000, windowHeight = 1000) => {
+  const editorStartWidth =
+    typeof localStorage !== "undefined"
+      ? localStorage.getItem("editorStartWidth") ?? SIZES.EDITOR_WIDTH
+      : SIZES.EDITOR_WIDTH
   const startState = new jtree.TreeNode(`githubTriangleComponent
 TopBarComponent
  LogoComponent
@@ -429,9 +443,10 @@ BottomBarComponent
  ReportButtonComponent
 RightBarComponent
  AgentPaletteComponent
-SimEditorComponent ${SIZES.EDITOR_WIDTH} ${SIZES.CHROME_HEIGHT}
+SimEditorComponent ${editorStartWidth} ${SIZES.CHROME_HEIGHT}
  value
-  ${simojiCode.replace(/\n/g, "\n  ")}`)
+  ${simojiCode.replace(/\n/g, "\n  ")}
+EditorHandleComponent`)
 
   const app = new SimojiApp(startState.toString())
   app.windowWidth = windowWidth

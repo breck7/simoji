@@ -20,7 +20,7 @@ class BoardErrorNode extends AbstractTreeComponent {
   }
 }
 
-class editorWidth extends jtree.TreeNode {
+class leftStartPosition extends jtree.TreeNode {
   get width() {
     return parseInt(this.getWord(1))
   }
@@ -34,7 +34,7 @@ class BoardComponent extends AbstractTreeComponent {
         ...this.agentMap,
         GridComponent,
         BoardStyleComponent,
-        editorWidth
+        leftStartPosition
       })
     return this._parser
   }
@@ -130,7 +130,7 @@ class BoardComponent extends AbstractTreeComponent {
   appendAgents(agents) {
     if (!agents.length) return this
 
-    if (typeof document === "undefined") return
+    if (this.isNodeJs()) return
 
     const fragment = document.createDocumentFragment()
     agents.forEach(agent => fragment.appendChild(agent.toElement()))
@@ -251,8 +251,8 @@ class BoardComponent extends AbstractTreeComponent {
     return this.root.simojiPrograms.length > 1
   }
 
-  get editorWidth() {
-    return this.getNode("editorWidth")?.width ?? 250
+  get leftStartPosition() {
+    return this.getNode("leftStartPosition")?.width ?? 250
   }
 
   get multiboardTransforms() {
@@ -269,7 +269,7 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   get style() {
-    return `left:calc(10px + ${this.editorWidth}px);${this.multiboardTransforms}`
+    return `left:calc(10px + ${this.leftStartPosition}px);${this.multiboardTransforms}`
   }
 
   toStumpCode() {
@@ -314,7 +314,7 @@ class BoardComponent extends AbstractTreeComponent {
 
   alert(command) {
     const message = command.getContent()
-    if (typeof alert !== "undefined")
+    if (!this.isNodeJs())
       // todo: willow should shim this
       alert(message)
     else this.root.log(message)
