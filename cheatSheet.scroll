@@ -137,6 +137,7 @@ pipeTable
  Combo|Command
  Spacebar|Play/Pause
  ?|Toggle Help
+ t|Advance one tick
  r|Reset Experiments
  s|Snapshot Current Starting Params
  o|Open Reports

@@ -159,8 +159,19 @@ body {
 .ResetButtonComponent {
 	cursor: pointer;
 	user-select: none;
-	width: 30px;
+	width: 50px;
 	display: inline-block;
+	text-align: center;
+}
+
+.BottomButton:hover {
+	background-color: rgba(255, 255, 255, 0.2);
+	opacity: 1;
+}
+
+.BottomButton:active {
+	background-color: rgba(255, 255, 255, 0.3);
+	opacity: 1;
 }
 
 .ReportButtonComponent {
@@ -170,10 +181,6 @@ body {
 .ResetButtonComponent {
 	float: left;
 	opacity: 0.2;
-}
-.ReportButtonComponent:hover,
-.ResetButtonComponent:hover {
-	opacity: 1;
 }
 
 .RightBarComponent {

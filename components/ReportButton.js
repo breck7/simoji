@@ -4,7 +4,7 @@ class ReportButtonComponent extends AbstractTreeComponent {
   toStumpCode() {
     return `span Δ
  title Generate Report
- class ReportButtonComponent
+ class ReportButtonComponent BottomButton
  clickCommand openReportInOhayoCommand`
   }
 }

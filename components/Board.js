@@ -321,7 +321,9 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   pause() {
+    const { isRunning } = this
     this.stopInterval()
+    if (isRunning) this.root.onBoardPause() // ensure playbutton has updated if needed
   }
 
   reset() {

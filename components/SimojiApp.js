@@ -216,6 +216,10 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     this.boards.forEach(board => board.stopInterval())
   }
 
+  advanceOneTickCommand() {
+    this.boards.forEach(board => board.boardLoop())
+  }
+
   get isRunning() {
     return this.boards.some(board => board.isRunning)
   }
@@ -312,6 +316,10 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
       .renderAndGetRenderReport()
   }
 
+  onBoardPause() {
+    this.updatePlayButtonComponentHack()
+  }
+
   togglePlayAllCommand() {
     this.isRunning ? this.stopAllIntervals() : this.startAllIntervals()
     this.updatePlayButtonComponentHack()
@@ -393,6 +401,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
       right: () => this.moveSelection("East"),
       left: () => this.moveSelection("West"),
       "?": () => this.toggleHelpCommand(),
+      t: () => this.advanceOneTickCommand(),
       backspace: () => this.deleteSelectionCommand()
     }
   }

@@ -7,7 +7,7 @@ class PlayButtonComponent extends AbstractTreeComponent {
 
   toStumpCode() {
     return `span ${this.isStarted ? "&#10074;&#10074;" : "▶︎"}
- class PlayButtonComponent
+ class PlayButtonComponent BottomButton
  clickCommand togglePlayAllCommand`
   }
 }

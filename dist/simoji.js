@@ -1029,7 +1029,9 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   pause() {
+    const { isRunning } = this
     this.stopInterval()
+    if (isRunning) this.root.onBoardPause() // ensure playbutton has updated if needed
   }
 
   reset() {
@@ -1233,7 +1235,7 @@ class PlayButtonComponent extends AbstractTreeComponent {
 
   toStumpCode() {
     return `span ${this.isStarted ? "&#10074;&#10074;" : "▶︎"}
- class PlayButtonComponent
+ class PlayButtonComponent BottomButton
  clickCommand togglePlayAllCommand`
   }
 }
@@ -1247,7 +1249,7 @@ class ReportButtonComponent extends AbstractTreeComponent {
   toStumpCode() {
     return `span Δ
  title Generate Report
- class ReportButtonComponent
+ class ReportButtonComponent BottomButton
  clickCommand openReportInOhayoCommand`
   }
 }
@@ -1261,7 +1263,7 @@ class ResetButtonComponent extends AbstractTreeComponent {
   toStumpCode() {
     return `span ≪
  title Clear and reset
- class ResetButtonComponent
+ class ResetButtonComponent BottomButton
  clickCommand resetAllCommand`
   }
 
@@ -1677,6 +1679,10 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     this.boards.forEach(board => board.stopInterval())
   }
 
+  advanceOneTickCommand() {
+    this.boards.forEach(board => board.boardLoop())
+  }
+
   get isRunning() {
     return this.boards.some(board => board.isRunning)
   }
@@ -1773,6 +1779,10 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
       .renderAndGetRenderReport()
   }
 
+  onBoardPause() {
+    this.updatePlayButtonComponentHack()
+  }
+
   togglePlayAllCommand() {
     this.isRunning ? this.stopAllIntervals() : this.startAllIntervals()
     this.updatePlayButtonComponentHack()
@@ -1854,6 +1864,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
       right: () => this.moveSelection("East"),
       left: () => this.moveSelection("West"),
       "?": () => this.toggleHelpCommand(),
+      t: () => this.advanceOneTickCommand(),
       backspace: () => this.deleteSelectionCommand()
     }
   }
