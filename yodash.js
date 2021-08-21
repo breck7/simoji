@@ -196,6 +196,19 @@ yodash.parsePosition = words => {
 	}
 }
 
+yodash.draw = str => {
+	const lines = str.split("\n")
+	const output = []
+	for (let index = 0; index < lines.length; index++) {
+		const words = lines[index].split(" ")
+		for (let wordIndex = 0; wordIndex < words.length; wordIndex++) {
+			const word = words[wordIndex]
+			if (word !== "") output.push(`${word} ${yodash.makePositionHash({ down: index, right: wordIndex })}`)
+		}
+	}
+	return output.join("\n")
+}
+
 yodash.updateOccupiedSpots = (board, occupiedSpots) => {
 	new TreeNode(board).forEach(line => {
 		occupiedSpots.add(yodash.makePositionHash(yodash.parsePosition(line.getWords())))

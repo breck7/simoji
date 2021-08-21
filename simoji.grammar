@@ -82,6 +82,20 @@ fillNode
     const {rows, cols, occupiedSpots, yodash} = this.getParent()
      return yodash.fill(rows, cols, occupiedSpots, this.getWord(1))
   }
+drawLineNode
+ catchAllCellType emojiCell
+drawNode
+ extends abstractDrawNode
+ cells keywordCell
+ crux draw
+ catchAllNodeType drawLineNode
+ javascript
+  compile() {
+    const {occupiedSpots} = this.getParent()
+    const spots = yodash.draw(this.childrenToString())
+    yodash.updateOccupiedSpots(spots, occupiedSpots)
+    return spots
+  }
 insertNode
  extends abstractDrawNode
  cells keywordCell integerOrPercentCell emojiCell
