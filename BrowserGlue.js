@@ -5,9 +5,14 @@ const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework
 
 class BrowserGlue extends AbstractTreeComponent {
   async fetchAndLoadSimCodeFromUrlCommand(url) {
-    const { willowBrowser } = this
-    const simCode = await willowBrowser.httpGetUrl(url)
+    const simCode = await this.fetchText(url)
     return simCode
+  }
+
+  async fetchText(url) {
+    const result = await fetch(url)
+    const text = await result.text()
+    return text
   }
 
   getFromLocalStorage() {

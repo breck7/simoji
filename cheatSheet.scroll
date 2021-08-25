@@ -151,6 +151,11 @@ section Sharing Your Simulations
 paragraph
  At the top of the page you should see a link that you can copy and paste to share your sim. When you update your simulation code that link will update.
 
+subsection Loading a Simulation from a URL
+
+paragraph
+ You can load any simulation from a publicly accessible URL by prefixing it with: `https://simoji.pub/#url `. For example: https://simoji.pub/#url%20https://simoji.pub/examples/eatTheBacon.simoji
+
 section Getting Involved
 
 paragraph

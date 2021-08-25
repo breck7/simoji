@@ -8,7 +8,7 @@
  
  Generally you don't want to edit it by hand.
 
- Scroll v22.1.0
+ Scroll v22.3.0
 
 -->
 <html lang="en-US">
@@ -17,7 +17,7 @@
   <title>Simoji Quickstart Guide - Simoji</title>
   <meta name="viewport" content="width=device-width,initial-scale=1"></meta>
   <meta name="description" content="Design quick simulations with Emojis"></meta>
-  <meta name="generator" content="Scroll v22.1.0"></meta>
+  <meta name="generator" content="Scroll v22.3.0"></meta>
   <meta property="og:title" content="Simoji Quickstart Guide"></meta>
   <meta property="og:description" content="Simoji is a language and tool for thinkers to write shareable simulations using 😃's. You write your simulations in a simple language using mostly Emojis and then click play. Simoji is public domain, open source and suggestions welcome!"></meta>
   <meta property="og:image" content=""></meta>
@@ -109,7 +109,6 @@ html {
   font-size: 80%;
 }
 .scrollParagraphComponent {
-  text-indent: 1em;
   margin-top: 0.4em;
   line-height: 1.4em;
 }
@@ -122,9 +121,13 @@ html {
   white-space: pre-line;
   border-left: .5em solid rgba(204,204,204,.8);
 }
-.scrollQuestionComponent,.scrollSectionComponent,.scrollSubsectionComponent {
+.scrollSectionComponent,.scrollSubsectionComponent {
   text-align: center;
-  margin: .2em;
+  margin-top: 1em;
+}
+.scrollQuestionComponent {
+  text-align: left;
+  margin-top: 2em;
 }
 .scrollCodeBlockComponent {
   overflow: auto;
@@ -370,6 +373,10 @@ experiment
 <h3 class="scrollSectionComponent">Sharing Your Simulations</h3>
 
 <p class="scrollParagraphComponent">At the top of the page you should see a link that you can copy and paste to share your sim. When you update your simulation code that link will update.</p>
+
+<h4 class="scrollSubsectionComponent">Loading a Simulation from a URL</h4>
+
+<p class="scrollParagraphComponent">You can load any simulation from a publicly accessible URL by prefixing it with: `https://simoji.pub/#url `. For example: https://simoji.pub/#url%20https://simoji.pub/examples/eatTheBacon.simoji</p>
 
 <h3 class="scrollSectionComponent">Getting Involved</h3>
 

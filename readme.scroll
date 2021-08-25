@@ -3,6 +3,11 @@ title Simoji - Write simulations with Emojis
 paragraph
  An early work in progress.
 
+section Documentation
+
+paragraph
+ Check out the QuickStart🔗./cheatSheet.html Guide.
+
 section Related Work
 
 list
@@ -27,6 +32,15 @@ list
  - sandspiel🔗sandspiel.club
  - The-Powder-Toy🔗github.com/The-Powder-Toy/The-Powder-Toy
 
+
+section Roadmap
+
+list
+ - Run sims with 8x as many agents
+ - Run 8x more sims at once
+ - Write 8x more kinds of sims with the same number of words
+ - Write models that are 8x less wrong
+ - Generate 8x better distributables
 
 section ❤️ Public Domain ❤️ 
 
