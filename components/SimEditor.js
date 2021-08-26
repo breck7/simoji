@@ -17,7 +17,7 @@ class CodeMirrorShim {
 class SimEditorComponent extends AbstractTreeComponent {
   toStumpCode() {
     return `div
- class SimEditorComponent
+ class ${SimEditorComponent.name}
  style width:${this.width}px;
  textarea
   id EditorTextarea

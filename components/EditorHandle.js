@@ -32,7 +32,7 @@ class EditorHandleComponent extends AbstractTreeComponent {
 
   toStumpCode() {
     return `div
- class EditorHandleComponent
+ class ${EditorHandleComponent.name}
  style left:${this.left}px;`
   }
 

@@ -1,3 +1,24 @@
+question What is the effect of population density on pandemic duration?
+
+experiment
+ insertCluster 100 🙍
+ insertCluster 100 🙍
+ insertCluster 100 🙍
+ insertCluster 30 🙍
+ insertCluster 30 🙍
+ insertCluster 10 🙍
+
+experiment
+ insert 200 🙍
+
+experiment
+ insertCluster 200 🙍
+
+experiment
+ insertCluster 200 🙍
+ insert 200 🙍
+
+
 🦠
  health 10
  onTick
@@ -29,13 +50,6 @@
    replaceWith 🧟
   🧟
    replaceWith 🧟
-
-insertCluster 100 🙍
-insertCluster 100 🙍
-insertCluster 100 🙍
-insertCluster 30 🙍
-insertCluster 30 🙍
-insertCluster 10 🙍
 
 insert 1 🦠
 

@@ -4,7 +4,7 @@ class ResetButtonComponent extends AbstractTreeComponent {
   toStumpCode() {
     return `span ≪
  title Clear and reset
- class ResetButtonComponent BottomButton
+ class ${ResetButtonComponent.name} BottomButton
  clickCommand resetAllCommand`
   }
 

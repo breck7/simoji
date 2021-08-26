@@ -1,3 +1,5 @@
+question Can you protect the family from the zombies?
+
 🧟‍♂️
  onTick
   jitter
@@ -35,3 +37,4 @@ ticksPerSecond 10
 insertCluster 30 🧟‍♂️ 1 1
 paste
  👨‍👩‍👧‍👦 12⬇️ 11➡️
+

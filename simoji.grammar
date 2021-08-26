@@ -51,8 +51,8 @@ simojiNode
  extensions simoji
  description A Tree Language that compiles to a TreeComponentFramework app.
  root
- inScope blankLineNode commentNode abstractSetupNumberNode abstractDrawNode styleNode onTickNode onExtinctNode behaviorDefinitionNode reportNode experimentNode settingDefinitionNode
- catchAllNodeType agentNode
+ inScope blankLineNode commentNode abstractSetupNode abstractDrawNode onTickNode onExtinctNode behaviorDefinitionNode experimentNode settingDefinitionNode
+ catchAllNodeType agentDefinitionNode
  compilesTo javascript
  example
   🦋
@@ -68,12 +68,12 @@ simojiNode
   insert 2 💡
  javascript
   get agentTypes() {
-    return this.filter(node => node.getNodeTypeId() === "agentNode")
+    return this.filter(node => node.getNodeTypeId() === "agentDefinitionNode")
   }
 experimentNode
  crux experiment
  cells keywordCell
- inScope blankLineNode commentNode abstractSetupNumberNode abstractDrawNode styleNode onTickNode onExtinctNode reportNode settingDefinitionNode
+ inScope blankLineNode commentNode abstractSetupNode abstractDrawNode onTickNode onExtinctNode settingDefinitionNode
  catchAllCellType stringCell
 abstractDrawNode
 fillNode
@@ -143,8 +143,8 @@ pasteDrawNode
 pasteLineNode
  catchAllCellType anyCell
  catchAllNodeType pasteLineNode
-agentNode
- inScope commentNode abstractEventNode abstractAttributeNode abstractBehaviorAttributeNode
+agentDefinitionNode
+ inScope commentNode abstractEventNode abstractAgentAttributeNode abstractBehaviorAttributeNode
  cells keywordCell
  catchAllNodeType errorNode
  compiler
@@ -175,10 +175,10 @@ removeCommandNode
  crux remove
  extends abstractCommandNode
  cells keywordCell
-abstractAttributeNode
+abstractAgentAttributeNode
  cells keywordCell
 abstractStringAttributeNode
- extends abstractAttributeNode
+ extends abstractAgentAttributeNode
  pattern ^\w+ .+$
  catchAllCellType stringCell
  javascript
@@ -187,7 +187,7 @@ abstractStringAttributeNode
   }
 abstractBooleanAttributeNode
  description A boolean attribute.
- extends abstractAttributeNode
+ extends abstractAgentAttributeNode
  javascript
   compile() {
     return `${this.getWord(0)} = true`
@@ -201,7 +201,7 @@ bouncyTraitNode
  extends abstractBooleanAttributeNode
  crux bouncy
 abstractIntegerAttributeNode
- extends abstractAttributeNode
+ extends abstractAgentAttributeNode
  description An integer attribute.
  cells keywordCell integerCell
  javascript
@@ -232,8 +232,10 @@ agentHtmlNode
  extends abstractStringAttributeNode
  cells keywordCell htmlCell
  crux html
+abstractSetupNode
 abstractSetupNumberNode
  cells keywordCell integerCell
+ extends abstractSetupNode
  javascript
   compile() {
    return ""
@@ -262,6 +264,7 @@ reportNode
  crux report
  description Define a custom report template.
  catchAllNodeType ohayoLineNode
+ extends abstractSetupNode
  cells keywordCell
  javascript
   compile() {
@@ -272,6 +275,7 @@ ohayoLineNode
  catchAllCellType ohayoCell
 styleNode
  description Optional CSS to load in BoardStyleComponent
+ extends abstractSetupNode
  cells keywordCell
  crux style
  catchAllNodeType styleLineNode
@@ -390,6 +394,12 @@ turnFromCommandNode
  extends abstractCommandNode
  crux turnFrom
  cells keywordCell emojiCell
+questionNode
+ crux question
+ description What are you trying to figure out?
+ cells keywordCell
+ catchAllCellType stringCell
+ extends abstractSetupNode
 commentNode
  catchAllCellType commentCell
  crux comment

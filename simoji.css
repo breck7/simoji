@@ -23,6 +23,7 @@ body {
 :root {
 	--rightBarWidth: 30px;
 	--topBarHeight: 28px;
+	--titleHeight: 20px;
 	--bottomBarHeight: 40px;
 	--chromeColor: rgb(47, 47, 51);
 }
@@ -79,7 +80,7 @@ body {
 
 .BoardComponent {
 	position: absolute;
-	top: calc(10px + var(--topBarHeight));
+	top: calc(10px + var(--topBarHeight) + var(--titleHeight));
 	bottom: calc(10px + var(--bottomBarHeight));
 	right: calc(10px + var(--rightBarWidth));
 	box-shadow: 0 3px 10px rgb(0 0 0 / 0.2);
@@ -222,4 +223,16 @@ body {
 .ExamplesComponent a:hover,
 .LogoComponent:hover {
 	background-color: rgba(255, 255, 255, 0.2);
+}
+
+.TitleComponent {
+	position: absolute;
+	top: var(--topBarHeight);
+	right: var(--rightBarWidth);
+	text-align: center;
+	height: var(--titleHeight);
+	font-family: Lato, Helvetica Neue, Arial, sans-serif;
+	font-weight: 400;
+	color: #666;
+	line-height: 30px;
 }

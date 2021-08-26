@@ -42,7 +42,7 @@ class GridComponent extends AbstractTreeComponent {
     }
     return (
       `div
- class GridComponent` + blocks
+ class ${GridComponent.name}` + blocks
     )
   }
 }

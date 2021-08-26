@@ -1,22 +1,23 @@
 const yodash = {}
 const lodash = require("lodash")
 const math = require("mathjs")
+const { Directions, NodeTypes } = require("./components/Types.js")
 
 yodash.parseInts = (arr, start) => arr.map((item, index) => (index >= start ? parseInt(item) : item))
 
 yodash.getRandomAngle = randomNumberGenerator => {
 	const r1 = randomNumberGenerator()
 	const r2 = randomNumberGenerator()
-	if (r1 > 0.5) return r2 > 0.5 ? "North" : "South"
-	return r2 > 0.5 ? "West" : "East"
+	if (r1 > 0.5) return r2 > 0.5 ? Directions.North : Directions.South
+	return r2 > 0.5 ? Directions.West : Directions.East
 }
 
 yodash.flipAngle = angle => {
 	let newAngle = ""
-	if (angle.includes("North")) newAngle += "South"
-	else if (angle.includes("South")) newAngle += "North"
-	if (angle.includes("East")) newAngle += "West"
-	else if (angle.includes("West")) newAngle += "East"
+	if (angle.includes(Directions.North)) newAngle += Directions.South
+	else if (angle.includes(Directions.South)) newAngle += Directions.North
+	if (angle.includes(Directions.East)) newAngle += Directions.West
+	else if (angle.includes(Directions.West)) newAngle += Directions.East
 	return newAngle
 }
 
@@ -32,7 +33,7 @@ yodash.compare = (left, operator, right) => {
 
 yodash.compileAgentClassDeclarationsAndMap = program => {
 	const clone = program.clone()
-	clone.filter(node => node.getNodeTypeId() !== "agentNode").forEach(node => node.destroy())
+	clone.filter(node => node.getNodeTypeId() !== NodeTypes.agentDefinitionNode).forEach(node => node.destroy())
 	clone.agentKeywordMap = {}
 	clone.agentTypes.forEach((node, index) => (clone.agentKeywordMap[node.getWord(0)] = `simAgent${index}`))
 	const compiled = clone.compile()
@@ -47,13 +48,13 @@ yodash.compileAgentClassDeclarationsAndMap = program => {
 yodash.patchExperimentAndReplaceSymbols = (program, experiment) => {
 	const clone = program.clone()
 	// drop experiment nodes
-	clone.filter(node => node.getNodeTypeId() === "experimentNode").forEach(node => node.destroy())
+	clone.filter(node => node.getNodeTypeId() === NodeTypes.experimentNode).forEach(node => node.destroy())
 	// Append current experiment
 	if (experiment) clone.concat(experiment.childrenToString())
 	// Build symbol table
 	const symbolTable = {}
 	clone
-		.filter(node => node.getNodeTypeId() === "settingDefinitionNode")
+		.filter(node => node.getNodeTypeId() === NodeTypes.settingDefinitionNode)
 		.forEach(node => {
 			symbolTable[node.getWord(0)] = node.getContent()
 			node.destroy()
@@ -66,10 +67,9 @@ yodash.patchExperimentAndReplaceSymbols = (program, experiment) => {
 	return withVarsReplaced
 }
 
-yodash.compileBoardStartState = (program, rows, cols, randomNumberGenerator) => {
+yodash.compileStartingAgentsWithPositions = (program, rows, cols, randomNumberGenerator) => {
 	const clone = program.clone()
-	const excludeTypes = ["blankLineNode", "settingDefinitionNode", "agentNode", "behaviorDefinitionNode"] // todo: cleanup
-	clone.filter(node => excludeTypes.includes(node.getNodeTypeId())).forEach(node => node.destroy())
+	clone.filter(node => !node.doesExtend(NodeTypes.abstractDrawNode)).forEach(node => node.destroy())
 	clone.occupiedSpots = new Set()
 	clone.randomNumberGenerator = randomNumberGenerator
 	clone.rows = rows
@@ -101,10 +101,10 @@ yodash.angle = (cx, cy, ex, ey) => {
 	//if (theta < 0) theta = 360 + theta; // range [0, 360)
 	let angle = ""
 
-	if (Math.abs(theta) > 90) angle += "North"
-	else angle += "South"
-	if (theta < 0) angle += "West"
-	else angle += "East"
+	if (Math.abs(theta) > 90) angle += Directions.North
+	else angle += Directions.South
+	if (theta < 0) angle += Directions.West
+	else angle += Directions.East
 	return angle
 }
 

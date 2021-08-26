@@ -14,7 +14,7 @@ class ExamplesComponent extends AbstractTreeComponent {
   clickCommand loadExampleCommand ${name}`
     }).join("\n")
     return `div
- class ExamplesComponent
+ class ${ExamplesComponent.name}
 ${sims}`
   }
 }

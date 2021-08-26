@@ -1,5 +1,4 @@
-comment
- http://www.netlogoweb.org/launch#http://www.netlogoweb.org/assets/modelslib/Sample%20Models/Biology/Moths.nlogo
+question Can you move the moths from one light to the other?
 
 🦋
  onTick .1
@@ -18,3 +17,6 @@ style
 
 insert 10 🦋
 insert 2 💡
+
+comment
+ http://www.netlogoweb.org/launch#http://www.netlogoweb.org/assets/modelslib/Sample%20Models/Biology/Moths.nlogo

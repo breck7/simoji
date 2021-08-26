@@ -16,6 +16,8 @@ Keywords.onTick = "onTick"
 Keywords.onDeath = "onDeath"
 Keywords.onExtinct = "onExtinct"
 
+Keywords.question = "question"
+
 const LocalStorageKeys = {}
 
 LocalStorageKeys.simoji = "simoji"
@@ -34,4 +36,11 @@ Directions.East = "East"
 Directions.South = "South"
 Directions.West = "West"
 
-module.exports = { Keywords, LocalStorageKeys, UrlKeys, Directions }
+const NodeTypes = {}
+
+NodeTypes.agentDefinitionNode = "agentDefinitionNode"
+NodeTypes.experimentNode = "experimentNode"
+NodeTypes.settingDefinitionNode = "settingDefinitionNode"
+NodeTypes.abstractDrawNode = "abstractDrawNode"
+
+module.exports = { Keywords, LocalStorageKeys, UrlKeys, Directions, NodeTypes }

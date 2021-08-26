@@ -12,6 +12,7 @@ const { BoardComponent } = require("./Board.js")
 const { BottomBarComponent } = require("./BottomBar.js")
 const { RightBarComponent } = require("./RightBar.js")
 const { EditorHandleComponent } = require("./EditorHandle.js")
+const { TitleComponent } = require("./Title.js")
 const { Keywords, LocalStorageKeys, UrlKeys, Directions } = require("./Types.js")
 
 const MIN_GRID_SIZE = 10
@@ -72,7 +73,8 @@ class SimojiApp extends AbstractTreeComponent {
       TreeComponentFrameworkDebuggerComponent,
       BottomBarComponent,
       RightBarComponent,
-      EditorHandleComponent
+      EditorHandleComponent,
+      TitleComponent
     })
   }
 
@@ -88,7 +90,7 @@ class SimojiApp extends AbstractTreeComponent {
 
     const chromeWidth = this.leftStartPosition + SIZES.RIGHT_BAR_WIDTH + SIZES.BOARD_MARGIN
     const maxAvailableCols = Math.floor((windowWidth - chromeWidth) / gridSize) - 1
-    const maxAvailableRows = Math.floor((windowHeight - SIZES.CHROME_HEIGHT) / gridSize) - 1
+    const maxAvailableRows = Math.floor((windowHeight - SIZES.CHROME_HEIGHT - SIZES.TITLE_HEIGHT) / gridSize) - 1
 
     const setCols = simojiProgram.get(Keywords.columns)
     const cols = Math.max(1, setCols ? parseInt(setCols) : Math.max(MIN_GRID_COLUMNS, maxAvailableCols))
@@ -128,17 +130,19 @@ class SimojiApp extends AbstractTreeComponent {
 
     this.compiledStartState = ""
     try {
-      this.compiledStartState = yodash.compileBoardStartState(program, rows, cols, randomNumberGenerator).trim()
+      this.compiledStartState = yodash
+        .compileStartingAgentsWithPositions(program, rows, cols, randomNumberGenerator)
+        .trim()
     } catch (err) {
       if (this.verbose) console.error(err)
     }
 
     const styleNode = program.getNode(Keywords.style) ?? undefined
     const board = this.appendLineAndChildren(
-      `BoardComponent ${gridSize} ${rows} ${cols} ${index}`,
+      `${BoardComponent.name} ${gridSize} ${rows} ${cols} ${index}`,
       `leftStartPosition ${this.leftStartPosition}\n${this.compiledStartState.trim()}
-GridComponent
-${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}`.trim()
+${GridComponent.name}
+${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : ""}`.trim()
     )
     board.seed = seed
     board.randomNumberGenerator = randomNumberGenerator
@@ -149,7 +153,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
   }
 
   get editor() {
-    return this.getNode("SimEditorComponent")
+    return this.getNode(SimEditorComponent.name)
   }
 
   loadExampleCommand(name) {
@@ -195,7 +199,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
   }
 
   get boards() {
-    return this.findNodes("BoardComponent")
+    return this.findNodes(BoardComponent.name)
   }
 
   get board() {
@@ -369,7 +373,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
   }
 
   updatePlayButtonComponentHack() {
-    this.getNode("BottomBarComponent PlayButtonComponent")
+    this.getNode(`${BottomBarComponent.name} ${PlayButtonComponent.name}`)
       .setContent(Date.now())
       .renderAndGetRenderReport()
   }
@@ -445,7 +449,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
   }
 
   async toggleHelpCommand() {
-    this.toggleAndRender("HelpModalComponent")
+    this.toggleAndRender(HelpModalComponent.name)
   }
 
   clearSelectionCommand() {
@@ -500,6 +504,7 @@ SIZES.BOARD_MARGIN = 20
 SIZES.TOP_BAR_HEIGHT = 28
 SIZES.BOTTOM_BAR_HEIGHT = 40
 SIZES.CHROME_HEIGHT = SIZES.TOP_BAR_HEIGHT + SIZES.BOTTOM_BAR_HEIGHT + SIZES.BOARD_MARGIN
+SIZES.TITLE_HEIGHT = 20
 
 SIZES.EDITOR_WIDTH = 250
 SIZES.RIGHT_BAR_WIDTH = 30
@@ -509,21 +514,22 @@ SimojiApp.setupApp = (simojiCode, windowWidth = 1000, windowHeight = 1000) => {
     typeof localStorage !== "undefined"
       ? localStorage.getItem(LocalStorageKeys.editorStartWidth) ?? SIZES.EDITOR_WIDTH
       : SIZES.EDITOR_WIDTH
-  const startState = new jtree.TreeNode(`githubTriangleComponent
-TopBarComponent
- LogoComponent
- ShareComponent
- ExamplesComponent
-BottomBarComponent
- ResetButtonComponent
- PlayButtonComponent
- ReportButtonComponent
-RightBarComponent
- AgentPaletteComponent
-SimEditorComponent ${editorStartWidth} ${SIZES.CHROME_HEIGHT}
+  const startState = new jtree.TreeNode(`${githubTriangleComponent.name}
+${TopBarComponent.name}
+ ${LogoComponent.name}
+ ${ShareComponent.name}
+ ${ExamplesComponent.name}
+${BottomBarComponent.name}
+ ${ResetButtonComponent.name}
+ ${PlayButtonComponent.name}
+ ${ReportButtonComponent.name}
+${RightBarComponent.name}
+ ${AgentPaletteComponent.name}
+${SimEditorComponent.name} ${editorStartWidth} ${SIZES.CHROME_HEIGHT}
  value
   ${simojiCode.replace(/\n/g, "\n  ")}
-EditorHandleComponent`)
+${EditorHandleComponent.name}
+${TitleComponent.name}`)
 
   const app = new SimojiApp(startState.toString())
   app.windowWidth = windowWidth
