@@ -260,16 +260,20 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
   }
 
   toggleSelectCommand(object) {
-    if (this.selection.includes(object)) {
-      object.unselect()
-      this.selection = this.selection.filter(node => node !== object)
-    } else {
-      this.selection.push(object)
-      object.select()
-    }
+    this.selection.includes(object) ? this.unselectCommand(object) : this.selectCommand(object)
 
     this.ensureRender()
     return this
+  }
+
+  unselectCommand(object) {
+    object.unselect()
+    this.selection = this.selection.filter(node => node !== object)
+  }
+
+  selectCommand(object) {
+    this.selection.push(object)
+    object.select()
   }
 
   async downloadCsvCommand() {
@@ -390,6 +394,23 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     this.toggleAndRender("HelpModalComponent")
   }
 
+  clearSelectionCommand() {
+    this.selection.forEach(object => object.unselect())
+    this.selection = []
+    this.ensureRender()
+  }
+
+  selectAllCommand() {
+    this.selection = []
+    this.boards.forEach(board => {
+      board.agents.forEach(agent => {
+        agent.select()
+        this.selection.push(agent)
+      })
+    })
+    this.ensureRender()
+  }
+
   _getKeyboardShortcuts() {
     return {
       space: () => this.togglePlayAllCommand(),
@@ -402,6 +423,8 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
       down: () => this.moveSelection("South"),
       right: () => this.moveSelection("East"),
       left: () => this.moveSelection("West"),
+      escape: () => this.clearSelectionCommand(),
+      "command+a": () => this.selectAllCommand(),
       "?": () => this.toggleHelpCommand(),
       t: () => this.advanceOneTickCommand(),
       backspace: () => this.deleteSelectionCommand()

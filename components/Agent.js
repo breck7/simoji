@@ -249,6 +249,7 @@ class Agent extends jtree.TreeNode {
   _updateHtml() {
     this.element.setAttribute("style", this.inlineStyle)
     if (this.selected) this.element.classList.add("selected")
+    else this.element.classList.remove("selected")
   }
 
   get inlineStyle() {
