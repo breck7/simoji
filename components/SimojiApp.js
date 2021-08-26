@@ -259,8 +259,10 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     this.renderAndGetRenderReport()
   }
 
-  toggleSelectCommand(object) {
-    this.selection.includes(object) ? this.unselectCommand(object) : this.selectCommand(object)
+  toggleSelectCommand(objects) {
+    objects.forEach(object => {
+      this.selection.includes(object) ? this.unselectCommand(object) : this.selectCommand(object)
+    })
 
     this.ensureRender()
     return this

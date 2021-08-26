@@ -6,8 +6,10 @@ class GridComponent extends AbstractTreeComponent {
     const positionHash = down + " " + right
     const board = this.getParent()
     const root = board.getRootNode()
-    const existingObject = board.agentAt(positionHash)
-    if (existingObject) return root.toggleSelectCommand(existingObject)
+    board.resetAgentPositionMap()
+    const { agentPositionMap } = board
+    const existingObjects = agentPositionMap.get(positionHash) ?? []
+    if (existingObjects.length) return root.toggleSelectCommand(existingObjects)
     const { agentToInsert } = root
 
     if (!agentToInsert) return this
