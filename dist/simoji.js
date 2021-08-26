@@ -68,7 +68,7 @@ yodash.patchExperimentAndReplaceSymbols = (program, experiment) => {
 
 yodash.compileBoardStartState = (program, rows, cols, randomNumberGenerator) => {
 	const clone = program.clone()
-	const excludeTypes = ["blankLineNode", "settingDefinitionNode", "agentNode"]
+	const excludeTypes = ["blankLineNode", "settingDefinitionNode", "agentNode", "behaviorDefinitionNode"] // todo: cleanup
 	clone.filter(node => excludeTypes.includes(node.getNodeTypeId())).forEach(node => node.destroy())
 	clone.occupiedSpots = new Set()
 	clone.randomNumberGenerator = randomNumberGenerator
@@ -290,6 +290,22 @@ const shuffleArray = (array, randomNumberGenerator) => {
 	return clonedArr
 }
 
+yodash.pick = (tree, fields) => {
+	const newTree = tree.clone()
+	const map = TreeUtils.arrayToMap(fields)
+	newTree.forEach(node => {
+		if (!map[node.getWord(0)]) node.destroy()
+	})
+
+	return newTree
+}
+
+yodash.flatten = tree => {
+	const newTree = new jtree.TreeNode()
+	tree.forEach(node => node.forEach(child => newTree.appendNode(child)))
+	return newTree
+}
+
 window.yodash = yodash
 
 
@@ -305,12 +321,13 @@ class Agent extends jtree.TreeNode {
   angle = "South"
 
   getCommandBlocks(eventName) {
-    return this.board.simojiProgram.getNode(this.getWord(0)).findNodes(eventName)
+    return this.definitionWithBehaviors.findNodes(eventName)
   }
 
   get definitionWithBehaviors() {
     if (!this.behaviors.length) return this.board.simojiProgram.getNode(this.getWord(0))
-    return flatten(pick(this.board.simojiProgram, [this.getWord(0), ...this.behaviors]))
+    const behaviors = yodash.flatten(yodash.pick(this.board.simojiProgram, [this.getWord(0), ...this.behaviors]))
+    return behaviors
   }
 
   skip(probability) {
@@ -544,6 +561,7 @@ class Agent extends jtree.TreeNode {
   _updateHtml() {
     this.element.setAttribute("style", this.inlineStyle)
     if (this.selected) this.element.classList.add("selected")
+    else this.element.classList.remove("selected")
   }
 
   get inlineStyle() {
@@ -671,7 +689,8 @@ class Agent extends jtree.TreeNode {
   }
 
   spawn(subject, command) {
-    this.board.appendLine(`${command.getWord(1)} ${subject.positionHash}`)
+    const position = command.getWordsFrom(2).length ? command.getWordsFrom(2).join(" ") : subject.positionHash
+    this.board.appendLine(`${command.getWord(1)} ${position}`)
   }
 
   move() {
@@ -682,6 +701,15 @@ class Agent extends jtree.TreeNode {
   jitter() {
     this.turnRandomly()
     this.move()
+  }
+
+  learn(target, command) {
+    this.behaviors.push(command.getWord(1))
+  }
+
+  unlearn(target, command) {
+    const behaviorName = command.getWord(1)
+    this.behaviors = this.behaviors.filter(name => name !== behaviorName)
   }
 }
 
@@ -944,11 +972,6 @@ class BoardComponent extends AbstractTreeComponent {
     return map
   }
 
-  agentAt(position) {
-    const hits = this.agentPositionMap.get(position)
-    return hits ? hits[0] : undefined
-  }
-
   handleCollisions() {
     this.agentPositionMap.forEach(nodes => {
       if (nodes.length > 1) nodes.forEach(node => node.handleCollisions(nodes))
@@ -1177,8 +1200,10 @@ class GridComponent extends AbstractTreeComponent {
     const positionHash = down + " " + right
     const board = this.getParent()
     const root = board.getRootNode()
-    const existingObject = board.agentAt(positionHash)
-    if (existingObject) return root.toggleSelectCommand(existingObject)
+    board.resetAgentPositionMap()
+    const { agentPositionMap } = board
+    const existingObjects = agentPositionMap.get(positionHash) ?? []
+    if (existingObjects.length) return root.toggleSelectCommand(existingObjects)
     const { agentToInsert } = root
 
     if (!agentToInsert) return this
@@ -1774,6 +1799,46 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
       console.log("resize")
       this.editor.setSize()
     })
+
+    this._makeDocumentCopyableAndCuttable()
+  }
+
+  _makeDocumentCopyableAndCuttable() {
+    const app = this
+    this.willowBrowser
+      .setCopyHandler(evt => app.copySelectionCommand(evt))
+      .setCutHandler(evt => app.cutSelectionCommand(evt))
+  }
+
+  async copySelectionCommand(evt) {
+    this._copySelection(evt)
+  }
+
+  async cutSelectionCommand(evt) {
+    this._copySelection(evt)
+    this.deleteSelectionCommand()
+  }
+
+  _copySelection(evt) {
+    const willowBrowser = this.willowBrowser
+    if (willowBrowser.someInputHasFocus()) return ""
+
+    if (!this.selection.length) return ""
+
+    const str = this.selection
+      .map(agent =>
+        agent
+          .getWords()
+          .slice(0, 3)
+          .join(" ")
+      )
+      .join("\n")
+
+    evt.preventDefault()
+    evt.clipboardData.setData("text/plain", str)
+    evt.clipboardData.setData("text/html", str)
+
+    return str
   }
 
   // todo: fix for boards
@@ -1788,17 +1853,23 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     this.renderAndGetRenderReport()
   }
 
-  toggleSelectCommand(object) {
-    if (this.selection.includes(object)) {
-      object.unselect()
-      this.selection = this.selection.filter(node => node !== object)
-    } else {
-      this.selection.push(object)
-      object.select()
-    }
+  toggleSelectCommand(objects) {
+    objects.forEach(object => {
+      this.selection.includes(object) ? this.unselectCommand(object) : this.selectCommand(object)
+    })
 
     this.ensureRender()
     return this
+  }
+
+  unselectCommand(object) {
+    object.unselect()
+    this.selection = this.selection.filter(node => node !== object)
+  }
+
+  selectCommand(object) {
+    this.selection.push(object)
+    object.select()
   }
 
   async downloadCsvCommand() {
@@ -1886,6 +1957,8 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
       node._move()
     })
 
+    this.boards.forEach(board => board.resetAgentPositionMap())
+
     this.ensureRender()
   }
 
@@ -1919,6 +1992,23 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     this.toggleAndRender("HelpModalComponent")
   }
 
+  clearSelectionCommand() {
+    this.selection.forEach(object => object.unselect())
+    this.selection = []
+    this.ensureRender()
+  }
+
+  selectAllCommand() {
+    this.selection = []
+    this.boards.forEach(board => {
+      board.agents.forEach(agent => {
+        agent.select()
+        this.selection.push(agent)
+      })
+    })
+    this.ensureRender()
+  }
+
   _getKeyboardShortcuts() {
     return {
       space: () => this.togglePlayAllCommand(),
@@ -1931,6 +2021,8 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
       down: () => this.moveSelection("South"),
       right: () => this.moveSelection("East"),
       left: () => this.moveSelection("West"),
+      escape: () => this.clearSelectionCommand(),
+      "command+a": () => this.selectAllCommand(),
       "?": () => this.toggleHelpCommand(),
       t: () => this.advanceOneTickCommand(),
       backspace: () => this.deleteSelectionCommand()
