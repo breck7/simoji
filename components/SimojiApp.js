@@ -12,6 +12,7 @@ const { BoardComponent } = require("./Board.js")
 const { BottomBarComponent } = require("./BottomBar.js")
 const { RightBarComponent } = require("./RightBar.js")
 const { EditorHandleComponent } = require("./EditorHandle.js")
+const { Keywords, LocalStorageKeys, UrlKeys, Directions } = require("./Types.js")
 
 const MIN_GRID_SIZE = 10
 const MAX_GRID_SIZE = 200
@@ -82,17 +83,17 @@ class SimojiApp extends AbstractTreeComponent {
   }
 
   makeGrid(simojiProgram, windowWidth, windowHeight) {
-    const setSize = simojiProgram.get("size")
+    const setSize = simojiProgram.get(Keywords.size)
     const gridSize = Math.min(Math.max(setSize ? parseInt(setSize) : DEFAULT_GRID_SIZE, MIN_GRID_SIZE), MAX_GRID_SIZE)
 
     const chromeWidth = this.leftStartPosition + SIZES.RIGHT_BAR_WIDTH + SIZES.BOARD_MARGIN
     const maxAvailableCols = Math.floor((windowWidth - chromeWidth) / gridSize) - 1
     const maxAvailableRows = Math.floor((windowHeight - SIZES.CHROME_HEIGHT) / gridSize) - 1
 
-    const setCols = simojiProgram.get("columns")
+    const setCols = simojiProgram.get(Keywords.columns)
     const cols = Math.max(1, setCols ? parseInt(setCols) : Math.max(MIN_GRID_COLUMNS, maxAvailableCols))
 
-    const setRows = simojiProgram.get("rows")
+    const setRows = simojiProgram.get(Keywords.rows)
     const rows = Math.max(1, setRows ? parseInt(setRows) : Math.max(MIN_GRID_ROWS, maxAvailableRows))
 
     return { gridSize, cols, rows }
@@ -101,6 +102,14 @@ class SimojiApp extends AbstractTreeComponent {
   verbose = true
 
   compiledStartState = ""
+
+  get firstProgram() {
+    return this.simojiPrograms[0]
+  }
+
+  get allAgentTypes() {
+    return this.firstProgram.agentTypes // todo: this isn't quite correct
+  }
 
   appendExperiments() {
     this.simojiPrograms.forEach((program, index) => {
@@ -114,7 +123,7 @@ class SimojiApp extends AbstractTreeComponent {
   _appendExperiment(program, index) {
     const { windowWidth, windowHeight } = this
     const { gridSize, cols, rows } = this.makeGrid(program, windowWidth, windowHeight)
-    const seed = program.has("seed") ? parseInt(program.get("seed")) : newSeed()
+    const seed = program.has(Keywords.seed) ? parseInt(program.get(Keywords.seed)) : newSeed()
     const randomNumberGenerator = yodash.getRandomNumberGenerator(seed)
 
     this.compiledStartState = ""
@@ -124,7 +133,7 @@ class SimojiApp extends AbstractTreeComponent {
       if (this.verbose) console.error(err)
     }
 
-    const styleNode = program.getNode("style") ?? undefined
+    const styleNode = program.getNode(Keywords.style) ?? undefined
     const board = this.appendLineAndChildren(
       `BoardComponent ${gridSize} ${rows} ${cols} ${index}`,
       `leftStartPosition ${this.leftStartPosition}\n${this.compiledStartState.trim()}
@@ -176,7 +185,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
 
   updateLocalStorage(simCode) {
     if (this.isNodeJs()) return // todo: tcf should shim this
-    localStorage.setItem("simoji", simCode)
+    localStorage.setItem(LocalStorageKeys.simoji, simCode)
     console.log("Local storage updated...")
   }
 
@@ -193,16 +202,18 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     return this.boards[0]
   }
 
-  get mainProgram() {
+  get mainExperiment() {
     return new simojiCompiler(this.simCode)
   }
 
   get simojiPrograms() {
     if (!this._simojiPrograms) {
-      const { mainProgram } = this
-      this._simojiPrograms = [yodash.patchExperimentAndReplaceSymbols(mainProgram)]
-      mainProgram.findNodes("experiment").forEach(experiment => {
-        this._simojiPrograms.push(yodash.patchExperimentAndReplaceSymbols(mainProgram, experiment))
+      const { mainExperiment } = this
+      this._simojiPrograms = mainExperiment.has(Keywords.experiment)
+        ? []
+        : [yodash.patchExperimentAndReplaceSymbols(mainExperiment)]
+      mainExperiment.findNodes(Keywords.experiment).forEach(experiment => {
+        this._simojiPrograms.push(yodash.patchExperimentAndReplaceSymbols(mainExperiment, experiment))
       })
       // Evaluate the variables
       this._simojiPrograms = this._simojiPrograms.map(program => new simojiCompiler(program.toString()))
@@ -242,7 +253,6 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     })
 
     this.willowBrowser.setResizeEndHandler(() => {
-      console.log("resize")
       this.editor.setSize()
     })
 
@@ -338,12 +348,12 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
 
   get urlHash() {
     const tree = new jtree.TreeNode()
-    tree.appendLineAndChildren("simoji", this.simCode ?? "")
+    tree.appendLineAndChildren(UrlKeys.simoji, this.simCode ?? "")
     return "#" + encodeURIComponent(tree.toString())
   }
 
   get report() {
-    const report = this.mainProgram.getNode("report")
+    const report = this.mainExperiment.getNode(Keywords.report)
     return report ? report.childrenToString() : "roughjs.line"
   }
 
@@ -420,14 +430,14 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     const boards = this.boards
     const board = boards[0]
     console.log(board.seed, board.rows, board.cols)
-    newCode.set("seed", board.seed.toString())
-    newCode.set("rows", board.rows.toString())
-    newCode.set("columns", board.cols.toString())
-    newCode.findNodes("experiment").forEach((experiment, index) => {
+    newCode.set(Keywords.seed, board.seed.toString())
+    newCode.set(Keywords.rows, board.rows.toString())
+    newCode.set(Keywords.columns, board.cols.toString())
+    newCode.findNodes(Keywords.experiment).forEach((experiment, index) => {
       const board = boards[index + 1]
-      experiment.set("seed", board.seed.toString())
-      experiment.set("rows", board.rows.toString())
-      experiment.set("columns", board.cols.toString())
+      experiment.set(Keywords.seed, board.seed.toString())
+      experiment.set(Keywords.rows, board.rows.toString())
+      experiment.set(Keywords.columns, board.cols.toString())
     })
 
     this.editor.setCodeMirrorValue(newCode.toString())
@@ -463,10 +473,10 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
       o: () => this.openReportInOhayoCommand(),
       r: () => this.resetAllCommand(),
       s: () => this.snapShotCommand(),
-      up: () => this.moveSelection("North"),
-      down: () => this.moveSelection("South"),
-      right: () => this.moveSelection("East"),
-      left: () => this.moveSelection("West"),
+      up: () => this.moveSelection(Directions.North),
+      down: () => this.moveSelection(Directions.South),
+      right: () => this.moveSelection(Directions.East),
+      left: () => this.moveSelection(Directions.West),
       escape: () => this.clearSelectionCommand(),
       "command+a": () => this.selectAllCommand(),
       "?": () => this.toggleHelpCommand(),
@@ -479,7 +489,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     this.editor.setWord(1, newSize)
     this.boards.forEach(board => board.set("leftStartPosition", newSize))
 
-    if (!this.isNodeJs()) localStorage.setItem("editorStartWidth", newSize)
+    if (!this.isNodeJs()) localStorage.setItem(LocalStorageKeys.editorStartWidth, newSize)
     this.renderAndGetRenderReport()
   }
 }
@@ -497,7 +507,7 @@ SIZES.RIGHT_BAR_WIDTH = 30
 SimojiApp.setupApp = (simojiCode, windowWidth = 1000, windowHeight = 1000) => {
   const editorStartWidth =
     typeof localStorage !== "undefined"
-      ? localStorage.getItem("editorStartWidth") ?? SIZES.EDITOR_WIDTH
+      ? localStorage.getItem(LocalStorageKeys.editorStartWidth) ?? SIZES.EDITOR_WIDTH
       : SIZES.EDITOR_WIDTH
   const startState = new jtree.TreeNode(`githubTriangleComponent
 TopBarComponent

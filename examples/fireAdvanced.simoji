@@ -1,4 +1,15 @@
-treeDensitySetting 10%
+experiment
+ treeDensitySetting 10%
+
+experiment
+ treeDensitySetting 20%
+
+experiment
+ treeDensitySetting 40%
+
+experiment
+ treeDensitySetting 80%
+
 catchFireSetting .3
 fireSpreadSetting .7
 fireLifetimeSetting 10
@@ -36,12 +47,3 @@ lightningFrequencySetting .1
 insert treeDensitySetting 🌲
 onTick lightningFrequencySetting
  spawn ⚡️
-
-experiment
- treeDensitySetting 20%
-
-experiment
- treeDensitySetting 40%
-
-experiment
- treeDensitySetting 80%

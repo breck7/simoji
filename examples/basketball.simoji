@@ -1,4 +1,5 @@
-shotProbabilitySetting .02
+experiment
+ shotProbabilitySetting .02
 
 experiment
  shotProbabilitySetting .2

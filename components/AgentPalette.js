@@ -4,7 +4,7 @@ class AgentPaletteComponent extends AbstractTreeComponent {
   toStumpCode() {
     const root = this.getRootNode()
     const { agentToInsert } = root
-    const items = root.simojiPrograms[0].agentTypes
+    const items = root.allAgentTypes
       .map(item => item.getWord(0))
       .map(
         word => ` div ${word}

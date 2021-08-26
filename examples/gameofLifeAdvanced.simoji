@@ -1,6 +1,7 @@
 # Conway's Game of Life
 
-neighborSetting 2
+experiment
+ neighborSetting 2
 
 experiment
  neighborSetting 3

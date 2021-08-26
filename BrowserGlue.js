@@ -2,6 +2,7 @@ const DEFAULT_SIM = "fire"
 const { jtree } = require("jtree")
 const { ExampleSims } = require("./components/ExampleSims.js")
 const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework.node.js")
+const { Keywords, LocalStorageKeys, UrlKeys } = require("./components/Types.js")
 
 class BrowserGlue extends AbstractTreeComponent {
   async fetchAndLoadSimCodeFromUrlCommand(url) {
@@ -16,15 +17,15 @@ class BrowserGlue extends AbstractTreeComponent {
   }
 
   getFromLocalStorage() {
-    return localStorage.getItem("simoji")
+    return localStorage.getItem(LocalStorageKeys.simoji)
   }
 
   async fetchSimCode() {
     const hash = this.willowBrowser.getHash().substr(1)
     const deepLink = new jtree.TreeNode(decodeURIComponent(hash))
-    const example = deepLink.get("example")
-    const fromUrl = deepLink.get("url")
-    const simojiCode = deepLink.getNode("simoji")
+    const example = deepLink.get(UrlKeys.example)
+    const fromUrl = deepLink.get(UrlKeys.url)
+    const simojiCode = deepLink.getNode(UrlKeys.simoji)
 
     if (fromUrl) return this.fetchAndLoadSimCodeFromUrlCommand(fromUrl)
     if (example) return this.getExample(example)

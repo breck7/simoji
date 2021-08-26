@@ -4,6 +4,8 @@ const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework
 const { GridComponent } = require("./Grid.js")
 const { Agent } = require("./Agent.js")
 
+const { Keywords } = require("./Types.js")
+
 let nodeJsPrefix = ""
 
 // prettier-ignore
@@ -105,7 +107,7 @@ class BoardComponent extends AbstractTreeComponent {
     this.handleTouches()
     this.handleNeighbors()
 
-    this.executeBoardCommands("onTick")
+    this.executeBoardCommands(Keywords.onTick)
     this.handleExtinctions()
 
     this.renderAndGetRenderReport()
@@ -151,12 +153,12 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   get ticksPerSecond() {
-    const setTime = this.simojiProgram.get("ticksPerSecond")
+    const setTime = this.simojiProgram.get(Keywords.ticksPerSecond)
     return setTime ? parseInt(setTime) : 10
   }
 
   handleExtinctions() {
-    this.simojiProgram.findNodes("onExtinct").forEach(commands => {
+    this.simojiProgram.findNodes(Keywords.onExtinct).forEach(commands => {
       const emoji = commands.getWord(1)
       if (emoji && this.has(emoji)) return
       commands.forEach(instruction => {

@@ -1,13 +1,16 @@
 const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework.node.js")
 const { yodash } = require("../yodash.js")
 const { jtree } = require("jtree")
+const { Keywords, Directions } = require("./Types.js")
+
+const SelectedClass = "selected"
 
 class Agent extends jtree.TreeNode {
   get name() {
     return this._name ?? this.icon
   }
 
-  angle = "South"
+  angle = Directions.South
 
   getCommandBlocks(eventName) {
     return this.definitionWithBehaviors.findNodes(eventName)
@@ -24,7 +27,7 @@ class Agent extends jtree.TreeNode {
   }
 
   handleNeighbors() {
-    this.getCommandBlocks("onNeighbors").forEach(neighborConditions => {
+    this.getCommandBlocks(Keywords.onNeighbors).forEach(neighborConditions => {
       if (this.skip(neighborConditions.getWord(1))) return
 
       const { neighorCount } = this
@@ -41,7 +44,7 @@ class Agent extends jtree.TreeNode {
   }
 
   handleTouches(agentPositionMap) {
-    this.getCommandBlocks("onTouch").forEach(touchMap => {
+    this.getCommandBlocks(Keywords.onTouch).forEach(touchMap => {
       if (this.skip(touchMap.getWord(1))) return
 
       for (let pos of yodash.positionsAdjacentTo(this.position)) {
@@ -59,7 +62,7 @@ class Agent extends jtree.TreeNode {
   }
 
   handleCollisions(targets) {
-    this.getCommandBlocks("onHit").forEach(hitMap => {
+    this.getCommandBlocks(Keywords.onHit).forEach(hitMap => {
       if (this.skip(hitMap.getWord(1))) return
       targets.forEach(target => {
         const targetId = target.getWord(0)
@@ -91,7 +94,7 @@ class Agent extends jtree.TreeNode {
       if (!this.tickStack.length) this.tickStack = undefined
     }
 
-    this._executeCommandBlocks("onTick")
+    this._executeCommandBlocks(Keywords.onTick)
     if (this.health === 0) this.onDeathCommand()
   }
 
@@ -109,7 +112,7 @@ class Agent extends jtree.TreeNode {
   }
 
   onDeathCommand() {
-    this._executeCommandBlocks("onDeath")
+    this._executeCommandBlocks(Keywords.onDeath)
   }
 
   markDirty() {
@@ -126,10 +129,10 @@ class Agent extends jtree.TreeNode {
     if (this.owner) return this
 
     const { angle } = this
-    if (angle.includes("North")) this.moveNorthCommand()
-    else if (angle.includes("South")) this.moveSouthCommand()
-    if (angle.includes("East")) this.moveEastCommand()
-    else if (angle.includes("West")) this.moveWestCommand()
+    if (angle.includes(Directions.North)) this.moveNorthCommand()
+    else if (angle.includes(Directions.South)) this.moveSouthCommand()
+    if (angle.includes(Directions.East)) this.moveEastCommand()
+    else if (angle.includes(Directions.West)) this.moveWestCommand()
 
     if (this.holding) {
       this.holding.forEach(node => {
@@ -219,11 +222,11 @@ class Agent extends jtree.TreeNode {
   }
 
   get selected() {
-    return this.getWord(4) === "selected"
+    return this.getWord(4) === SelectedClass
   }
 
   select() {
-    this.setWord(4, "selected")
+    this.setWord(4, SelectedClass)
   }
 
   unselect() {
@@ -249,8 +252,8 @@ class Agent extends jtree.TreeNode {
 
   _updateHtml() {
     this.element.setAttribute("style", this.inlineStyle)
-    if (this.selected) this.element.classList.add("selected")
-    else this.element.classList.remove("selected")
+    if (this.selected) this.element.classList.add(SelectedClass)
+    else this.element.classList.remove(SelectedClass)
   }
 
   get inlineStyle() {
@@ -265,7 +268,7 @@ class Agent extends jtree.TreeNode {
     elem.setAttribute("id", `agent${this._getUid()}`)
     elem.innerHTML = this.html ?? this.icon
     elem.classList.add("Agent")
-    if (this.selected) elem.classList.add("selected")
+    if (this.selected) elem.classList.add(SelectedClass)
     elem.setAttribute("style", this.inlineStyle)
     return elem
   }
@@ -273,7 +276,7 @@ class Agent extends jtree.TreeNode {
   toStumpCode() {
     return `div ${this.html ?? this.icon}
  id agent${this._getUid()}
- class Agent ${this.selected ? "selected" : ""}
+ class Agent ${this.selected ? SelectedClass : ""}
  style ${this.inlineStyle}`
   }
 
