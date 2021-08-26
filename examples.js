@@ -1,18 +1,15 @@
 const stamp = require("jtree/products/stamp.nodejs.js")
-const { jtree } = require("jtree")
+const { Disk } = require("jtree/products/Disk.node.js")
 
-const getExamples = prod => {
-	const tree = new jtree.TreeNode(stamp.dirToStampWithContents(__dirname + "/examples/"))
-	tree.forEach(node => {
-		// todo: refactor stamp
-		const name = node.getWord(1).replace(".simoji", "")
-		node.setLine(name)
-		const contents = node.getNode("data")
-		node.setChildren(contents.childrenToString())
-		if (contents.length < 2) node.destroy()
-		if (prod && !prod.has(name)) node.destroy()
-	})
-	return tree.toString()
-}
+const getExamples = justThese =>
+	Disk.getFiles(__dirname + "/examples/")
+		.map(path => {
+			const name = Disk.getFileName(path.replace(".simoji", ""))
+			if (justThese && !justThese.has(name)) return undefined
+			return name + `\n ` + Disk.read(path).replace(/\n/g, "\n ")
+		})
+		.filter(i => i)
+		.join("\n")
+		.trim()
 
 module.exports = { getExamples }
