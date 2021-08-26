@@ -68,7 +68,7 @@ yodash.patchExperimentAndReplaceSymbols = (program, experiment) => {
 
 yodash.compileBoardStartState = (program, rows, cols, randomNumberGenerator) => {
 	const clone = program.clone()
-	const excludeTypes = ["blankLineNode", "settingDefinitionNode", "agentNode"]
+	const excludeTypes = ["blankLineNode", "settingDefinitionNode", "agentNode", "behaviorDefinitionNode"] // todo: cleanup
 	clone.filter(node => excludeTypes.includes(node.getNodeTypeId())).forEach(node => node.destroy())
 	clone.occupiedSpots = new Set()
 	clone.randomNumberGenerator = randomNumberGenerator
@@ -288,6 +288,22 @@ const shuffleArray = (array, randomNumberGenerator) => {
 		;[clonedArr[index], clonedArr[replacerIndex]] = [clonedArr[replacerIndex], clonedArr[index]]
 	}
 	return clonedArr
+}
+
+yodash.pick = (tree, fields) => {
+	const newTree = tree.clone()
+	const map = TreeUtils.arrayToMap(fields)
+	newTree.forEach(node => {
+		if (!map[node.getWord(0)]) node.destroy()
+	})
+
+	return newTree
+}
+
+yodash.flatten = tree => {
+	const newTree = new jtree.TreeNode()
+	tree.forEach(node => node.forEach(child => newTree.appendNode(child)))
+	return newTree
 }
 
 module.exports = { yodash }

@@ -24,9 +24,13 @@ textCell
  highlightScope string
 integerCell
  highlightScope constant.numeric
+behaviorNameCell
+ highlightScope keyword
 conditionalOperatorCell
  highlightScope keyword
  enum < > = <= >=
+positionCell
+ highlightScope constant.numeric
 neighborCountCell
  extends integerCell
  min 0
@@ -47,7 +51,7 @@ simojiNode
  extensions simoji
  description A Tree Language that compiles to a TreeComponentFramework app.
  root
- inScope blankLineNode commentNode abstractSetupNumberNode abstractDrawNode styleNode onTickNode onExtinctNode reportNode experimentNode settingDefinitionNode
+ inScope blankLineNode commentNode abstractSetupNumberNode abstractDrawNode styleNode onTickNode onExtinctNode behaviorDefinitionNode reportNode experimentNode settingDefinitionNode
  catchAllNodeType agentNode
  compilesTo javascript
  example
@@ -140,7 +144,7 @@ pasteLineNode
  catchAllCellType anyCell
  catchAllNodeType pasteLineNode
 agentNode
- inScope commentNode abstractEventNode abstractAttributeNode
+ inScope commentNode abstractEventNode abstractAttributeNode abstractBehaviorAttributeNode
  cells keywordCell
  catchAllNodeType errorNode
  compiler
@@ -150,8 +154,10 @@ agentNode
     const root = this.getRootNode()
     const name = root.agentKeywordMap[this.getWord(0)]
     const normal = super.compile()
+    const behaviors = this.filter(node => node.getNodeTypeId() === "abstractBehaviorAttributeNode").map(behavior => `"${behavior.getLine()}"`).join(",")
     return `class ${name} extends Agent {
       icon = "${this.getWord(0)}"
+      behaviors = [${behaviors}]
       ${normal}
     }`
   }
@@ -163,6 +169,7 @@ spawnCommandNode
  crux spawn
  extends abstractCommandNode
  cells keywordCell emojiCell
+ catchAllCellType positionCell
 removeCommandNode
  description Remove this agent from the board.
  crux remove
@@ -173,6 +180,7 @@ abstractAttributeNode
 abstractStringAttributeNode
  extends abstractAttributeNode
  pattern ^\w+ .+$
+ catchAllCellType stringCell
  javascript
   compile() {
     return `${this.getWord(0)} = "${this.getWord(1)}"`
@@ -405,3 +413,27 @@ commentLineNode
  catchAllCellType commentCell
 javascriptLineNode
  catchAllCellType javascriptCell
+abstractBehaviorAttributeNode
+ cells behaviorNameCell
+ pattern ^.*Behavior$
+ javascript
+  compile() {
+    return ""
+  }
+behaviorDefinitionNode
+ inScope commentNode abstractEventNode
+ cells behaviorNameCell
+ pattern ^.*Behavior$
+ catchAllNodeType errorNode
+ javascript
+  compile() {
+    return ""
+  }
+learnCommandNode
+ crux learn
+ extends abstractCommandNode
+ cells keywordCell behaviorNameCell
+unlearnCommandNode
+ crux unlearn
+ extends abstractCommandNode
+ cells keywordCell behaviorNameCell

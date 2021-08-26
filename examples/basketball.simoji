@@ -1,43 +1,111 @@
+shotProbabilitySetting .02
+
+experiment
+ shotProbabilitySetting .2
+
+experiment
+ shotProbabilitySetting .4
+
+experiment
+ shotProbabilitySetting .8
+
 🏀
  onHit
-  🥅
-   pause
-   alert GOAAAAAAAAALLLL!
- bouncy
+  🥅⛹️‍♂️
+   narrate Blue scores!
+   spawn 🏀 9⬇️ 15➡️
+   spawn 🔵 18⬇️ 1➡️
+   remove
+  🥅⛹️‍♀️
+   narrate Red scores!
+   spawn 🏀 9⬇️ 15➡️
+   spawn 🔴 17⬇️ 1➡️
+   remove
 
+🔵
+🔴
+
+hasBallBehavior
+ comment Sprint toward net
+ onTick .5
+  turnToward net
+  move
+  narrate breaks toward the net.
+ comment Shoot
+ onTick shotProbabilitySetting
+  turnToward net
+  shoot
+  narrate shoots!
+  learn noBallBehavior
+  unlearn hasBallBehavior
+ comment Pass
+ onTick .02
+  turnToward team
+  shoot
+  narrate passes the ball!
+  learn noBallBehavior
+  unlearn hasBallBehavior
+
+noBallBehavior
+ onTick .3
+  turnToward 🏀
+  move
+ onHit
+  🏀
+   pickItUp
+   narrate has the ball
+   learn hasBallBehavior
+   unlearn noBallBehavior
+ onTick .05
+  turnFrom opponent
+  move
+ onTick .1
+  turnFrom opponent
+  jitter
+
+# Blue Team
 ⛹️‍♂️
- onTick
-  jitter
- onHit
-  🏀
-   pickItUp
+ net 🥅⛹️‍♂️
+ team ⛹️‍♂️
+ opponent ⛹️‍♀️
+ noBallBehavior
 
+# Red Team
 ⛹️‍♀️
- onTick
-  jitter
- onHit
-  🏀
-   pickItUp
+ net 🥅⛹️‍♀️
+ team ⛹️‍♀️
+ opponent ⛹️‍♂️
+ noBallBehavior
 
-🥅
+# Baskets
+🥅⛹️‍♂️
+ html 🥅
+🥅⛹️‍♀️
+ html 🥅
+paste
+ 🥅⛹️‍♂️ 9⬇️ 2➡️
+ 🥅⛹️‍♀️ 9⬇️ 29➡️
+ 🏀 9⬇️ 15➡️
 
+# Court
 🪵
  solid
+rectangle 🪵 30 15 1 1
 
-rectangle 🪵 30 15 5 5
+size 30
+
+# Red Team
 paste
- 🥅 13⬇️ 6➡️
- 🥅 13⬇️ 33➡️
- 🏀 13⬇️ 19➡️
- ⛹️‍♀️ 13⬇️ 10➡️
- ⛹️‍♀️ 9⬇️ 10➡️
- ⛹️‍♀️ 15⬇️ 15➡️
- ⛹️‍♀️ 12⬇️ 15➡️
- ⛹️‍♀️ 9⬇️ 15➡️
- ⛹️‍♂️ 12⬇️ 29➡️
- ⛹️‍♂️ 10⬇️ 29➡️
- ⛹️‍♂️ 15⬇️ 24➡️
- ⛹️‍♂️ 11⬇️ 24➡️
- ⛹️‍♂️ 8⬇️ 24➡️
-size 20
-ticksPerSecond 10
+ ⛹️‍♀️ 9⬇️ 6➡️
+ ⛹️‍♀️ 5⬇️ 6➡️
+ ⛹️‍♀️ 11⬇️ 11➡️
+ ⛹️‍♀️ 8⬇️ 11➡️
+ ⛹️‍♀️ 5⬇️ 11➡️
+
+# Blue Team
+paste
+ ⛹️‍♂️ 8⬇️ 25➡️
+ ⛹️‍♂️ 6⬇️ 25➡️
+ ⛹️‍♂️ 11⬇️ 20➡️
+ ⛹️‍♂️ 7⬇️ 20➡️
+ ⛹️‍♂️ 4⬇️ 20➡️

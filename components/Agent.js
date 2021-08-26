@@ -10,12 +10,13 @@ class Agent extends jtree.TreeNode {
   angle = "South"
 
   getCommandBlocks(eventName) {
-    return this.board.simojiProgram.getNode(this.getWord(0)).findNodes(eventName)
+    return this.definitionWithBehaviors.findNodes(eventName)
   }
 
   get definitionWithBehaviors() {
     if (!this.behaviors.length) return this.board.simojiProgram.getNode(this.getWord(0))
-    return flatten(pick(this.board.simojiProgram, [this.getWord(0), ...this.behaviors]))
+    const behaviors = yodash.flatten(yodash.pick(this.board.simojiProgram, [this.getWord(0), ...this.behaviors]))
+    return behaviors
   }
 
   skip(probability) {
@@ -377,7 +378,8 @@ class Agent extends jtree.TreeNode {
   }
 
   spawn(subject, command) {
-    this.board.appendLine(`${command.getWord(1)} ${subject.positionHash}`)
+    const position = command.getWordsFrom(2).length ? command.getWordsFrom(2).join(" ") : subject.positionHash
+    this.board.appendLine(`${command.getWord(1)} ${position}`)
   }
 
   move() {
@@ -388,6 +390,15 @@ class Agent extends jtree.TreeNode {
   jitter() {
     this.turnRandomly()
     this.move()
+  }
+
+  learn(target, command) {
+    this.behaviors.push(command.getWord(1))
+  }
+
+  unlearn(target, command) {
+    const behaviorName = command.getWord(1)
+    this.behaviors = this.behaviors.filter(name => name !== behaviorName)
   }
 }
 
