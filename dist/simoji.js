@@ -313,12 +313,15 @@ window.yodash = yodash
 
 
 
+
+const SelectedClass = "selected"
+
 class Agent extends jtree.TreeNode {
   get name() {
     return this._name ?? this.icon
   }
 
-  angle = "South"
+  angle = Directions.South
 
   getCommandBlocks(eventName) {
     return this.definitionWithBehaviors.findNodes(eventName)
@@ -335,7 +338,7 @@ class Agent extends jtree.TreeNode {
   }
 
   handleNeighbors() {
-    this.getCommandBlocks("onNeighbors").forEach(neighborConditions => {
+    this.getCommandBlocks(Keywords.onNeighbors).forEach(neighborConditions => {
       if (this.skip(neighborConditions.getWord(1))) return
 
       const { neighorCount } = this
@@ -352,7 +355,7 @@ class Agent extends jtree.TreeNode {
   }
 
   handleTouches(agentPositionMap) {
-    this.getCommandBlocks("onTouch").forEach(touchMap => {
+    this.getCommandBlocks(Keywords.onTouch).forEach(touchMap => {
       if (this.skip(touchMap.getWord(1))) return
 
       for (let pos of yodash.positionsAdjacentTo(this.position)) {
@@ -370,7 +373,7 @@ class Agent extends jtree.TreeNode {
   }
 
   handleCollisions(targets) {
-    this.getCommandBlocks("onHit").forEach(hitMap => {
+    this.getCommandBlocks(Keywords.onHit).forEach(hitMap => {
       if (this.skip(hitMap.getWord(1))) return
       targets.forEach(target => {
         const targetId = target.getWord(0)
@@ -402,7 +405,7 @@ class Agent extends jtree.TreeNode {
       if (!this.tickStack.length) this.tickStack = undefined
     }
 
-    this._executeCommandBlocks("onTick")
+    this._executeCommandBlocks(Keywords.onTick)
     if (this.health === 0) this.onDeathCommand()
   }
 
@@ -420,7 +423,7 @@ class Agent extends jtree.TreeNode {
   }
 
   onDeathCommand() {
-    this._executeCommandBlocks("onDeath")
+    this._executeCommandBlocks(Keywords.onDeath)
   }
 
   markDirty() {
@@ -437,10 +440,10 @@ class Agent extends jtree.TreeNode {
     if (this.owner) return this
 
     const { angle } = this
-    if (angle.includes("North")) this.moveNorthCommand()
-    else if (angle.includes("South")) this.moveSouthCommand()
-    if (angle.includes("East")) this.moveEastCommand()
-    else if (angle.includes("West")) this.moveWestCommand()
+    if (angle.includes(Directions.North)) this.moveNorthCommand()
+    else if (angle.includes(Directions.South)) this.moveSouthCommand()
+    if (angle.includes(Directions.East)) this.moveEastCommand()
+    else if (angle.includes(Directions.West)) this.moveWestCommand()
 
     if (this.holding) {
       this.holding.forEach(node => {
@@ -530,11 +533,11 @@ class Agent extends jtree.TreeNode {
   }
 
   get selected() {
-    return this.getWord(4) === "selected"
+    return this.getWord(4) === SelectedClass
   }
 
   select() {
-    this.setWord(4, "selected")
+    this.setWord(4, SelectedClass)
   }
 
   unselect() {
@@ -560,8 +563,8 @@ class Agent extends jtree.TreeNode {
 
   _updateHtml() {
     this.element.setAttribute("style", this.inlineStyle)
-    if (this.selected) this.element.classList.add("selected")
-    else this.element.classList.remove("selected")
+    if (this.selected) this.element.classList.add(SelectedClass)
+    else this.element.classList.remove(SelectedClass)
   }
 
   get inlineStyle() {
@@ -576,7 +579,7 @@ class Agent extends jtree.TreeNode {
     elem.setAttribute("id", `agent${this._getUid()}`)
     elem.innerHTML = this.html ?? this.icon
     elem.classList.add("Agent")
-    if (this.selected) elem.classList.add("selected")
+    if (this.selected) elem.classList.add(SelectedClass)
     elem.setAttribute("style", this.inlineStyle)
     return elem
   }
@@ -584,7 +587,7 @@ class Agent extends jtree.TreeNode {
   toStumpCode() {
     return `div ${this.html ?? this.icon}
  id agent${this._getUid()}
- class Agent ${this.selected ? "selected" : ""}
+ class Agent ${this.selected ? SelectedClass : ""}
  style ${this.inlineStyle}`
   }
 
@@ -722,7 +725,7 @@ class AgentPaletteComponent extends AbstractTreeComponent {
   toStumpCode() {
     const root = this.getRootNode()
     const { agentToInsert } = root
-    const items = root.simojiPrograms[0].agentTypes
+    const items = root.allAgentTypes
       .map(item => item.getWord(0))
       .map(
         word => ` div ${word}
@@ -746,6 +749,8 @@ ${items}`
 }
 
 window.AgentPaletteComponent = AgentPaletteComponent
+
+
 
 
 
@@ -854,7 +859,7 @@ class BoardComponent extends AbstractTreeComponent {
     this.handleTouches()
     this.handleNeighbors()
 
-    this.executeBoardCommands("onTick")
+    this.executeBoardCommands(Keywords.onTick)
     this.handleExtinctions()
 
     this.renderAndGetRenderReport()
@@ -900,12 +905,12 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   get ticksPerSecond() {
-    const setTime = this.simojiProgram.get("ticksPerSecond")
+    const setTime = this.simojiProgram.get(Keywords.ticksPerSecond)
     return setTime ? parseInt(setTime) : 10
   }
 
   handleExtinctions() {
-    this.simojiProgram.findNodes("onExtinct").forEach(commands => {
+    this.simojiProgram.findNodes(Keywords.onExtinct).forEach(commands => {
       const emoji = commands.getWord(1)
       if (emoji && this.has(emoji)) return
       commands.forEach(instruction => {
@@ -1388,7 +1393,7 @@ class ShareComponent extends AbstractTreeComponent {
   }
 
   getDependencies() {
-    return [this.getRootNode().simojiPrograms[0]]
+    return [this.getRootNode().firstProgram]
   }
 
   get link() {
@@ -1568,6 +1573,7 @@ window.SimEditorComponent = SimEditorComponent
 
 
 
+
 const MIN_GRID_SIZE = 10
 const MAX_GRID_SIZE = 200
 const DEFAULT_GRID_SIZE = 20
@@ -1636,17 +1642,17 @@ class SimojiApp extends AbstractTreeComponent {
   }
 
   makeGrid(simojiProgram, windowWidth, windowHeight) {
-    const setSize = simojiProgram.get("size")
+    const setSize = simojiProgram.get(Keywords.size)
     const gridSize = Math.min(Math.max(setSize ? parseInt(setSize) : DEFAULT_GRID_SIZE, MIN_GRID_SIZE), MAX_GRID_SIZE)
 
     const chromeWidth = this.leftStartPosition + SIZES.RIGHT_BAR_WIDTH + SIZES.BOARD_MARGIN
     const maxAvailableCols = Math.floor((windowWidth - chromeWidth) / gridSize) - 1
     const maxAvailableRows = Math.floor((windowHeight - SIZES.CHROME_HEIGHT) / gridSize) - 1
 
-    const setCols = simojiProgram.get("columns")
+    const setCols = simojiProgram.get(Keywords.columns)
     const cols = Math.max(1, setCols ? parseInt(setCols) : Math.max(MIN_GRID_COLUMNS, maxAvailableCols))
 
-    const setRows = simojiProgram.get("rows")
+    const setRows = simojiProgram.get(Keywords.rows)
     const rows = Math.max(1, setRows ? parseInt(setRows) : Math.max(MIN_GRID_ROWS, maxAvailableRows))
 
     return { gridSize, cols, rows }
@@ -1655,6 +1661,14 @@ class SimojiApp extends AbstractTreeComponent {
   verbose = true
 
   compiledStartState = ""
+
+  get firstProgram() {
+    return this.simojiPrograms[0]
+  }
+
+  get allAgentTypes() {
+    return this.firstProgram.agentTypes // todo: this isn't quite correct
+  }
 
   appendExperiments() {
     this.simojiPrograms.forEach((program, index) => {
@@ -1668,7 +1682,7 @@ class SimojiApp extends AbstractTreeComponent {
   _appendExperiment(program, index) {
     const { windowWidth, windowHeight } = this
     const { gridSize, cols, rows } = this.makeGrid(program, windowWidth, windowHeight)
-    const seed = program.has("seed") ? parseInt(program.get("seed")) : newSeed()
+    const seed = program.has(Keywords.seed) ? parseInt(program.get(Keywords.seed)) : newSeed()
     const randomNumberGenerator = yodash.getRandomNumberGenerator(seed)
 
     this.compiledStartState = ""
@@ -1678,7 +1692,7 @@ class SimojiApp extends AbstractTreeComponent {
       if (this.verbose) console.error(err)
     }
 
-    const styleNode = program.getNode("style") ?? undefined
+    const styleNode = program.getNode(Keywords.style) ?? undefined
     const board = this.appendLineAndChildren(
       `BoardComponent ${gridSize} ${rows} ${cols} ${index}`,
       `leftStartPosition ${this.leftStartPosition}\n${this.compiledStartState.trim()}
@@ -1730,7 +1744,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
 
   updateLocalStorage(simCode) {
     if (this.isNodeJs()) return // todo: tcf should shim this
-    localStorage.setItem("simoji", simCode)
+    localStorage.setItem(LocalStorageKeys.simoji, simCode)
     console.log("Local storage updated...")
   }
 
@@ -1747,16 +1761,18 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     return this.boards[0]
   }
 
-  get mainProgram() {
+  get mainExperiment() {
     return new simojiCompiler(this.simCode)
   }
 
   get simojiPrograms() {
     if (!this._simojiPrograms) {
-      const { mainProgram } = this
-      this._simojiPrograms = [yodash.patchExperimentAndReplaceSymbols(mainProgram)]
-      mainProgram.findNodes("experiment").forEach(experiment => {
-        this._simojiPrograms.push(yodash.patchExperimentAndReplaceSymbols(mainProgram, experiment))
+      const { mainExperiment } = this
+      this._simojiPrograms = mainExperiment.has(Keywords.experiment)
+        ? []
+        : [yodash.patchExperimentAndReplaceSymbols(mainExperiment)]
+      mainExperiment.findNodes(Keywords.experiment).forEach(experiment => {
+        this._simojiPrograms.push(yodash.patchExperimentAndReplaceSymbols(mainExperiment, experiment))
       })
       // Evaluate the variables
       this._simojiPrograms = this._simojiPrograms.map(program => new simojiCompiler(program.toString()))
@@ -1796,7 +1812,6 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     })
 
     this.willowBrowser.setResizeEndHandler(() => {
-      console.log("resize")
       this.editor.setSize()
     })
 
@@ -1892,12 +1907,12 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
 
   get urlHash() {
     const tree = new jtree.TreeNode()
-    tree.appendLineAndChildren("simoji", this.simCode ?? "")
+    tree.appendLineAndChildren(UrlKeys.simoji, this.simCode ?? "")
     return "#" + encodeURIComponent(tree.toString())
   }
 
   get report() {
-    const report = this.mainProgram.getNode("report")
+    const report = this.mainExperiment.getNode(Keywords.report)
     return report ? report.childrenToString() : "roughjs.line"
   }
 
@@ -1974,14 +1989,14 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     const boards = this.boards
     const board = boards[0]
     console.log(board.seed, board.rows, board.cols)
-    newCode.set("seed", board.seed.toString())
-    newCode.set("rows", board.rows.toString())
-    newCode.set("columns", board.cols.toString())
-    newCode.findNodes("experiment").forEach((experiment, index) => {
+    newCode.set(Keywords.seed, board.seed.toString())
+    newCode.set(Keywords.rows, board.rows.toString())
+    newCode.set(Keywords.columns, board.cols.toString())
+    newCode.findNodes(Keywords.experiment).forEach((experiment, index) => {
       const board = boards[index + 1]
-      experiment.set("seed", board.seed.toString())
-      experiment.set("rows", board.rows.toString())
-      experiment.set("columns", board.cols.toString())
+      experiment.set(Keywords.seed, board.seed.toString())
+      experiment.set(Keywords.rows, board.rows.toString())
+      experiment.set(Keywords.columns, board.cols.toString())
     })
 
     this.editor.setCodeMirrorValue(newCode.toString())
@@ -2017,10 +2032,10 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
       o: () => this.openReportInOhayoCommand(),
       r: () => this.resetAllCommand(),
       s: () => this.snapShotCommand(),
-      up: () => this.moveSelection("North"),
-      down: () => this.moveSelection("South"),
-      right: () => this.moveSelection("East"),
-      left: () => this.moveSelection("West"),
+      up: () => this.moveSelection(Directions.North),
+      down: () => this.moveSelection(Directions.South),
+      right: () => this.moveSelection(Directions.East),
+      left: () => this.moveSelection(Directions.West),
       escape: () => this.clearSelectionCommand(),
       "command+a": () => this.selectAllCommand(),
       "?": () => this.toggleHelpCommand(),
@@ -2033,7 +2048,7 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
     this.editor.setWord(1, newSize)
     this.boards.forEach(board => board.set("leftStartPosition", newSize))
 
-    if (!this.isNodeJs()) localStorage.setItem("editorStartWidth", newSize)
+    if (!this.isNodeJs()) localStorage.setItem(LocalStorageKeys.editorStartWidth, newSize)
     this.renderAndGetRenderReport()
   }
 }
@@ -2051,7 +2066,7 @@ SIZES.RIGHT_BAR_WIDTH = 30
 SimojiApp.setupApp = (simojiCode, windowWidth = 1000, windowHeight = 1000) => {
   const editorStartWidth =
     typeof localStorage !== "undefined"
-      ? localStorage.getItem("editorStartWidth") ?? SIZES.EDITOR_WIDTH
+      ? localStorage.getItem(LocalStorageKeys.editorStartWidth) ?? SIZES.EDITOR_WIDTH
       : SIZES.EDITOR_WIDTH
   const startState = new jtree.TreeNode(`githubTriangleComponent
 TopBarComponent
@@ -2110,7 +2125,53 @@ class LogoComponent extends AbstractTreeComponent {
 window.TopBarComponent = TopBarComponent
 
 
+const Keywords = {}
+
+Keywords.experiment = "experiment"
+Keywords.seed = "seed"
+Keywords.size = "size"
+Keywords.rows = "rows"
+Keywords.columns = "columns"
+Keywords.report = "report"
+Keywords.ticksPerSecond = "ticksPerSecond"
+Keywords.style = "style"
+
+Keywords.onNeighbors = "onNeighbors"
+Keywords.onTouch = "onTouch"
+Keywords.onHit = "onHit"
+Keywords.onTick = "onTick"
+Keywords.onDeath = "onDeath"
+Keywords.onExtinct = "onExtinct"
+
+const LocalStorageKeys = {}
+
+LocalStorageKeys.simoji = "simoji"
+LocalStorageKeys.editorStartWidth = "editorStartWidth"
+
+const UrlKeys = {}
+
+UrlKeys.simoji = "simoji"
+UrlKeys.example = "example"
+UrlKeys.url = "url"
+
+const Directions = {}
+
+Directions.North = "North"
+Directions.East = "East"
+Directions.South = "South"
+Directions.West = "West"
+
+window.Keywords = Keywords
+
+window.LocalStorageKeys = LocalStorageKeys
+
+window.UrlKeys = UrlKeys
+
+window.Directions = Directions
+
+
 const DEFAULT_SIM = "fire"
+
 
 
 
@@ -2128,15 +2189,15 @@ class BrowserGlue extends AbstractTreeComponent {
   }
 
   getFromLocalStorage() {
-    return localStorage.getItem("simoji")
+    return localStorage.getItem(LocalStorageKeys.simoji)
   }
 
   async fetchSimCode() {
     const hash = this.willowBrowser.getHash().substr(1)
     const deepLink = new jtree.TreeNode(decodeURIComponent(hash))
-    const example = deepLink.get("example")
-    const fromUrl = deepLink.get("url")
-    const simojiCode = deepLink.getNode("simoji")
+    const example = deepLink.get(UrlKeys.example)
+    const fromUrl = deepLink.get(UrlKeys.url)
+    const simojiCode = deepLink.getNode(UrlKeys.simoji)
 
     if (fromUrl) return this.fetchAndLoadSimCodeFromUrlCommand(fromUrl)
     if (example) return this.getExample(example)
