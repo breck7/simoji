@@ -361,6 +361,8 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
       node._move()
     })
 
+    this.boards.forEach(board => board.resetAgentPositionMap())
+
     this.ensureRender()
   }
 
