@@ -223,11 +223,6 @@ class BoardComponent extends AbstractTreeComponent {
     return map
   }
 
-  agentAt(position) {
-    const hits = this.agentPositionMap.get(position)
-    return hits ? hits[0] : undefined
-  }
-
   handleCollisions() {
     this.agentPositionMap.forEach(nodes => {
       if (nodes.length > 1) nodes.forEach(node => node.handleCollisions(nodes))

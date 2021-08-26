@@ -245,6 +245,46 @@ ${styleNode ? styleNode.toString().replace("style", "BoardStyleComponent") : ""}
       console.log("resize")
       this.editor.setSize()
     })
+
+    this._makeDocumentCopyableAndCuttable()
+  }
+
+  _makeDocumentCopyableAndCuttable() {
+    const app = this
+    this.willowBrowser
+      .setCopyHandler(evt => app.copySelectionCommand(evt))
+      .setCutHandler(evt => app.cutSelectionCommand(evt))
+  }
+
+  async copySelectionCommand(evt) {
+    this._copySelection(evt)
+  }
+
+  async cutSelectionCommand(evt) {
+    this._copySelection(evt)
+    this.deleteSelectionCommand()
+  }
+
+  _copySelection(evt) {
+    const willowBrowser = this.willowBrowser
+    if (willowBrowser.someInputHasFocus()) return ""
+
+    if (!this.selection.length) return ""
+
+    const str = this.selection
+      .map(agent =>
+        agent
+          .getWords()
+          .slice(0, 3)
+          .join(" ")
+      )
+      .join("\n")
+
+    evt.preventDefault()
+    evt.clipboardData.setData("text/plain", str)
+    evt.clipboardData.setData("text/html", str)
+
+    return str
   }
 
   // todo: fix for boards
