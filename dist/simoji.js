@@ -372,7 +372,7 @@ class Agent extends jtree.TreeNode {
     })
   }
 
-  handleCollisions(targets) {
+  handleOverlaps(targets) {
     this.getCommandBlocks(Keywords.onHit).forEach(hitMap => {
       if (this.skip(hitMap.getWord(1))) return
       targets.forEach(target => {
@@ -381,6 +381,10 @@ class Agent extends jtree.TreeNode {
         if (commandBlock) commandBlock.forEach(command => this._executeCommand(target, command))
       })
     })
+  }
+
+  get overlappingAgents() {
+    return (this.board.agentPositionMap.get(this.positionHash) ?? []).filter(node => node !== this)
   }
 
   _executeCommand(target, instruction) {
@@ -440,10 +444,10 @@ class Agent extends jtree.TreeNode {
     if (this.owner) return this
 
     const { angle } = this
-    if (angle.includes(Directions.North)) this.moveNorthCommand()
-    else if (angle.includes(Directions.South)) this.moveSouthCommand()
-    if (angle.includes(Directions.East)) this.moveEastCommand()
-    else if (angle.includes(Directions.West)) this.moveWestCommand()
+    if (angle.includes(Directions.North)) this.moveNorth()
+    else if (angle.includes(Directions.South)) this.moveSouth()
+    if (angle.includes(Directions.East)) this.moveEast()
+    else if (angle.includes(Directions.West)) this.moveWest()
 
     if (this.holding) {
       this.holding.forEach(node => {
@@ -452,19 +456,19 @@ class Agent extends jtree.TreeNode {
     }
   }
 
-  moveSouthCommand() {
+  moveSouth() {
     this.top++
   }
 
-  moveNorthCommand() {
+  moveNorth() {
     this.top--
   }
 
-  moveWestCommand() {
+  moveWest() {
     this.left--
   }
 
-  moveEastCommand() {
+  moveEast() {
     this.left++
   }
 
@@ -701,6 +705,12 @@ class Agent extends jtree.TreeNode {
     return this._move()
   }
 
+  moveToEmptySpot() {
+    while (this.overlappingAgents.length) {
+      this.move()
+    }
+  }
+
   jitter() {
     this.turnRandomly()
     this.move()
@@ -855,7 +865,7 @@ class BoardComponent extends AbstractTreeComponent {
     this.agents.forEach(node => node.onTick())
 
     this.resetAgentPositionMap()
-    this.handleCollisions()
+    this.handleOverlaps()
     this.handleTouches()
     this.handleNeighbors()
 
@@ -977,9 +987,9 @@ class BoardComponent extends AbstractTreeComponent {
     return map
   }
 
-  handleCollisions() {
+  handleOverlaps() {
     this.agentPositionMap.forEach(nodes => {
-      if (nodes.length > 1) nodes.forEach(node => node.handleCollisions(nodes))
+      if (nodes.length > 1) nodes.forEach(node => node.handleOverlaps(nodes))
     })
   }
 

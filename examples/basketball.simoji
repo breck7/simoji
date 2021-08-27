@@ -1,4 +1,4 @@
-question Is it better to shoot or to pass?
+question Is it better to shoot wildly or to bring it close to the basket?
 
 experiment
  shotProbabilitySetting .02
@@ -25,8 +25,22 @@ experiment
    spawn 🔴 17⬇️ 1➡️
    remove
 
+
+moveEastToBlankSpotBehavior
+ onTick
+  moveToEmptySpot
+  unlearn moveEastToBlankSpotBehavior
+
+
 🔵
+ angle East
+ moveEastToBlankSpotBehavior
 🔴
+ angle East
+ moveEastToBlankSpotBehavior
+
+
+ticksPerSecond 30
 
 hasBallBehavior
  comment Sprint toward net
@@ -86,8 +100,8 @@ noBallBehavior
 🥅⛹️‍♀️
  html 🥅
 paste
- 🥅⛹️‍♂️ 9⬇️ 2➡️
- 🥅⛹️‍♀️ 9⬇️ 29➡️
+ 🥅⛹️‍♂️ 8⬇️ 2➡️
+ 🥅⛹️‍♀️ 8⬇️ 29➡️
  🏀 9⬇️ 15➡️
 
 # Court

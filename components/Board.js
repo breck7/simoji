@@ -103,7 +103,7 @@ class BoardComponent extends AbstractTreeComponent {
     this.agents.forEach(node => node.onTick())
 
     this.resetAgentPositionMap()
-    this.handleCollisions()
+    this.handleOverlaps()
     this.handleTouches()
     this.handleNeighbors()
 
@@ -225,9 +225,9 @@ class BoardComponent extends AbstractTreeComponent {
     return map
   }
 
-  handleCollisions() {
+  handleOverlaps() {
     this.agentPositionMap.forEach(nodes => {
-      if (nodes.length > 1) nodes.forEach(node => node.handleCollisions(nodes))
+      if (nodes.length > 1) nodes.forEach(node => node.handleOverlaps(nodes))
     })
   }
 
