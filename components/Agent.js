@@ -26,7 +26,13 @@ class Agent extends jtree.TreeNode {
     return probability !== undefined && this.board.randomNumberGenerator() > parseFloat(probability)
   }
 
+  // if an element hasnt been removed. todo: cleanup
+  get stillExists() {
+    return !!this.element
+  }
+
   handleNeighbors() {
+    if (!this.stillExists) return
     this.getCommandBlocks(Keywords.onNeighbors).forEach(neighborConditions => {
       if (this.skip(neighborConditions.getWord(1))) return
 
@@ -44,6 +50,7 @@ class Agent extends jtree.TreeNode {
   }
 
   handleTouches(agentPositionMap) {
+    if (!this.stillExists) return
     this.getCommandBlocks(Keywords.onTouch).forEach(touchMap => {
       if (this.skip(touchMap.getWord(1))) return
 
@@ -62,6 +69,7 @@ class Agent extends jtree.TreeNode {
   }
 
   handleOverlaps(targets) {
+    if (!this.stillExists) return
     this.getCommandBlocks(Keywords.onHit).forEach(hitMap => {
       if (this.skip(hitMap.getWord(1))) return
       targets.forEach(target => {
@@ -93,6 +101,7 @@ class Agent extends jtree.TreeNode {
   }
 
   onTick() {
+    if (!this.stillExists) return
     if (this.tickStack) {
       this._executeCommandBlock(this.tickStack.shift())
       if (!this.tickStack.length) this.tickStack = undefined

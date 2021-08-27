@@ -1,6 +1,6 @@
 question Is it better to shoot wildly or to bring it close to the basket?
 
-experiment
+experiment Shoot rarely
  shotProbabilitySetting .02
 
 experiment
@@ -9,7 +9,7 @@ experiment
 experiment
  shotProbabilitySetting .4
 
-experiment
+experiment Shoot right away
  shotProbabilitySetting .8
 
 🏀

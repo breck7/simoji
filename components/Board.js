@@ -272,7 +272,14 @@ class BoardComponent extends AbstractTreeComponent {
   toStumpCode() {
     return `div
  style ${this.style}
+ div ${this.experimentTitle}
+  class BoardTitle
  class ${this.getCssClassNames().join(" ")}`
+  }
+
+  get experimentTitle() {
+    if (!this.hasMultipleBoards) return ""
+    return this.root.mainExperiment.findNodes(Keywords.experiment)[this.boardIndex].getContent() ?? ""
   }
 
   startInterval() {

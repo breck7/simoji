@@ -1,0 +1,82 @@
+question What is the effect of population density on pandemic duration?
+
+experiment
+ insertCluster 100 🙍
+ insertCluster 100 🙍
+ insertCluster 100 🙍
+ insertCluster 30 🙍
+ insertCluster 30 🙍
+ insertCluster 10 🙍
+
+experiment
+ insert 200 🙍
+
+experiment
+ insertCluster 200 🙍
+
+experiment
+ insertCluster 200 🙍
+ insert 200 🙍
+
+
+🦠
+ health 10
+ onTick
+  decrease health
+ onDeath
+  remove
+
+🧟
+ health 100
+ onTick .03
+  log recovered
+  replaceWith 🦸‍♂️
+ onTick
+  decrease health
+  jitter
+ onDeath
+  replaceWith 🪦
+
+🦸‍♂️
+ comment immune
+ onTick
+  jitter
+
+🙍
+ onTick
+  jitter
+ onTouch
+  🦠
+   replaceWith 🧟
+  🧟
+   replaceWith 🧟
+
+insert 1 🦠
+
+onExtinct 🧟
+ log No more cases.
+ pause
+
+
+🪦
+
+size 15
+ticksPerSecond 10
+
+report
+ roughjs.line
+ columns.keep 🧟
+  roughjs.line Active Cases
+ columns.keep 🪦
+  roughjs.line Cumulative Deaths
+
+
+comment
+ See Also
+ - http://covidsim.eu/
+ - http://modelingcommons.org/browse/one_model/6282#model_tabs_browse_info
+ - https://github.com/maplerainresearch/covid19-sim-mesa/blob/master/model.py
+ - https://www.frontiersin.org/articles/10.3389/fpubh.2020.563247/full
+ - https://ncase.me/covid-19/
+ - https://en.wikipedia.org/wiki/List_of_COVID-19_simulation_models
+ 

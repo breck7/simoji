@@ -1,30 +1,51 @@
-question What is the effect of population density on pandemic duration?
-
-experiment
- insertCluster 100 🙍
- insertCluster 100 🙍
- insertCluster 100 🙍
- insertCluster 30 🙍
- insertCluster 30 🙍
- insertCluster 10 🙍
-
-experiment
- insert 200 🙍
-
-experiment
- insertCluster 200 🙍
-
-experiment
- insertCluster 200 🙍
- insert 200 🙍
-
-
 🦠
- health 10
- onTick
-  decrease health
- onDeath
-  remove
+
+question How long will the pandemic last?
+
+# Given someone has never been infected, what are the odds they get infected?
+succeptibilitySetting .95
+# What are odds of reinfection?
+reinfectionRateSetting .002
+
+# 1 is no lockdowns. 0 is total lockdown.
+freedomOfMovementSetting 1
+
+# What is starting population size?
+urbanPopulationSetting 150
+# What is starting rural population?
+ruralPopulationSetting 30
+# What is starting infected size?
+startingInfectedSetting 3
+
+# How many places can one get the vaccine?
+vaccineCentersSetting 5
+# How likely are people to seek the vaccine?
+vaccinationDesirabilitySetting .3
+# Given someone was vaxed, what are the odds they get infected?
+vaxSucceptibilitySetting .5
+
+experiment High Vaccination Rate, High Vaccine Efficacy
+ vaccinationDesirabilitySetting .8
+ vaxSucceptibilitySetting .05
+
+
+experiment High Vaccination Rate, Low Vaccine Efficacy
+ vaccinationDesirabilitySetting .8
+ vaxSucceptibilitySetting .75
+
+experiment Lockdown
+ freedomOfMovementSetting .3
+
+experiment High Reinfection Rate
+ reinfectionRateSetting .2
+
+
+insert startingInfectedSetting 🧟
+insert vaccineCentersSetting 💉
+
+insertCluster urbanPopulationSetting 🙍
+insert ruralPopulationSetting 🙍
+
 
 🧟
  health 100
@@ -38,20 +59,44 @@ experiment
   replaceWith 🪦
 
 🦸‍♂️
- comment immune
+ comment Recovered
  onTick
   jitter
-
-🙍
- onTick
-  jitter
- onTouch
-  🦠
-   replaceWith 🧟
+ onTouch reinfectionRateSetting
   🧟
    replaceWith 🧟
 
-insert 1 🦠
+lifeBehavior
+ onTick freedomOfMovementSetting
+  jitter
+
+seekVaccineBehavior
+ onTick vaccinationDesirabilitySetting
+  turnToward 💉
+  move
+
+
+🙍
+ lifeBehavior
+ seekVaccineBehavior
+ onTouch innateImmunitySetting
+  🧟
+   replaceWith 🧟
+  💉
+   replaceWith 🧑🏽‍🚒
+
+
+💉
+
+
+🧑🏽‍🚒
+ lifeBehavior
+ onTouch vaxSucceptibilitySetting
+  🧟
+   replaceWith 🧟
+
+
+
 
 onExtinct 🧟
  log No more cases.
