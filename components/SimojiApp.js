@@ -8,6 +8,7 @@ const { ExampleSims } = require("./ExampleSims.js")
 const { TopBarComponent } = require("./TopBar.js")
 const { SimEditorComponent } = require("./SimEditor.js")
 const { HelpModalComponent } = require("./HelpModal.js")
+const { ExampleMenuComponent, ExamplesComponent } = require("./Examples.js")
 const { BoardComponent } = require("./Board.js")
 const { BottomBarComponent } = require("./BottomBar.js")
 const { RightBarComponent } = require("./RightBar.js")
@@ -74,7 +75,8 @@ class SimojiApp extends AbstractTreeComponent {
       BottomBarComponent,
       RightBarComponent,
       EditorHandleComponent,
-      TitleComponent
+      TitleComponent,
+      ExampleMenuComponent
     })
   }
 
@@ -120,6 +122,14 @@ class SimojiApp extends AbstractTreeComponent {
         return
       this._appendExperiment(program, index)
     })
+  }
+
+  closeAllContextMenus() {
+    this.filter(node => node instanceof ExampleMenuComponent).forEach(node => node.unmountAndDestroy())
+  }
+
+  _onCommandWillRun() {
+    this.closeAllContextMenus() // todo: move these to a body handler?
   }
 
   _appendExperiment(program, index) {

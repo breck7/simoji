@@ -1,28 +1,32 @@
-comment
- http://modelingcommons.org/browse/one_model/3362#model_tabs_browse_nlw
+question What might the spread of a simple virus look like?
 
 🧟
- health 30
- onTick
+ health 100
+ onTick .9
   decrease health
   jitter
+ onTick .01
+  log recovered
+  replaceWith 🦸‍♂️
  onDeath
-  remove
+  replaceWith 🪦
 
 🙍
  onTick
   jitter
-  move
  onTouch
   🧟
    replaceWith 🧟
 
-insert 100 🙍
+🦸‍♂️
+ onTick
+  jitter
+
+insert 10% 🙍
 insert 1 🧟
 
 🪦
- comment Dead Person
-💉
 
-size 20
-ticksPerSecond 10
+onExtinct 🧟
+ log No more cases.
+ pause

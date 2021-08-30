@@ -312,6 +312,91 @@ window.yodash = yodash
 
 
 
+var jQuery
+
+class AbstractContextMenuComponent extends AbstractTreeComponent {
+  toHakonCode() {
+    const theme = this.getTheme()
+    return `.AbstractContextMenuComponent
+ position fixed
+ max-height 100%
+ color white
+ z-index 221
+ background rgb(47,47,51)
+ box-shadow 0 1px 3px 0 rgb(47,47,51)
+ font-size 14px
+ a
+  display block
+  padding 3px
+  font-size 14px
+  text-decoration none`
+  }
+
+  static closeAllContextMenusOn(treeNode) {
+    treeNode.filter(node => node instanceof AbstractContextMenuComponent).forEach(node => node.unmountAndDestroy())
+  }
+
+  toStumpCode() {
+    return new jtree.TreeNode(`div
+ class AbstractContextMenuComponent {constructorName}
+ {body}`).templateToString({ constructorName: this.constructor.name, body: this.getContextMenuBodyStumpCode() })
+  }
+
+  treeComponentDidMount() {
+    const container = this.getStumpNode()
+    const app = this.getRootNode()
+    const { willowBrowser } = app
+    const bodyShadow = willowBrowser.getBodyStumpNode().getShadow()
+    const unmountOnClick = function() {
+      bodyShadow.offShadowEvent("click", unmountOnClick) // todo: should we move this to before unmount?
+      app.closeAllContextMenus()
+    }
+    setTimeout(() => bodyShadow.onShadowEvent("click", unmountOnClick), 100) // todo: fix this.
+    const event = app.getMouseEvent()
+    const windowSize = willowBrowser.getWindowSize()
+    const position = this._getContextMenuPosition(
+      windowSize.width,
+      windowSize.height,
+      this.left,
+      event.clientY,
+      container.getShadow()
+    )
+    jQuery(container.getShadow().element).css(position)
+  }
+
+  top = undefined
+  get left() {
+    return this.getRootNode().getMouseEvent().clientX
+  }
+
+  _getContextMenuPosition(windowWidth, windowHeight, x, y, shadow) {
+    let boxTop = y
+    let boxLeft = x
+    const boxWidth = shadow.getShadowOuterWidth()
+    const boxHeight = shadow.getShadowOuterHeight()
+    const boxHeightOverflow = boxHeight + boxTop - windowHeight
+    const boxRightOverflow = boxWidth + boxLeft - windowWidth
+
+    // todo: instead of this change orientation
+    if (boxHeightOverflow > 0) boxTop -= boxHeightOverflow
+
+    if (boxRightOverflow > 0) boxLeft = x - boxWidth - 5
+
+    if (boxTop < 0) boxTop = 0
+
+    return {
+      left: boxLeft,
+      top: this.top ?? boxTop
+    }
+  }
+}
+
+window.AbstractContextMenuComponent = AbstractContextMenuComponent
+
+
+
+
+
 
 
 const SelectedClass = "selected"
@@ -1203,24 +1288,82 @@ window.ExampleSims = ExampleSims
 
 
 
+
+
+const Categories = new jtree.TreeNode(`🦠 Epidemiology
+ virus
+ covid19
+🌲 Forests
+ fire
+ fireAdvanced
+⚽️ Sports
+ soccer
+ pong
+ basketball
+💰 Business
+ startupIdeas
+👾 Game of Life
+ gameOfLife
+ gospersGliderGun
+ gameOfLifeAdvanced
+🦋 Biology
+ moths
+🕹 Games
+ zombies`)
+
+class ExampleMenuComponent extends AbstractContextMenuComponent {
+  getContextMenuBodyStumpCode() {
+    const icon = this.getWord(1)
+    const category = Categories.getNode(icon)
+
+    return category
+      .map(node => {
+        const name = node.getFirstWord()
+        const program = ExampleSims.getNode(name)
+        const icon = program.childrenToString().match(/(\p{Extended_Pictographic}+)/u)[1]
+        const properName = jtree.Utils.ucfirst(name)
+        return `a ${icon}  &nbsp; ${properName}
+ clickCommand loadExampleCommand ${name}
+ class ExampleButton`
+      })
+      .join("\n")
+  }
+
+  // Align these to below and to the left of the clicked button
+  top = 28
+  get left() {
+    const evt = this.getRootNode().getMouseEvent()
+    return evt.clientX - evt.offsetX
+  }
+}
+
 class ExamplesComponent extends AbstractTreeComponent {
   toStumpCode() {
-    const sims = ExampleSims.map(item => {
-      const name = item.getFirstWord()
-      const properName = jtree.Utils.ucfirst(name)
-      const icon = item.childrenToString().match(/(\p{Extended_Pictographic}+)/u)[1]
+    const categories = Categories.map(category => {
+      const icon = category.getFirstWord()
+      const name = category.getContent()
+      const firstFile = category.nodeAt(0).getFirstWord()
       return ` a ${icon}
-  href index.html#example%20${name}
-  title ${properName}
-  clickCommand loadExampleCommand ${name}`
+  href index.html#example%20${firstFile}
+  title ${name}
+  clickCommand openCategoryCommand ${icon}`
     }).join("\n")
     return `div
  class ${ExamplesComponent.name}
-${sims}`
+${categories}`
+  }
+
+  async openCategoryCommand(icon) {
+    const root = this.getRootNode()
+    const category = Categories.getNode(icon)
+    const firstFile = category.nodeAt(0).getFirstWord()
+    this.getRootNode().toggleAndRender(`${ExampleMenuComponent.name} ${icon}`)
   }
 }
 
 window.ExamplesComponent = ExamplesComponent
+
+window.ExampleMenuComponent = ExampleMenuComponent
 
 
 
@@ -1601,6 +1744,7 @@ window.SimEditorComponent = SimEditorComponent
 
 
 
+
 const MIN_GRID_SIZE = 10
 const MAX_GRID_SIZE = 200
 const DEFAULT_GRID_SIZE = 20
@@ -1659,7 +1803,8 @@ class SimojiApp extends AbstractTreeComponent {
       BottomBarComponent,
       RightBarComponent,
       EditorHandleComponent,
-      TitleComponent
+      TitleComponent,
+      ExampleMenuComponent
     })
   }
 
@@ -1705,6 +1850,14 @@ class SimojiApp extends AbstractTreeComponent {
         return
       this._appendExperiment(program, index)
     })
+  }
+
+  closeAllContextMenus() {
+    this.filter(node => node instanceof ExampleMenuComponent).forEach(node => node.unmountAndDestroy())
+  }
+
+  _onCommandWillRun() {
+    this.closeAllContextMenus() // todo: move these to a body handler?
   }
 
   _appendExperiment(program, index) {

@@ -214,6 +214,10 @@ body {
 	display: inline-block;
 }
 
+.ExampleButton {
+	cursor: pointer;
+}
+
 .ExamplesComponent a {
 	text-decoration: none;
 	display: inline-block;
@@ -221,7 +225,8 @@ body {
 	width: 30px;
 }
 .ExamplesComponent a:hover,
-.LogoComponent:hover {
+.LogoComponent:hover,
+.ExampleButton:hover {
 	background-color: rgba(255, 255, 255, 0.2);
 }
 
