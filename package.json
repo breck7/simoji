@@ -13,6 +13,9 @@
   "bin": {
     "simoji": "./cli.js"
   },
+  "engines": {
+    "node": ">=14.0.0"
+  },
   "dependencies": {
     "jquery": "^3.6.0",
     "jtree": "^53.0.0",
