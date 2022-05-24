@@ -26,4 +26,4 @@ class LogoComponent extends AbstractTreeComponent {
   }
 }
 
-module.exports = { TopBarComponent }
+module.exports = { TopBarComponent, LogoComponent }

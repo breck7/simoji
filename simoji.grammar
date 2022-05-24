@@ -170,6 +170,10 @@ spawnCommandNode
  extends abstractCommandNode
  cells keywordCell emojiCell
  catchAllCellType positionCell
+moveToEmptySpotCommandNode
+ crux moveToEmptySpot
+ extends abstractCommandNode
+ cells keywordCell
 removeCommandNode
  description Remove this agent from the board.
  crux remove

@@ -32,6 +32,17 @@ list
  - sandspiel🔗sandspiel.club
  - The-Powder-Toy🔗github.com/The-Powder-Toy/The-Powder-Toy
 
+section Development
+
+question What is the dev loop like?
+
+paragraph
+ - Start the dev server with `node server.js`.
+ - Open `localhost/dev.html`
+ - Edit files
+ - Refresh
+ - Run tests with `npm test`
+ - Build distribution with `./build.js`
 
 section Roadmap
 

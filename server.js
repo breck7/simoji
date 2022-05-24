@@ -32,7 +32,7 @@ class Server {
 		app.use(express.static(__dirname + "/"))
 
 		app.listen(port, () => {
-			console.log(`Running Simoji Dev Server. cmd+dblclick: http://localhost:${port}/`)
+			console.log(`Running Simoji Dev Server. cmd+dblclick: http://localhost:${port}/dev.html`)
 		})
 	}
 }
