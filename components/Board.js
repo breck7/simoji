@@ -178,14 +178,7 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   isSolidAgent(position) {
-    if (!this._solidsSet) {
-      this._solidsSet = new Set()
-      this.getTopDownArray()
-        .filter(node => node.solid)
-        .forEach(item => {
-          this._solidsSet.add(item.positionHash)
-        })
-    }
+    if (!this._solidsSet) this.resetAgentPositionMap()
     const hash = yodash.makePositionHash(position)
     if (this._solidsSet.has(hash)) return true
 
@@ -202,17 +195,16 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   resetAgentPositionMap() {
-    this._agentPositionMap = this.makeAgentPositionMap()
-  }
-
-  makeAgentPositionMap() {
     const map = new Map()
-    this.agents.forEach(node => {
-      const { positionHash } = node
+    const solidsSet = new Set()
+    this.agents.forEach(agent => {
+      const { positionHash } = agent
+      if (agent.solid) solidsSet.add(positionHash)
       if (!map.has(positionHash)) map.set(positionHash, [])
-      map.get(positionHash).push(node)
+      map.get(positionHash).push(agent)
     })
-    return map
+    this._solidsSet = solidsSet
+    this._agentPositionMap = map
   }
 
   get agentTypeMap() {
