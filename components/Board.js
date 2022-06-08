@@ -98,8 +98,60 @@ class BoardComponent extends AbstractTreeComponent {
 
   _populationCounts = []
 
+  runAtTimeEvents() {
+    const blocks = this.timeMap.get(this.tick)
+    if (blocks)
+      blocks.forEach(block =>
+        block
+          .filter(node => node.doesExtend(NodeTypes.abstractInjectCommandNode))
+          .forEach(command => this.runInjectCommand(command))
+      )
+  }
+
+  insertAgentAtCommand(right, down) {
+    const root = this.root
+    const board = this
+    const positionHash = down + " " + right
+    board.resetAgentPositionMap()
+    const { agentPositionMap } = board
+    const existingObjects = agentPositionMap.get(positionHash) ?? []
+    if (existingObjects.length) return root.toggleSelectCommand(existingObjects)
+    const { agentToInsert } = root
+
+    if (!agentToInsert) return
+
+    //if (parent.findNodes(agentToInsert).length > MAX_ITEMS) return true
+
+    board.prependLine(`${agentToInsert} ${positionHash}`)
+    board.renderAndGetRenderReport()
+    board.resetAgentPositionMap()
+
+    if (!root.isSnapshotOn) root.snapShotCommand()
+
+    const allCode = new TreeNode(root.simCode)
+    let targetNode = root.boards.length === 1 ? allCode : allCode.findNodes("experiment")[this.boardIndex]
+
+    if (this.tick) targetNode = targetNode.appendLine(`atTime ${this.tick}`)
+    targetNode.appendLine(`insertAt ${agentToInsert} ${down} ${right}`)
+    root.onSourceCodeChange(allCode)
+  }
+
+  get timeMap() {
+    if (this._atTimes) return this._atTimes
+    const map = new Map()
+    this.simojiProgram.findNodes("atTime").forEach(node => {
+      const tick = parseInt(node.getWord(1))
+      if (!map.get(tick)) map.set(tick, [])
+      map.get(tick).push(node)
+    })
+    this._atTimes = map
+    return map
+  }
+
   tick = 0
-  boardLoop() {
+  boardLoop(render = true) {
+    this.runAtTimeEvents()
+
     this.agents.forEach(node => node.onTick())
 
     this.resetAgentPositionMap()
@@ -110,10 +162,10 @@ class BoardComponent extends AbstractTreeComponent {
     this.executeBoardCommands(Keywords.onTick)
     this.handleExtinctions()
 
-    this.renderAndGetRenderReport()
-
     this.tick++
     this._populationCounts.push(this.populationCount)
+
+    if (render) this.renderAndGetRenderReport()
 
     if (this.resetAfterLoop) {
       this.resetAfterLoop = false
@@ -155,6 +207,84 @@ class BoardComponent extends AbstractTreeComponent {
   get ticksPerSecond() {
     const setTime = this.simojiProgram.get(Keywords.ticksPerSecond)
     return setTime ? parseInt(setTime) : 10
+  }
+
+  occupiedSpots = new Set()
+
+  runInjectCommand(command) {
+    this[command.getNodeTypeId()](command)
+  }
+
+  insertClusterNode(commandNode) {
+    this.concat(
+      yodash.insertClusteredRandomAgents(
+        this.randomNumberGenerator,
+        parseInt(commandNode.getWord(1)),
+        commandNode.getWord(2),
+        this.rows,
+        this.cols,
+        this.occupiedSpots,
+        commandNode.getWord(3),
+        commandNode.getWord(4)
+      )
+    )
+  }
+
+  insertAtNode(commandNode) {
+    this.appendLine(`${commandNode.getWord(1)} ${commandNode.getWord(3)} ${commandNode.getWord(2)}`)
+    // TODO: update occupied spots cache?
+  }
+
+  rectangleDrawNode(commandNode) {
+    const newLines = yodash.makeRectangle(...yodash.parseInts(commandNode.getWords().slice(1), 1))
+    this.concat(newLines)
+    // TODO: update occupied spots cache?
+  }
+
+  pasteDrawNode(commandNode) {
+    const newSpots = new TreeNode(commandNode.childrenToString())
+    yodash.updateOccupiedSpots(newSpots, this.occupiedSpots)
+    this.concat(newSpots)
+  }
+
+  fillNode(commandNode) {
+    this.concat(yodash.fill(this.rows, this.cols, this.occupiedSpots, commandNode.getWord(1)))
+  }
+
+  drawNode(commandNode) {
+    const { occupiedSpots } = this
+    const spots = yodash.draw(commandNode.childrenToString())
+    yodash.updateOccupiedSpots(spots, occupiedSpots)
+    this.concat(spots)
+  }
+
+  get seed() {
+    if (!this._seed)
+      this._seed = this.simojiProgram.has(Keywords.seed) ? parseInt(this.simojiProgram.get(Keywords.seed)) : newSeed()
+    return this._seed
+  }
+
+  get randomNumberGenerator() {
+    if (!this._rng) this._rng = yodash.getRandomNumberGenerator(this.seed)
+    return this._rng
+  }
+
+  insertNode(commandNode) {
+    const { rows, cols, occupiedSpots } = this
+    const emoji = commandNode.getWord(2)
+    let amount = commandNode.getWord(1)
+
+    const availableSpots = yodash.getAllAvailableSpots(rows, cols, occupiedSpots)
+    amount = amount.includes("%") ? yodash.parsePercent(amount) * (rows * cols) : parseInt(amount)
+    const newAgents = yodash
+      .sampleFrom(availableSpots, amount, this.randomNumberGenerator)
+      .map(spot => {
+        const { hash } = spot
+        occupiedSpots.add(hash)
+        return `${emoji} ${hash}`
+      })
+      .join("\n")
+    this.concat(newAgents)
   }
 
   handleExtinctions() {
@@ -205,6 +335,7 @@ class BoardComponent extends AbstractTreeComponent {
     })
     this._solidsSet = solidsSet
     this._agentPositionMap = map
+    this.occupiedSpots = new Set(map.keys())
   }
 
   get agentTypeMap() {
@@ -287,6 +418,15 @@ class BoardComponent extends AbstractTreeComponent {
     return !!this.interval
   }
 
+  skipToThisManyTicksIfNotPaused(ticks) {
+    this.interval = true
+    for (let i = 0; i <= ticks; i++) {
+      this.boardLoop(false)
+      if (!this.isRunning) break
+    }
+    this.renderAndGetRenderReport()
+  }
+
   runUntilPause() {
     this.interval = true
     while (this.interval) {
@@ -341,6 +481,12 @@ class BoardStyleComponent extends AbstractTreeComponent {
  bern
   ${this.childrenToString().replace(/\n/g, "\n  ")}`
   }
+}
+
+let _defaultSeed = Date.now()
+const newSeed = () => {
+  _defaultSeed++
+  return _defaultSeed
 }
 
 module.exports = { BoardComponent }

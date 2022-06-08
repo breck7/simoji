@@ -67,17 +67,6 @@ yodash.patchExperimentAndReplaceSymbols = (program, experiment) => {
 	return withVarsReplaced
 }
 
-yodash.compileStartingAgentsWithPositions = (program, rows, cols, randomNumberGenerator) => {
-	const clone = program.clone()
-	clone.filter(node => !node.doesExtend(NodeTypes.abstractDrawNode)).forEach(node => node.destroy())
-	clone.occupiedSpots = new Set()
-	clone.randomNumberGenerator = randomNumberGenerator
-	clone.rows = rows
-	clone.cols = cols
-	clone.yodash = yodash
-	return clone.compile()
-}
-
 yodash.getBestAngle = (targets, position) => {
 	let closest = Infinity
 	let target
@@ -232,18 +221,6 @@ yodash.getAllAvailableSpots = (rows, cols, occupiedSpots, rowStart = 0, colStart
 
 yodash.parsePercent = str => parseFloat(str.replace("%", "")) / 100
 
-yodash.insertRandomAgents = (randomNumberGenerator, amount, char, rows, cols, occupiedSpots) => {
-	const availableSpots = yodash.getAllAvailableSpots(rows, cols, occupiedSpots)
-	amount = amount.includes("%") ? yodash.parsePercent(amount) * (rows * cols) : parseInt(amount)
-	return sampleFrom(availableSpots, amount, randomNumberGenerator)
-		.map(spot => {
-			const { hash } = spot
-			occupiedSpots.add(hash)
-			return `${char} ${hash}`
-		})
-		.join("\n")
-}
-
 yodash.insertClusteredRandomAgents = (
 	randomNumberGenerator,
 	amount,
@@ -255,7 +232,7 @@ yodash.insertClusteredRandomAgents = (
 	originColumn
 ) => {
 	const availableSpots = yodash.getAllAvailableSpots(rows, cols, occupiedSpots)
-	const spots = sampleFrom(availableSpots, amount * 10, randomNumberGenerator)
+	const spots = yodash.sampleFrom(availableSpots, amount * 10, randomNumberGenerator)
 	const origin = originColumn
 		? { down: parseInt(originRow), right: parseInt(originColumn) }
 		: yodash.getRandomLocation(rows, cols, randomNumberGenerator)
@@ -278,7 +255,7 @@ yodash.getRandomNumberGenerator = seed => () => {
 	return semiRand - Math.floor(semiRand)
 }
 
-const sampleFrom = (collection, howMany, randomNumberGenerator) =>
+yodash.sampleFrom = (collection, howMany, randomNumberGenerator) =>
 	shuffleArray(collection, randomNumberGenerator).slice(0, howMany)
 
 const shuffleArray = (array, randomNumberGenerator) => {

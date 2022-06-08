@@ -51,7 +51,7 @@ simojiNode
  extensions simoji
  description A Tree Language that compiles to a TreeComponentFramework app.
  root
- inScope blankLineNode commentNode abstractSetupNode abstractDrawNode onTickNode onExtinctNode behaviorDefinitionNode experimentNode settingDefinitionNode
+ inScope abstractIgnoreNode abstractSetupNode abstractInjectCommandNode onTickNode onExtinctNode behaviorDefinitionNode experimentNode settingDefinitionNode
  catchAllNodeType agentDefinitionNode
  compilesTo javascript
  example
@@ -68,175 +68,20 @@ simojiNode
   insert 2 💡
  javascript
   get agentTypes() {
-    return this.filter(node => node.getNodeTypeId() === "agentDefinitionNode")
+   return this.filter(node => node.getNodeTypeId() === "agentDefinitionNode")
   }
 experimentNode
  crux experiment
  cells keywordCell
- inScope blankLineNode commentNode abstractSetupNode abstractDrawNode onTickNode onExtinctNode settingDefinitionNode
+ inScope abstractIgnoreNode abstractSetupNode abstractInjectCommandNode onTickNode onExtinctNode settingDefinitionNode
  catchAllCellType stringCell
-abstractDrawNode
-fillNode
- description Fill all blank cells with this agent.
- extends abstractDrawNode
- cells keywordCell emojiCell
- crux fill
- javascript
-  compile() {
-    const {rows, cols, occupiedSpots, yodash} = this.getParent()
-     return yodash.fill(rows, cols, occupiedSpots, this.getWord(1))
-  }
-drawLineNode
- catchAllCellType emojiCell
-drawNode
- extends abstractDrawNode
- cells keywordCell
- crux draw
- catchAllNodeType drawLineNode
- javascript
-  compile() {
-    const {occupiedSpots} = this.getParent()
-    const spots = yodash.draw(this.childrenToString())
-    yodash.updateOccupiedSpots(spots, occupiedSpots)
-    return spots
-  }
-insertNode
- extends abstractDrawNode
- cells keywordCell integerOrPercentCell emojiCell
- crux insert
- javascript
-  compile() {
-    const {rows, cols, occupiedSpots, randomNumberGenerator, yodash} = this.getParent()
-     return yodash.insertRandomAgents(randomNumberGenerator, this.getWord(1), this.getWord(2), rows, cols,  occupiedSpots)
-  }
-insertClusterNode
- extends insertNode
- crux insertCluster
- catchAllCellType integerCell
- javascript
-  compile() {
-    const {rows, cols, occupiedSpots, randomNumberGenerator, yodash} = this.getParent()
-     return yodash.insertClusteredRandomAgents(randomNumberGenerator, parseInt(this.getWord(1)), this.getWord(2), rows, cols,  occupiedSpots, this.getWord(3), this.getWord(4))
-  }
-rectangleDrawNode
- extends abstractDrawNode
- cells keywordCell emojiCell integerCell integerCell
- catchAllCellType integerCell
- crux rectangle
- javascript
-  compile() {
-    const {yodash} = this.getParent()
-    return yodash.makeRectangle(...yodash.parseInts(this.getWords().slice(1), 1))
-  }
-pasteDrawNode
- extends abstractDrawNode
- cells keywordCell
- crux paste
- catchAllNodeType pasteLineNode
- javascript
-  compile() {
-    const {yodash} = this.getParent()
-    const board = this.childrenToString()
-    yodash.updateOccupiedSpots(board, this.getParent().occupiedSpots)
-    return board
-  }
-pasteLineNode
- catchAllCellType anyCell
- catchAllNodeType pasteLineNode
-agentDefinitionNode
- inScope commentNode abstractEventNode abstractAgentAttributeNode abstractBehaviorAttributeNode
- cells keywordCell
- catchAllNodeType errorNode
- compiler
-  stringTemplate 
- javascript
-  compile() {
-    const root = this.getRootNode()
-    const name = root.agentKeywordMap[this.getWord(0)]
-    const normal = super.compile()
-    const behaviors = this.filter(node => node.getNodeTypeId() === "abstractBehaviorAttributeNode").map(behavior => `"${behavior.getLine()}"`).join(",")
-    return `class ${name} extends Agent {
-      icon = "${this.getWord(0)}"
-      behaviors = [${behaviors}]
-      ${normal}
-    }`
-  }
-abstractCommandNode
- cells keywordCell
-abstractSubjectObjectCommandNode
- extends abstractCommandNode
-spawnCommandNode
- crux spawn
- extends abstractCommandNode
- cells keywordCell emojiCell
- catchAllCellType positionCell
-moveToEmptySpotCommandNode
- crux moveToEmptySpot
- extends abstractCommandNode
- cells keywordCell
-removeCommandNode
- description Remove this agent from the board.
- crux remove
- extends abstractCommandNode
- cells keywordCell
-abstractAgentAttributeNode
- cells keywordCell
-abstractStringAttributeNode
- extends abstractAgentAttributeNode
- pattern ^\w+ .+$
- catchAllCellType stringCell
- javascript
-  compile() {
-    return `${this.getWord(0)} = "${this.getWord(1)}"`
-  }
-abstractBooleanAttributeNode
- description A boolean attribute.
- extends abstractAgentAttributeNode
- javascript
-  compile() {
-    return `${this.getWord(0)} = true`
-  }
-solidTraitNode
- description If set other agents won't pass through these.
- extends abstractBooleanAttributeNode
- crux solid
-bouncyTraitNode
- description If set other agents will bounce off this after a collision.
- extends abstractBooleanAttributeNode
- crux bouncy
-abstractIntegerAttributeNode
- extends abstractAgentAttributeNode
- description An integer attribute.
- cells keywordCell integerCell
- javascript
-  compile() {
-    return `${this.getWord(0)} = ${this.getWord(1)}`
-  }
-customIntegerAttributeNode
- pattern ^\w+ \d+$
- extends abstractIntegerAttributeNode
-settingDefinitionNode
- description Define a configurable input.
- cells keywordCell settingValueCell
- pattern ^\w+Setting .+$
-healthNode
- extends abstractIntegerAttributeNode
- crux health
-angleNode
- extends abstractStringAttributeNode
- cells keywordCell angleCell
- crux angle
-agentStyleNode
- description Provide custom CSS for an agent type.
- extends abstractStringAttributeNode
- cells keywordCell cssCell
- crux style
-agentHtmlNode
- description Provide custom HTML for each rendered agent.
- extends abstractStringAttributeNode
- cells keywordCell htmlCell
- crux html
 abstractSetupNode
+atTimeNode
+ crux atTime
+ description Run commands at a certain tick.
+ cells keywordCell integerCell
+ extends abstractSetupNode
+ inScope abstractInjectCommandNode
 abstractSetupNumberNode
  cells keywordCell integerCell
  extends abstractSetupNode
@@ -274,9 +119,6 @@ reportNode
   compile() {
    return ""
   }
-ohayoLineNode
- description Data visualization code written for Ohayo.
- catchAllCellType ohayoCell
 styleNode
  description Optional CSS to load in BoardStyleComponent
  extends abstractSetupNode
@@ -287,64 +129,79 @@ styleNode
   compile() {
    return ""
   }
-styleLineNode
- catchAllCellType cssCell
- catchAllNodeType styleLineNode
-targetEmojiNode
- inScope abstractCommandNode
- cells emojiCell
-abstractEventNode
+questionNode
+ crux question
+ description What are you trying to figure out?
  cells keywordCell
- catchAllCellType probabilityCell
- javascript
-  compile() { return ``}
-abstractInteractionEventNode
- extends abstractEventNode
- catchAllNodeType targetEmojiNode
-onHitNode
- extends abstractInteractionEventNode
- crux onHit
- description Define what happens when this agent collides with other agents.
-onTouchNode
- extends abstractInteractionEventNode
- crux onTouch
- description Define what happens when this agent is adjacent to other agents.
-emojiAndNeighborConditionNode
- inScope abstractCommandNode
- pattern ^.+ (<|>|=|<=|>=)+ .+$
- cells emojiCell conditionalOperatorCell neighborCountCell
-onNeighborsNode
- description Define what happens when a certain amount of neighbors are nearby.
- extends abstractInteractionEventNode
- inScope emojiAndNeighborConditionNode
- crux onNeighbors
-onDeathNode
- extends abstractEventNode
- crux onDeath
- inScope abstractCommandNode
- description Define what happens when this agent runs out of health.
-onTickNode
- extends abstractEventNode
- crux onTick
- inScope abstractCommandNode
- description Define what happens each tick.
-onExtinctNode
- crux onExtinct
- inScope abstractCommandNode
+ catchAllCellType stringCell
+ extends abstractSetupNode
+abstractInjectCommandNode
+fillNode
+ description Fill all blank cells with this agent.
+ extends abstractInjectCommandNode
  cells keywordCell emojiCell
- description Define what happens when a type of agent goes extinct from the board.
+ crux fill
+drawNode
+ extends abstractInjectCommandNode
+ cells keywordCell
+ crux draw
+ catchAllNodeType drawLineNode
+insertNode
+ extends abstractInjectCommandNode
+ cells keywordCell integerOrPercentCell emojiCell
+ crux insert
+insertAtNode
+ extends insertNode
+ description Insert at X Y
+ cells keywordCell emojiCell positionCell positionCell
+ crux insertAt
+insertClusterNode
+ extends insertNode
+ crux insertCluster
+ catchAllCellType integerCell
+rectangleDrawNode
+ extends abstractInjectCommandNode
+ cells keywordCell emojiCell integerCell integerCell
+ catchAllCellType integerCell
+ crux rectangle
+pasteDrawNode
+ extends abstractInjectCommandNode
+ cells keywordCell
+ crux paste
+ catchAllNodeType pasteLineNode
+drawLineNode
+ catchAllCellType emojiCell
+pasteLineNode
+ catchAllCellType anyCell
+ catchAllNodeType pasteLineNode
+agentDefinitionNode
+ inScope abstractIgnoreNode abstractEventNode abstractAgentAttributeNode abstractBehaviorAttributeNode
+ cells keywordCell
+ catchAllNodeType errorNode
+ compiler
+  stringTemplate 
  javascript
-  compile() { return ""}
+  compile() {
+   const root = this.getRootNode()
+   const name = root.agentKeywordMap[this.getWord(0)]
+   const normal = super.compile()
+   const behaviors = this.filter(node => node.getNodeTypeId() === "abstractBehaviorAttributeNode")
+    .map(behavior => `"${behavior.getLine()}"`)
+    .join(",")
+   return `class ${name} extends Agent {
+      icon = "${this.getWord(0)}"
+      behaviors = [${behaviors}]
+      ${normal}
+    }`
+  }
+abstractCommandNode
+ cells keywordCell
+abstractSubjectObjectCommandNode
+ extends abstractCommandNode
 replaceWithCommandNode
  extends abstractSubjectObjectCommandNode
  crux replaceWith
  cells keywordCell emojiCell
-javascriptCommandNode
- description An escape hatch so you can write custom javascript in a pinch.
- extends abstractCommandNode
- crux javascript
- catchAllNodeType javascriptLineNode
- cells keywordCell
 kickItCommandNode
  extends abstractSubjectObjectCommandNode
  crux kickIt
@@ -354,6 +211,26 @@ shootCommandNode
 pickItUpCommandNode
  extends abstractSubjectObjectCommandNode
  crux pickItUp
+spawnCommandNode
+ crux spawn
+ extends abstractCommandNode
+ cells keywordCell emojiCell
+ catchAllCellType positionCell
+moveToEmptySpotCommandNode
+ crux moveToEmptySpot
+ extends abstractCommandNode
+ cells keywordCell
+removeCommandNode
+ description Remove this agent from the board.
+ crux remove
+ extends abstractCommandNode
+ cells keywordCell
+javascriptCommandNode
+ description An escape hatch so you can write custom javascript in a pinch.
+ extends abstractCommandNode
+ crux javascript
+ catchAllNodeType javascriptLineNode
+ cells keywordCell
 alertCommandNode
  extends abstractCommandNode
  crux alert
@@ -398,31 +275,146 @@ turnFromCommandNode
  extends abstractCommandNode
  crux turnFrom
  cells keywordCell emojiCell
-questionNode
- crux question
- description What are you trying to figure out?
+learnCommandNode
+ crux learn
+ extends abstractCommandNode
+ cells keywordCell behaviorNameCell
+unlearnCommandNode
+ crux unlearn
+ extends abstractCommandNode
+ cells keywordCell behaviorNameCell
+abstractAgentAttributeNode
  cells keywordCell
+abstractStringAttributeNode
+ extends abstractAgentAttributeNode
+ pattern ^\w+ .+$
  catchAllCellType stringCell
- extends abstractSetupNode
-commentNode
- catchAllCellType commentCell
- crux comment
+ javascript
+  compile() {
+   return `${this.getWord(0)} = "${this.getWord(1)}"`
+  }
+angleNode
+ extends abstractStringAttributeNode
+ cells keywordCell angleCell
+ crux angle
+agentStyleNode
+ description Provide custom CSS for an agent type.
+ extends abstractStringAttributeNode
+ cells keywordCell cssCell
+ crux style
+agentHtmlNode
+ description Provide custom HTML for each rendered agent.
+ extends abstractStringAttributeNode
+ cells keywordCell htmlCell
+ crux html
+abstractBooleanAttributeNode
+ description A boolean attribute.
+ extends abstractAgentAttributeNode
+ javascript
+  compile() {
+   return `${this.getWord(0)} = true`
+  }
+solidTraitNode
+ description If set other agents won't pass through these.
+ extends abstractBooleanAttributeNode
+ crux solid
+bouncyTraitNode
+ description If set other agents will bounce off this after a collision.
+ extends abstractBooleanAttributeNode
+ crux bouncy
+abstractIntegerAttributeNode
+ extends abstractAgentAttributeNode
+ description An integer attribute.
+ cells keywordCell integerCell
+ javascript
+  compile() {
+   return `${this.getWord(0)} = ${this.getWord(1)}`
+  }
+customIntegerAttributeNode
+ pattern ^\w+ \d+$
+ extends abstractIntegerAttributeNode
+healthNode
+ extends abstractIntegerAttributeNode
+ crux health
+settingDefinitionNode
+ description Define a configurable input.
+ cells keywordCell settingValueCell
+ pattern ^\w+Setting .+$
+ohayoLineNode
+ description Data visualization code written for Ohayo.
+ catchAllCellType ohayoCell
+styleLineNode
+ catchAllCellType cssCell
+ catchAllNodeType styleLineNode
+targetEmojiNode
+ inScope abstractCommandNode
+ cells emojiCell
+abstractEventNode
+ cells keywordCell
+ catchAllCellType probabilityCell
+ javascript
+  compile() {
+   return ``
+  }
+abstractInteractionEventNode
+ extends abstractEventNode
+ catchAllNodeType targetEmojiNode
+onHitNode
+ extends abstractInteractionEventNode
+ crux onHit
+ description Define what happens when this agent collides with other agents.
+onTouchNode
+ extends abstractInteractionEventNode
+ crux onTouch
+ description Define what happens when this agent is adjacent to other agents.
+onNeighborsNode
+ description Define what happens when a certain amount of neighbors are nearby.
+ extends abstractInteractionEventNode
+ inScope emojiAndNeighborConditionNode
+ crux onNeighbors
+onDeathNode
+ extends abstractEventNode
+ crux onDeath
+ inScope abstractCommandNode
+ description Define what happens when this agent runs out of health.
+onTickNode
+ extends abstractEventNode
+ crux onTick
+ inScope abstractCommandNode
+ description Define what happens each tick.
+emojiAndNeighborConditionNode
+ inScope abstractCommandNode
+ pattern ^.+ (<|>|=|<=|>=)+ .+$
+ cells emojiCell conditionalOperatorCell neighborCountCell
+onExtinctNode
+ crux onExtinct
+ inScope abstractCommandNode
+ cells keywordCell emojiCell
+ description Define what happens when a type of agent goes extinct from the board.
  javascript
   compile() {
    return ""
   }
+abstractIgnoreNode
+ tags doNotSynthesize
+ javascript
+  compile () {
+    return ""
+  }
+commentNode
+ extends abstractIgnoreNode
+ catchAllCellType commentCell
+ crux comment
  catchAllNodeType commentLineNode
 commentAliasNode
  description Alternate alias for a comment.
  crux #
  extends commentNode
 blankLineNode
+ extends abstractIgnoreNode
  description Blank lines compile do nothing.
  cells blankCell
- compiler
-  stringTemplate 
  pattern ^$
- tags doNotSynthesize
 commentLineNode
  catchAllCellType commentCell
 javascriptLineNode
@@ -432,22 +424,14 @@ abstractBehaviorAttributeNode
  pattern ^.*Behavior$
  javascript
   compile() {
-    return ""
+   return ""
   }
 behaviorDefinitionNode
- inScope commentNode abstractEventNode
+ inScope abstractIgnoreNode abstractEventNode
  cells behaviorNameCell
  pattern ^.*Behavior$
  catchAllNodeType errorNode
  javascript
   compile() {
-    return ""
+   return ""
   }
-learnCommandNode
- crux learn
- extends abstractCommandNode
- cells keywordCell behaviorNameCell
-unlearnCommandNode
- crux unlearn
- extends abstractCommandNode
- cells keywordCell behaviorNameCell

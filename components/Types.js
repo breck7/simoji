@@ -41,6 +41,6 @@ const NodeTypes = {}
 NodeTypes.agentDefinitionNode = "agentDefinitionNode"
 NodeTypes.experimentNode = "experimentNode"
 NodeTypes.settingDefinitionNode = "settingDefinitionNode"
-NodeTypes.abstractDrawNode = "abstractDrawNode"
+NodeTypes.abstractInjectCommandNode = "abstractInjectCommandNode"
 
 module.exports = { Keywords, LocalStorageKeys, UrlKeys, Directions, NodeTypes }

@@ -63,12 +63,6 @@ class ErrorNode extends AbstractTreeComponent {
   }
 }
 
-let _defaultSeed = Date.now()
-const newSeed = () => {
-  _defaultSeed++
-  return _defaultSeed
-}
-
 class SimojiApp extends AbstractTreeComponent {
   createParser() {
     return new jtree.TreeNode.Parser(ErrorNode, {
@@ -111,8 +105,6 @@ class SimojiApp extends AbstractTreeComponent {
 
   verbose = true
 
-  compiledStartState = ""
-
   get firstProgram() {
     return this.simojiPrograms[0]
   }
@@ -126,7 +118,11 @@ class SimojiApp extends AbstractTreeComponent {
       if (index > 3)
         // currently max out at 4 experiments. just need to update CSS transform code.
         return
-      this._appendExperiment(program, index)
+      const board = this._appendExperiment(program, index)
+
+      program
+        .filter(node => node.doesExtend(NodeTypes.abstractInjectCommandNode))
+        .forEach(command => board.runInjectCommand(command))
     })
   }
 
@@ -141,27 +137,15 @@ class SimojiApp extends AbstractTreeComponent {
   _appendExperiment(program, index) {
     const { windowWidth, windowHeight } = this
     const { gridSize, cols, rows } = this.makeGrid(program, windowWidth, windowHeight)
-    const seed = program.has(Keywords.seed) ? parseInt(program.get(Keywords.seed)) : newSeed()
-    const randomNumberGenerator = yodash.getRandomNumberGenerator(seed)
-
-    this.compiledStartState = ""
-    try {
-      this.compiledStartState = yodash
-        .compileStartingAgentsWithPositions(program, rows, cols, randomNumberGenerator)
-        .trim()
-    } catch (err) {
-      if (this.verbose) console.error(err)
-    }
 
     const styleNode = program.getNode(Keywords.style) ?? undefined
     const board = this.appendLineAndChildren(
       `${BoardComponent.name} ${gridSize} ${rows} ${cols} ${index}`,
-      `leftStartPosition ${this.leftStartPosition}\n${this.compiledStartState.trim()}
+      `leftStartPosition ${this.leftStartPosition}
 ${GridComponent.name}
 ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : ""}`.trim()
     )
-    board.seed = seed
-    board.randomNumberGenerator = randomNumberGenerator
+    return board
   }
 
   get leftStartPosition() {
@@ -170,6 +154,11 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
 
   get editor() {
     return this.getNode(SimEditorComponent.name)
+  }
+
+  onSourceCodeChange(newCode) {
+    this.editor.setCodeMirrorValue(newCode.toString())
+    this.updateLocalStorage(newCode)
   }
 
   loadExampleCommand(name) {
@@ -249,7 +238,20 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
     this.boards.forEach(board => board.stopInterval())
   }
 
+  get maxTick() {
+    return Math.max(this.boards.map(board => board.tick))
+  }
+
+  goBackOneTickCommand() {
+    const { maxTick } = this
+    this.pauseAllCommand()
+    if (!this.isSnapshotOn) this.snapShotCommand()
+    this.loadNewSim(this.simCode)
+    this.boards.forEach(board => board.skipToThisManyTicksIfNotPaused(maxTick - 2))
+  }
+
   advanceOneTickCommand() {
+    this.pauseAllCommand()
     this.boards.forEach(board => board.boardLoop())
   }
 
@@ -444,24 +446,30 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
     this.boards.forEach(board => board.resetAgentPositionMap())
   }
 
+  get isSnapshotOn() {
+    // technically also needs rows and column settings
+    return new jtree.TreeNode(this.simCode).has(Keywords.seed)
+  }
+
   // Save the current random play for reproducibility and shareability
   snapShotCommand() {
     const newCode = new jtree.TreeNode(this.simCode)
     const boards = this.boards
+
+    // todo: buggy. we should rename the board class to experiment, or rename experiment keyword to board.
     const board = boards[0]
-    console.log(board.seed, board.rows, board.cols)
     newCode.set(Keywords.seed, board.seed.toString())
     newCode.set(Keywords.rows, board.rows.toString())
     newCode.set(Keywords.columns, board.cols.toString())
     newCode.findNodes(Keywords.experiment).forEach((experiment, index) => {
-      const board = boards[index + 1]
+      const board = boards[index]
       experiment.set(Keywords.seed, board.seed.toString())
       experiment.set(Keywords.rows, board.rows.toString())
       experiment.set(Keywords.columns, board.cols.toString())
     })
 
     this.editor.setCodeMirrorValue(newCode.toString())
-    this.loadNewSim(newCode)
+    this.updateLocalStorage(newCode)
   }
 
   async toggleHelpCommand() {
@@ -500,7 +508,8 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
       escape: () => this.clearSelectionCommand(),
       "command+a": () => this.selectAllCommand(),
       "?": () => this.toggleHelpCommand(),
-      t: () => this.advanceOneTickCommand(),
+      ",": () => this.goBackOneTickCommand(),
+      ".": () => this.advanceOneTickCommand(),
       backspace: () => this.deleteSelectionCommand()
     }
   }
