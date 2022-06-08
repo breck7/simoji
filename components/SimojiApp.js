@@ -410,6 +410,29 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
     }
   }
 
+  insertAgentAtCommand(board, right, down) {
+    const positionHash = down + " " + right
+    board.resetAgentPositionMap()
+    const { agentPositionMap } = board
+    const existingObjects = agentPositionMap.get(positionHash) ?? []
+    if (existingObjects.length) return this.toggleSelectCommand(existingObjects)
+    const { agentToInsert } = this
+
+    if (!agentToInsert) return this
+
+    //if (parent.findNodes(agentToInsert).length > MAX_ITEMS) return true
+
+    board.prependLine(`${agentToInsert} ${positionHash}`)
+    board.renderAndGetRenderReport()
+    board.resetAgentPositionMap()
+
+    if (!this.isSnapshotOn) this.snapShotCommand()
+    const newCode = new jtree.TreeNode(this.simCode)
+    newCode.appendLine(`insertAt ${agentToInsert} ${down} ${right}`)
+    this.editor.setCodeMirrorValue(newCode.toString())
+    this.updateLocalStorage(newCode)
+  }
+
   changeAgentBrushCommand(agent) {
     if (agent === this._agentToInsert) {
       this._agentToInsert = undefined
@@ -444,6 +467,11 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
     this.boards.forEach(board => board.resetAgentPositionMap())
   }
 
+  get isSnapshotOn() {
+    // technically also needs rows and column settings
+    return new jtree.TreeNode(this.simCode).has(Keywords.seed)
+  }
+
   // Save the current random play for reproducibility and shareability
   snapShotCommand() {
     const newCode = new jtree.TreeNode(this.simCode)
@@ -461,7 +489,7 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
     })
 
     this.editor.setCodeMirrorValue(newCode.toString())
-    this.loadNewSim(newCode)
+    this.updateLocalStorage(newCode)
   }
 
   async toggleHelpCommand() {

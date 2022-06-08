@@ -3,22 +3,8 @@ const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework
 
 class GridComponent extends AbstractTreeComponent {
   gridClickCommand(down, right) {
-    const positionHash = down + " " + right
     const board = this.getParent()
-    const root = board.getRootNode()
-    board.resetAgentPositionMap()
-    const { agentPositionMap } = board
-    const existingObjects = agentPositionMap.get(positionHash) ?? []
-    if (existingObjects.length) return root.toggleSelectCommand(existingObjects)
-    const { agentToInsert } = root
-
-    if (!agentToInsert) return this
-
-    //if (parent.findNodes(agentToInsert).length > MAX_ITEMS) return true
-
-    board.prependLine(`${agentToInsert} ${positionHash}`)
-    board.renderAndGetRenderReport()
-    board.resetAgentPositionMap()
+    return board.getRootNode().insertAgentAtCommand(board, right, down)
   }
 
   makeBlock(down, right, gridSize) {

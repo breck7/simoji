@@ -109,6 +109,18 @@ insertNode
     const {rows, cols, occupiedSpots, randomNumberGenerator, yodash} = this.getParent()
      return yodash.insertRandomAgents(randomNumberGenerator, this.getWord(1), this.getWord(2), rows, cols,  occupiedSpots)
   }
+insertAtNode
+ extends insertNode
+ description Insert at X Y
+ cells keywordCell emojiCell positionCell positionCell
+ crux insertAt
+ javascript
+  compile() {
+    const {yodash} = this.getParent()
+    const board = this.childrenToString()
+    yodash.updateOccupiedSpots(board, this.getParent().occupiedSpots)
+    return `${this.getWord(1)} ${this.getWord(3)} ${this.getWord(2)}`
+  }
 insertClusterNode
  extends insertNode
  crux insertCluster
