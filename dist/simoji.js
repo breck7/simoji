@@ -67,17 +67,6 @@ yodash.patchExperimentAndReplaceSymbols = (program, experiment) => {
 	return withVarsReplaced
 }
 
-yodash.compileStartingAgentsWithPositions = (program, rows, cols, randomNumberGenerator) => {
-	const clone = program.clone()
-	clone.filter(node => !node.doesExtend(NodeTypes.abstractDrawNode)).forEach(node => node.destroy())
-	clone.occupiedSpots = new Set()
-	clone.randomNumberGenerator = randomNumberGenerator
-	clone.rows = rows
-	clone.cols = cols
-	clone.yodash = yodash
-	return clone.compile()
-}
-
 yodash.getBestAngle = (targets, position) => {
 	let closest = Infinity
 	let target
@@ -232,18 +221,6 @@ yodash.getAllAvailableSpots = (rows, cols, occupiedSpots, rowStart = 0, colStart
 
 yodash.parsePercent = str => parseFloat(str.replace("%", "")) / 100
 
-yodash.insertRandomAgents = (randomNumberGenerator, amount, char, rows, cols, occupiedSpots) => {
-	const availableSpots = yodash.getAllAvailableSpots(rows, cols, occupiedSpots)
-	amount = amount.includes("%") ? yodash.parsePercent(amount) * (rows * cols) : parseInt(amount)
-	return sampleFrom(availableSpots, amount, randomNumberGenerator)
-		.map(spot => {
-			const { hash } = spot
-			occupiedSpots.add(hash)
-			return `${char} ${hash}`
-		})
-		.join("\n")
-}
-
 yodash.insertClusteredRandomAgents = (
 	randomNumberGenerator,
 	amount,
@@ -255,7 +232,7 @@ yodash.insertClusteredRandomAgents = (
 	originColumn
 ) => {
 	const availableSpots = yodash.getAllAvailableSpots(rows, cols, occupiedSpots)
-	const spots = sampleFrom(availableSpots, amount * 10, randomNumberGenerator)
+	const spots = yodash.sampleFrom(availableSpots, amount * 10, randomNumberGenerator)
 	const origin = originColumn
 		? { down: parseInt(originRow), right: parseInt(originColumn) }
 		: yodash.getRandomLocation(rows, cols, randomNumberGenerator)
@@ -278,7 +255,7 @@ yodash.getRandomNumberGenerator = seed => () => {
 	return semiRand - Math.floor(semiRand)
 }
 
-const sampleFrom = (collection, howMany, randomNumberGenerator) =>
+yodash.sampleFrom = (collection, howMany, randomNumberGenerator) =>
 	shuffleArray(collection, randomNumberGenerator).slice(0, howMany)
 
 const shuffleArray = (array, randomNumberGenerator) => {
@@ -954,8 +931,60 @@ class BoardComponent extends AbstractTreeComponent {
 
   _populationCounts = []
 
+  runAtTimeEvents() {
+    const blocks = this.timeMap.get(this.tick)
+    if (blocks)
+      blocks.forEach(block =>
+        block
+          .filter(node => node.doesExtend(NodeTypes.abstractInjectCommandNode))
+          .forEach(command => this.runInjectCommand(command))
+      )
+  }
+
+  insertAgentAtCommand(right, down) {
+    const root = this.root
+    const board = this
+    const positionHash = down + " " + right
+    board.resetAgentPositionMap()
+    const { agentPositionMap } = board
+    const existingObjects = agentPositionMap.get(positionHash) ?? []
+    if (existingObjects.length) return root.toggleSelectCommand(existingObjects)
+    const { agentToInsert } = root
+
+    if (!agentToInsert) return
+
+    //if (parent.findNodes(agentToInsert).length > MAX_ITEMS) return true
+
+    board.prependLine(`${agentToInsert} ${positionHash}`)
+    board.renderAndGetRenderReport()
+    board.resetAgentPositionMap()
+
+    if (!root.isSnapshotOn) root.snapShotCommand()
+
+    const allCode = new TreeNode(root.simCode)
+    let targetNode = root.boards.length === 1 ? allCode : allCode.findNodes("experiment")[this.boardIndex]
+
+    if (this.tick) targetNode = targetNode.appendLine(`atTime ${this.tick}`)
+    targetNode.appendLine(`insertAt ${agentToInsert} ${down} ${right}`)
+    root.onSourceCodeChange(allCode)
+  }
+
+  get timeMap() {
+    if (this._atTimes) return this._atTimes
+    const map = new Map()
+    this.simojiProgram.findNodes("atTime").forEach(node => {
+      const tick = parseInt(node.getWord(1))
+      if (!map.get(tick)) map.set(tick, [])
+      map.get(tick).push(node)
+    })
+    this._atTimes = map
+    return map
+  }
+
   tick = 0
-  boardLoop() {
+  boardLoop(render = true) {
+    this.runAtTimeEvents()
+
     this.agents.forEach(node => node.onTick())
 
     this.resetAgentPositionMap()
@@ -966,10 +995,10 @@ class BoardComponent extends AbstractTreeComponent {
     this.executeBoardCommands(Keywords.onTick)
     this.handleExtinctions()
 
-    this.renderAndGetRenderReport()
-
     this.tick++
     this._populationCounts.push(this.populationCount)
+
+    if (render) this.renderAndGetRenderReport()
 
     if (this.resetAfterLoop) {
       this.resetAfterLoop = false
@@ -1011,6 +1040,84 @@ class BoardComponent extends AbstractTreeComponent {
   get ticksPerSecond() {
     const setTime = this.simojiProgram.get(Keywords.ticksPerSecond)
     return setTime ? parseInt(setTime) : 10
+  }
+
+  occupiedSpots = new Set()
+
+  runInjectCommand(command) {
+    this[command.getNodeTypeId()](command)
+  }
+
+  insertClusterNode(commandNode) {
+    this.concat(
+      yodash.insertClusteredRandomAgents(
+        this.randomNumberGenerator,
+        parseInt(commandNode.getWord(1)),
+        commandNode.getWord(2),
+        this.rows,
+        this.cols,
+        this.occupiedSpots,
+        commandNode.getWord(3),
+        commandNode.getWord(4)
+      )
+    )
+  }
+
+  insertAtNode(commandNode) {
+    this.appendLine(`${commandNode.getWord(1)} ${commandNode.getWord(3)} ${commandNode.getWord(2)}`)
+    // TODO: update occupied spots cache?
+  }
+
+  rectangleDrawNode(commandNode) {
+    const newLines = yodash.makeRectangle(...yodash.parseInts(commandNode.getWords().slice(1), 1))
+    this.concat(newLines)
+    // TODO: update occupied spots cache?
+  }
+
+  pasteDrawNode(commandNode) {
+    const newSpots = new TreeNode(commandNode.childrenToString())
+    yodash.updateOccupiedSpots(newSpots, this.occupiedSpots)
+    this.concat(newSpots)
+  }
+
+  fillNode(commandNode) {
+    this.concat(yodash.fill(this.rows, this.cols, this.occupiedSpots, commandNode.getWord(1)))
+  }
+
+  drawNode(commandNode) {
+    const { occupiedSpots } = this
+    const spots = yodash.draw(commandNode.childrenToString())
+    yodash.updateOccupiedSpots(spots, occupiedSpots)
+    this.concat(spots)
+  }
+
+  get seed() {
+    if (!this._seed)
+      this._seed = this.simojiProgram.has(Keywords.seed) ? parseInt(this.simojiProgram.get(Keywords.seed)) : newSeed()
+    return this._seed
+  }
+
+  get randomNumberGenerator() {
+    if (!this._rng) this._rng = yodash.getRandomNumberGenerator(this.seed)
+    return this._rng
+  }
+
+  insertNode(commandNode) {
+    const { rows, cols, occupiedSpots } = this
+    const emoji = commandNode.getWord(2)
+    let amount = commandNode.getWord(1)
+
+    const availableSpots = yodash.getAllAvailableSpots(rows, cols, occupiedSpots)
+    amount = amount.includes("%") ? yodash.parsePercent(amount) * (rows * cols) : parseInt(amount)
+    const newAgents = yodash
+      .sampleFrom(availableSpots, amount, this.randomNumberGenerator)
+      .map(spot => {
+        const { hash } = spot
+        occupiedSpots.add(hash)
+        return `${emoji} ${hash}`
+      })
+      .join("\n")
+    this.concat(newAgents)
   }
 
   handleExtinctions() {
@@ -1061,6 +1168,7 @@ class BoardComponent extends AbstractTreeComponent {
     })
     this._solidsSet = solidsSet
     this._agentPositionMap = map
+    this.occupiedSpots = new Set(map.keys())
   }
 
   get agentTypeMap() {
@@ -1143,6 +1251,15 @@ class BoardComponent extends AbstractTreeComponent {
     return !!this.interval
   }
 
+  skipToThisManyTicksIfNotPaused(ticks) {
+    this.interval = true
+    for (let i = 0; i <= ticks; i++) {
+      this.boardLoop(false)
+      if (!this.isRunning) break
+    }
+    this.renderAndGetRenderReport()
+  }
+
   runUntilPause() {
     this.interval = true
     while (this.interval) {
@@ -1197,6 +1314,12 @@ class BoardStyleComponent extends AbstractTreeComponent {
  bern
   ${this.childrenToString().replace(/\n/g, "\n  ")}`
   }
+}
+
+let _defaultSeed = Date.now()
+const newSeed = () => {
+  _defaultSeed++
+  return _defaultSeed
 }
 
 window.BoardComponent = BoardComponent
@@ -1363,8 +1486,7 @@ window.ExampleMenuComponent = ExampleMenuComponent
 
 class GridComponent extends AbstractTreeComponent {
   gridClickCommand(down, right) {
-    const board = this.getParent()
-    return board.getRootNode().insertAgentAtCommand(board, right, down)
+    return this.getParent().insertAgentAtCommand(right, down)
   }
 
   makeBlock(down, right, gridSize) {
@@ -1769,12 +1891,6 @@ class ErrorNode extends AbstractTreeComponent {
   }
 }
 
-let _defaultSeed = Date.now()
-const newSeed = () => {
-  _defaultSeed++
-  return _defaultSeed
-}
-
 class SimojiApp extends AbstractTreeComponent {
   createParser() {
     return new jtree.TreeNode.Parser(ErrorNode, {
@@ -1817,8 +1933,6 @@ class SimojiApp extends AbstractTreeComponent {
 
   verbose = true
 
-  compiledStartState = ""
-
   get firstProgram() {
     return this.simojiPrograms[0]
   }
@@ -1832,7 +1946,11 @@ class SimojiApp extends AbstractTreeComponent {
       if (index > 3)
         // currently max out at 4 experiments. just need to update CSS transform code.
         return
-      this._appendExperiment(program, index)
+      const board = this._appendExperiment(program, index)
+
+      program
+        .filter(node => node.doesExtend(NodeTypes.abstractInjectCommandNode))
+        .forEach(command => board.runInjectCommand(command))
     })
   }
 
@@ -1847,27 +1965,15 @@ class SimojiApp extends AbstractTreeComponent {
   _appendExperiment(program, index) {
     const { windowWidth, windowHeight } = this
     const { gridSize, cols, rows } = this.makeGrid(program, windowWidth, windowHeight)
-    const seed = program.has(Keywords.seed) ? parseInt(program.get(Keywords.seed)) : newSeed()
-    const randomNumberGenerator = yodash.getRandomNumberGenerator(seed)
-
-    this.compiledStartState = ""
-    try {
-      this.compiledStartState = yodash
-        .compileStartingAgentsWithPositions(program, rows, cols, randomNumberGenerator)
-        .trim()
-    } catch (err) {
-      if (this.verbose) console.error(err)
-    }
 
     const styleNode = program.getNode(Keywords.style) ?? undefined
     const board = this.appendLineAndChildren(
       `${BoardComponent.name} ${gridSize} ${rows} ${cols} ${index}`,
-      `leftStartPosition ${this.leftStartPosition}\n${this.compiledStartState.trim()}
+      `leftStartPosition ${this.leftStartPosition}
 ${GridComponent.name}
 ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : ""}`.trim()
     )
-    board.seed = seed
-    board.randomNumberGenerator = randomNumberGenerator
+    return board
   }
 
   get leftStartPosition() {
@@ -1876,6 +1982,11 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
 
   get editor() {
     return this.getNode(SimEditorComponent.name)
+  }
+
+  onSourceCodeChange(newCode) {
+    this.editor.setCodeMirrorValue(newCode.toString())
+    this.updateLocalStorage(newCode)
   }
 
   loadExampleCommand(name) {
@@ -1955,7 +2066,23 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
     this.boards.forEach(board => board.stopInterval())
   }
 
+  get maxTick() {
+    return Math.max(...this.boards.map(board => board.tick))
+  }
+
+  goBackOneTickCommand() {
+    const { maxTick } = this
+    const previousTick = maxTick - 2
+    this.pauseAllCommand()
+    if (previousTick < 0) return
+    if (!this.isSnapshotOn) this.snapShotCommand()
+    this.loadNewSim(this.simCode)
+    this.boards.forEach(board => board.skipToThisManyTicksIfNotPaused(previousTick))
+    console.log(`Running to tick ${previousTick} from ${maxTick}`)
+  }
+
   advanceOneTickCommand() {
+    this.pauseAllCommand()
     this.boards.forEach(board => board.boardLoop())
   }
 
@@ -2116,29 +2243,6 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
     }
   }
 
-  insertAgentAtCommand(board, right, down) {
-    const positionHash = down + " " + right
-    board.resetAgentPositionMap()
-    const { agentPositionMap } = board
-    const existingObjects = agentPositionMap.get(positionHash) ?? []
-    if (existingObjects.length) return this.toggleSelectCommand(existingObjects)
-    const { agentToInsert } = this
-
-    if (!agentToInsert) return this
-
-    //if (parent.findNodes(agentToInsert).length > MAX_ITEMS) return true
-
-    board.prependLine(`${agentToInsert} ${positionHash}`)
-    board.renderAndGetRenderReport()
-    board.resetAgentPositionMap()
-
-    if (!this.isSnapshotOn) this.snapShotCommand()
-    const newCode = new jtree.TreeNode(this.simCode)
-    newCode.appendLine(`insertAtCommand ${agentToInsert} ${down} ${right}`)
-    this.editor.setCodeMirrorValue(newCode.toString())
-    this.updateLocalStorage(newCode)
-  }
-
   changeAgentBrushCommand(agent) {
     if (agent === this._agentToInsert) {
       this._agentToInsert = undefined
@@ -2182,13 +2286,14 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
   snapShotCommand() {
     const newCode = new jtree.TreeNode(this.simCode)
     const boards = this.boards
+
+    // todo: buggy. we should rename the board class to experiment, or rename experiment keyword to board.
     const board = boards[0]
-    console.log(board.seed, board.rows, board.cols)
     newCode.set(Keywords.seed, board.seed.toString())
     newCode.set(Keywords.rows, board.rows.toString())
     newCode.set(Keywords.columns, board.cols.toString())
     newCode.findNodes(Keywords.experiment).forEach((experiment, index) => {
-      const board = boards[index + 1]
+      const board = boards[index]
       experiment.set(Keywords.seed, board.seed.toString())
       experiment.set(Keywords.rows, board.rows.toString())
       experiment.set(Keywords.columns, board.cols.toString())
@@ -2234,7 +2339,8 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
       escape: () => this.clearSelectionCommand(),
       "command+a": () => this.selectAllCommand(),
       "?": () => this.toggleHelpCommand(),
-      t: () => this.advanceOneTickCommand(),
+      ",": () => this.goBackOneTickCommand(),
+      ".": () => this.advanceOneTickCommand(),
       backspace: () => this.deleteSelectionCommand()
     }
   }
@@ -2395,7 +2501,7 @@ const NodeTypes = {}
 NodeTypes.agentDefinitionNode = "agentDefinitionNode"
 NodeTypes.experimentNode = "experimentNode"
 NodeTypes.settingDefinitionNode = "settingDefinitionNode"
-NodeTypes.abstractDrawNode = "abstractDrawNode"
+NodeTypes.abstractInjectCommandNode = "abstractInjectCommandNode"
 
 window.Keywords = Keywords
 
