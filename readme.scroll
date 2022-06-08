@@ -36,13 +36,12 @@ section Development
 
 question What is the dev loop like?
 
-paragraph
- - Start the dev server with `node server.js`.
- - Open `localhost/dev.html`
- - Edit files
- - Refresh
- - Run tests with `npm test`
- - Build distribution with `./build.js`
+1. Start the dev server with `node server.js`.
+2. Open `localhost/dev.html`
+3. Edit files
+4. Refresh
+5. Run tests with `npm test`
+6. Build distribution with `./build.js`
 
 section Roadmap
 
