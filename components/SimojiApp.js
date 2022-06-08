@@ -239,15 +239,18 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
   }
 
   get maxTick() {
-    return Math.max(this.boards.map(board => board.tick))
+    return Math.max(...this.boards.map(board => board.tick))
   }
 
   goBackOneTickCommand() {
     const { maxTick } = this
+    const previousTick = maxTick - 2
     this.pauseAllCommand()
+    if (previousTick < 0) return
     if (!this.isSnapshotOn) this.snapShotCommand()
     this.loadNewSim(this.simCode)
-    this.boards.forEach(board => board.skipToThisManyTicksIfNotPaused(maxTick - 2))
+    this.boards.forEach(board => board.skipToThisManyTicksIfNotPaused(previousTick))
+    console.log(`Running to tick ${previousTick} from ${maxTick}`)
   }
 
   advanceOneTickCommand() {
