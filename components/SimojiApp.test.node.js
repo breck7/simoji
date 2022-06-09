@@ -56,14 +56,14 @@ insert 200 😃`)
 
 	// Race condition is possible but pigs more likely to fly first.
 	areEqual(boardState1 === boardState2, false, "Boards should have changed")
-	areEqual(app.compiledStartState === "", false, "valid start state compiles")
+	areEqual(app.simojiPrograms[0].getAllErrors().length, 0, "program is valid")
 
 	// Act
 	app.pasteCodeCommand(`😃
 insert
 insert 10 😃
 `)
-	areEqual(app.compiledStartState, "", "invalid start state compiles to blank")
+	areEqual(app.simojiPrograms[0].getAllErrors().length, 2, "invalid programs dont crash")
 }
 
 module.exports = { testTree }

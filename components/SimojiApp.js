@@ -20,7 +20,7 @@ const { BottomBarComponent } = require("./BottomBar.js")
 const { RightBarComponent } = require("./RightBar.js")
 const { EditorHandleComponent } = require("./EditorHandle.js")
 const { TitleComponent } = require("./Title.js")
-const { Keywords, LocalStorageKeys, UrlKeys, Directions } = require("./Types.js")
+const { Keywords, LocalStorageKeys, UrlKeys, Directions, NodeTypes } = require("./Types.js")
 
 const MIN_GRID_SIZE = 10
 const MAX_GRID_SIZE = 200
@@ -120,9 +120,13 @@ class SimojiApp extends AbstractTreeComponent {
         return
       const board = this._appendExperiment(program, index)
 
-      program
-        .filter(node => node.doesExtend(NodeTypes.abstractInjectCommandNode))
-        .forEach(command => board.runInjectCommand(command))
+      try {
+        program
+          .filter(node => node.doesExtend(NodeTypes.abstractInjectCommandNode))
+          .forEach(command => board.runInjectCommand(command))
+      } catch (err) {
+        if (this.verbose) console.error(err)
+      }
     })
   }
 

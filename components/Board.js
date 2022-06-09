@@ -3,8 +3,7 @@ const { yodash } = require("../yodash.js")
 const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework.node.js")
 const { GridComponent } = require("./Grid.js")
 const { Agent } = require("./Agent.js")
-
-const { Keywords } = require("./Types.js")
+const { Keywords, NodeTypes } = require("./Types.js")
 
 let nodeJsPrefix = ""
 
