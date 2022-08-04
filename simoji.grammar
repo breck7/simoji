@@ -1,4 +1,5 @@
 anyCell
+booleanCell
 stringCell
  highlightScope string
 settingValueCell
@@ -314,6 +315,10 @@ abstractBooleanAttributeNode
   compile() {
    return `${this.getWord(0)} = true`
   }
+noPaletteNode
+ extends abstractBooleanAttributeNode
+ cruxFromId
+ description Don't show this agent in the palette.
 solidTraitNode
  description If set other agents won't pass through these.
  extends abstractBooleanAttributeNode

@@ -1,6 +1,7 @@
 question Can you protect the family from the zombies?
 
 🧟‍♂️
+ noPalette
  onTick
   jitter
  onHit
@@ -20,6 +21,7 @@ question Can you protect the family from the zombies?
   spawn 🪃
 
 🪃
+ noPalette
  angle West
  onTick
   move
@@ -27,9 +29,11 @@ question Can you protect the family from the zombies?
 💣
 
 🪦
+ noPalette
  comment Dead zombie
 
 👨‍👩‍👧‍👦
+ noPalette
 
 size 30
 ticksPerSecond 10
