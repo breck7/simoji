@@ -839,7 +839,6 @@ window.AgentPaletteComponent = AgentPaletteComponent
 
 
 
-
 let nodeJsPrefix = ""
 
 // prettier-ignore
@@ -1948,9 +1947,13 @@ class SimojiApp extends AbstractTreeComponent {
         return
       const board = this._appendExperiment(program, index)
 
-      program
-        .filter(node => node.doesExtend(NodeTypes.abstractInjectCommandNode))
-        .forEach(command => board.runInjectCommand(command))
+      try {
+        program
+          .filter(node => node.doesExtend(NodeTypes.abstractInjectCommandNode))
+          .forEach(command => board.runInjectCommand(command))
+      } catch (err) {
+        if (this.verbose) console.error(err)
+      }
     })
   }
 

@@ -1,5 +1,5 @@
 node_modules
-readme.html
+*.html
 ignore/
 coverage/
 .nyc_output/
