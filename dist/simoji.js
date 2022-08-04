@@ -806,7 +806,7 @@ class AgentPaletteComponent extends AbstractTreeComponent {
   toStumpCode() {
     const root = this.getRootNode()
     const { agentToInsert } = root
-    const items = root.allAgentTypes
+    const items = this.paletteItems
       .map(item => item.getWord(0))
       .map(
         word => ` div ${word}
@@ -817,6 +817,10 @@ class AgentPaletteComponent extends AbstractTreeComponent {
     return `div
  class AgentPaletteComponent
 ${items}`
+  }
+
+  get paletteItems() {
+    return this.getRootNode().allAgentTypes.filter(item => !item.has("noPalette"))
   }
 
   changeAgentBrushCommand(x) {
@@ -1225,8 +1229,14 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   toStumpCode() {
+    const id = `board{this._getUid()}`
+    const tickDuration = 1.0 / this.ticksPerSecond
     return `div
  style ${this.style}
+ id ${id}
+ styleTag
+  bern
+   #${id} .Agent {transition: all ${tickDuration}s linear;}
  div ${this.experimentTitle}
   class BoardTitle
  class ${this.getCssClassNames().join(" ")}`
