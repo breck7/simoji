@@ -392,8 +392,14 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   toStumpCode() {
+    const id = `board{this._getUid()}`
+    const tickDuration = 1.0 / this.ticksPerSecond
     return `div
  style ${this.style}
+ id ${id}
+ styleTag
+  bern
+   #${id} .Agent {transition: all ${tickDuration}s linear;}
  div ${this.experimentTitle}
   class BoardTitle
  class ${this.getCssClassNames().join(" ")}`
