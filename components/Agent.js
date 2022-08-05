@@ -269,11 +269,15 @@ class Agent extends jtree.TreeNode {
     else this.element.classList.remove(SelectedClass)
   }
 
+  get agentSize() {
+    return this.size ?? this.gridSize
+  }
+
   get inlineStyle() {
-    const { gridSize, health } = this
+    const { gridSize, health, agentSize } = this
     const opacity = health === undefined ? "" : `opacity:${this.health / this.startHealth};`
     return `top:${this.top * gridSize}px;left:${this.left *
-      gridSize}px;font-size:${gridSize}px;line-height: ${gridSize}px;${opacity};${this.style ?? ""}`
+      gridSize}px;font-size:${agentSize}px;line-height:${agentSize}px;${opacity};${this.style ?? ""}`
   }
 
   toElement() {

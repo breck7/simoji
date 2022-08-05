@@ -90,7 +90,7 @@ abstractSetupNumberNode
   compile() {
    return ""
   }
-sizeNode
+gridSizeNode
  description Size of a grid cell in pixels. Min is 10. Max is 200.
  extends abstractSetupNumberNode
  crux size
@@ -340,7 +340,11 @@ customIntegerAttributeNode
  extends abstractIntegerAttributeNode
 healthNode
  extends abstractIntegerAttributeNode
- crux health
+ cruxFromId
+sizeNode
+ extends abstractIntegerAttributeNode
+ description Size of the agent's rectangle.
+ cruxFromId
 settingDefinitionNode
  description Define a configurable input.
  cells keywordCell settingValueCell
