@@ -1,12 +1,13 @@
 title Simoji - Write simulations with Emojis
 
-paragraph
+aftertext
  An early work in progress.
 
 section Documentation
 
-paragraph
- Check out the QuickStart🔗./cheatSheet.html Guide.
+aftertext
+ Check out the QuickStart Guide.
+ link cheatSheet.html QuickStart Guide
 
 section Related Work
 
