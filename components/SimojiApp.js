@@ -442,7 +442,7 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
       node._move()
     })
 
-    this.boards.forEach(board => board.resetAgentPositionMap())
+    this.boards.forEach(board => board.resetWorldMap())
 
     this.ensureRender()
   }
@@ -450,7 +450,7 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
   deleteSelectionCommand() {
     this.selection.forEach(node => node.nuke())
     this.selection = []
-    this.boards.forEach(board => board.resetAgentPositionMap())
+    this.boards.forEach(board => board.resetWorldMap())
   }
 
   get isSnapshotOn() {

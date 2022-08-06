@@ -2,6 +2,7 @@ const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework
 const { yodash } = require("../yodash.js")
 const { jtree } = require("jtree")
 const { Keywords, Directions } = require("./Types.js")
+const { WorldMap } = require("./WorldMap.js")
 
 const SelectedClass = "selected"
 
@@ -31,59 +32,6 @@ class Agent extends jtree.TreeNode {
     return !!this.element
   }
 
-  handleNeighbors() {
-    if (!this.stillExists) return
-    this.getCommandBlocks(Keywords.onNeighbors).forEach(neighborConditions => {
-      if (this.skip(neighborConditions.getWord(1))) return
-
-      const { neighorCount } = this
-
-      neighborConditions.forEach(conditionAndCommandsBlock => {
-        const [emoji, operator, count] = conditionAndCommandsBlock.getWords()
-        const actual = neighorCount[emoji]
-        if (!yodash.compare(actual ?? 0, operator, count)) return
-        conditionAndCommandsBlock.forEach(command => this._executeCommand(this, command))
-
-        if (this.getIndex() === -1) return {}
-      })
-    })
-  }
-
-  handleTouches(agentPositionMap) {
-    if (!this.stillExists) return
-    this.getCommandBlocks(Keywords.onTouch).forEach(touchMap => {
-      if (this.skip(touchMap.getWord(1))) return
-
-      for (let pos of yodash.positionsAdjacentTo(this.position)) {
-        const hits = agentPositionMap.get(yodash.makePositionHash(pos)) ?? []
-        for (let target of hits) {
-          const targetId = target.getWord(0)
-          const commandBlock = touchMap.getNode(targetId)
-          if (commandBlock) {
-            commandBlock.forEach(command => this._executeCommand(target, command))
-            if (this.getIndex() === -1) return
-          }
-        }
-      }
-    })
-  }
-
-  handleOverlaps(targets) {
-    if (!this.stillExists) return
-    this.getCommandBlocks(Keywords.onHit).forEach(hitMap => {
-      if (this.skip(hitMap.getWord(1))) return
-      targets.forEach(target => {
-        const targetId = target.getWord(0)
-        const commandBlock = hitMap.getNode(targetId)
-        if (commandBlock) commandBlock.forEach(command => this._executeCommand(target, command))
-      })
-    })
-  }
-
-  get overlappingAgents() {
-    return (this.board.agentPositionMap.get(this.positionHash) ?? []).filter(node => node !== this)
-  }
-
   _executeCommand(target, instruction) {
     const commandName = instruction.getWord(0)
     if (this[commandName]) this[commandName](target, instruction)
@@ -111,19 +59,6 @@ class Agent extends jtree.TreeNode {
     if (this.health === 0) this.onDeathCommand()
   }
 
-  get neighorCount() {
-    const { agentPositionMap } = this.board
-    const neighborCounts = {}
-    yodash.positionsAdjacentTo(this.position).forEach(pos => {
-      const agents = agentPositionMap.get(yodash.makePositionHash(pos)) ?? []
-      agents.forEach(agent => {
-        if (!neighborCounts[agent.name]) neighborCounts[agent.name] = 0
-        neighborCounts[agent.name]++
-      })
-    })
-    return neighborCounts
-  }
-
   onDeathCommand() {
     this._executeCommandBlocks(Keywords.onDeath)
   }
@@ -149,7 +84,7 @@ class Agent extends jtree.TreeNode {
 
     if (this.holding) {
       this.holding.forEach(node => {
-        node.position = { right: this.left, down: this.top }
+        node.setPosition({ right: this.left, down: this.top })
       })
     }
   }
@@ -177,45 +112,121 @@ class Agent extends jtree.TreeNode {
   set top(value) {
     if (value > this.maxDown) value = this.maxDown
     if (value < 0) value = 0
-    this.position = {
+    this.setPosition({
       down: value,
       right: this.left
-    }
+    })
   }
 
   get root() {
     return this.getRootNode()
   }
 
-  set position(value) {
-    if (this.board.isSolidAgent(value)) return this.bouncy ? this.bounce() : this
-    const newLine = this.getLine()
-      .split(" ")
-      .map(part => (part.includes("⬇️") ? value.down + "⬇️" : part.includes("➡️") ? value.right + "➡️" : part))
-      .join(" ")
-    return this.setLine(newLine)
-  }
-
   get board() {
     return this.getParent()
   }
 
-  get maxRight() {
-    return this.board.cols
+  // ZZZZ
+  setPosition(newPosition) {
+    if (!this.board.worldMap.canGoHere(newPosition, this.agentSize)) return this.bouncy ? this.bounce() : this
+    const newLine = this.getLine()
+      .split(" ")
+      .map(part =>
+        part.includes("⬇️") ? newPosition.down + "⬇️" : part.includes("➡️") ? newPosition.right + "➡️" : part
+      )
+      .join(" ")
+    return this.setLine(newLine)
   }
 
+  // ZZZZ
+  handleNeighbors() {
+    if (!this.stillExists) return
+    this.getCommandBlocks(Keywords.onNeighbors).forEach(neighborConditions => {
+      if (this.skip(neighborConditions.getWord(1))) return
+
+      const { neighorCount } = this
+
+      neighborConditions.forEach(conditionAndCommandsBlock => {
+        const [emoji, operator, count] = conditionAndCommandsBlock.getWords()
+        const actual = neighorCount[emoji]
+        if (!yodash.compare(actual ?? 0, operator, count)) return
+        conditionAndCommandsBlock.forEach(command => this._executeCommand(this, command))
+
+        if (this.getIndex() === -1) return {}
+      })
+    })
+  }
+
+  // ZZZZ
+  handleTouches(worldMap) {
+    if (!this.stillExists) return
+    this.getCommandBlocks(Keywords.onTouch).forEach(touchMap => {
+      if (this.skip(touchMap.getWord(1))) return
+
+      for (let pos of yodash.positionsAdjacentTo(this.position)) {
+        const hits = worldMap.get(yodash.makePositionHash(pos)) ?? []
+        for (let target of hits) {
+          const targetId = target.getWord(0)
+          const commandBlock = touchMap.getNode(targetId)
+          if (commandBlock) {
+            commandBlock.forEach(command => this._executeCommand(target, command))
+            if (this.getIndex() === -1) return
+          }
+        }
+      }
+    })
+  }
+
+  // ZZZZ
+  handleOverlaps(targets) {
+    if (!this.stillExists) return
+    this.getCommandBlocks(Keywords.onHit).forEach(hitMap => {
+      if (this.skip(hitMap.getWord(1))) return
+      targets.forEach(target => {
+        const targetId = target.getWord(0)
+        const commandBlock = hitMap.getNode(targetId)
+        if (commandBlock) commandBlock.forEach(command => this._executeCommand(target, command))
+      })
+    })
+  }
+
+  // ZZZZ
+  get overlappingAgents() {
+    return (this.board.worldMap.get(this.positionHash) ?? []).filter(node => node !== this)
+  }
+
+  // ZZZZ
+  get neighorCount() {
+    const { worldMap } = this.board
+    const neighborCounts = {}
+    yodash.positionsAdjacentTo(this.position).forEach(pos => {
+      const agents = worldMap.get(yodash.makePositionHash(pos)) ?? []
+      agents.forEach(agent => {
+        if (!neighborCounts[agent.name]) neighborCounts[agent.name] = 0
+        neighborCounts[agent.name]++
+      })
+    })
+    return neighborCounts
+  }
+
+  // ZZZZ minus size?
+  get maxRight() {
+    return this.board.cols - Math.floor(this.size / this.gridSize)
+  }
+
+  // ZZZZ minus size?
   get maxDown() {
-    return this.board.rows
+    return this.board.rows - Math.floor(this.size / this.gridSize)
   }
 
   set left(value) {
     if (value > this.maxRight) value = this.maxRight
 
     if (value < 0) value = 0
-    this.position = {
+    this.setPosition({
       down: this.top,
       right: value
-    }
+    })
   }
 
   get left() {

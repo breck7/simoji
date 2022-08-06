@@ -4,6 +4,7 @@ const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework
 const { GridComponent } = require("./Grid.js")
 const { Agent } = require("./Agent.js")
 const { Keywords, NodeTypes } = require("./Types.js")
+const { WorldMap } = require("./WorldMap.js")
 
 let nodeJsPrefix = ""
 
@@ -107,13 +108,14 @@ class BoardComponent extends AbstractTreeComponent {
       )
   }
 
-  insertAgentAtCommand(right, down) {
+  /// ZZZZZ
+  insertOrSelectAgentAtCommand(right, down) {
     const root = this.root
     const board = this
     const positionHash = down + " " + right
-    board.resetAgentPositionMap()
-    const { agentPositionMap } = board
-    const existingObjects = agentPositionMap.get(positionHash) ?? []
+    board.resetWorldMap()
+    const { worldMap } = board
+    const existingObjects = worldMap.get(positionHash) ?? []
     if (existingObjects.length) return root.toggleSelectCommand(existingObjects)
     const { agentToInsert } = root
 
@@ -123,7 +125,7 @@ class BoardComponent extends AbstractTreeComponent {
 
     board.prependLine(`${agentToInsert} ${positionHash}`)
     board.renderAndGetRenderReport()
-    board.resetAgentPositionMap()
+    board.resetWorldMap()
 
     if (!root.isSnapshotOn) root.snapShotCommand()
 
@@ -153,7 +155,7 @@ class BoardComponent extends AbstractTreeComponent {
 
     this.agents.forEach(node => node.onTick())
 
-    this.resetAgentPositionMap()
+    this.resetWorldMap()
     this.handleOverlaps()
     this.handleTouches()
     this.handleNeighbors()
@@ -222,7 +224,7 @@ class BoardComponent extends AbstractTreeComponent {
         commandNode.getWord(2),
         this.rows,
         this.cols,
-        this.occupiedSpots,
+        this.worldMap.occupiedSpots,
         commandNode.getWord(3),
         commandNode.getWord(4)
       )
@@ -242,12 +244,12 @@ class BoardComponent extends AbstractTreeComponent {
 
   pasteDrawNode(commandNode) {
     const newSpots = new TreeNode(commandNode.childrenToString())
-    yodash.updateOccupiedSpots(newSpots, this.occupiedSpots)
+    yodash.updateOccupiedSpots(newSpots, this.worldMap.occupiedSpots)
     this.concat(newSpots)
   }
 
   fillNode(commandNode) {
-    this.concat(yodash.fill(this.rows, this.cols, this.occupiedSpots, commandNode.getWord(1)))
+    this.concat(yodash.fill(this.rows, this.cols, this.worldMap.occupiedSpots, commandNode.getWord(1)))
   }
 
   drawNode(commandNode) {
@@ -306,35 +308,8 @@ class BoardComponent extends AbstractTreeComponent {
     })
   }
 
-  isSolidAgent(position) {
-    if (!this._solidsSet) this.resetAgentPositionMap()
-    const hash = yodash.makePositionHash(position)
-    if (this._solidsSet.has(hash)) return true
-
-    return false
-  }
-
   get agents() {
     return this.getTopDownArray().filter(node => node instanceof Agent)
-  }
-
-  get agentPositionMap() {
-    if (!this._agentPositionMap) this.resetAgentPositionMap()
-    return this._agentPositionMap
-  }
-
-  resetAgentPositionMap() {
-    const map = new Map()
-    const solidsSet = new Set()
-    this.agents.forEach(agent => {
-      const { positionHash } = agent
-      if (agent.solid) solidsSet.add(positionHash)
-      if (!map.has(positionHash)) map.set(positionHash, [])
-      map.get(positionHash).push(agent)
-    })
-    this._solidsSet = solidsSet
-    this._agentPositionMap = map
-    this.occupiedSpots = new Set(map.keys())
   }
 
   get agentTypeMap() {
@@ -347,17 +322,27 @@ class BoardComponent extends AbstractTreeComponent {
     return map
   }
 
+  get worldMap() {
+    if (!this._worldMap) this.resetWorldMap()
+    return this._worldMap
+  }
+
+  resetWorldMap() {
+    this._worldMap = new WorldMap(this.agents)
+  }
+
+  // YY
   handleOverlaps() {
-    this.agentPositionMap.forEach(nodes => {
-      if (nodes.length > 1) nodes.forEach(node => node.handleOverlaps(nodes))
-    })
+    this.worldMap.overlappingAgents.forEach(nodes => nodes.forEach(node => node.handleOverlaps(nodes)))
   }
 
+  // YY
   handleTouches() {
-    const agentPositionMap = this.agentPositionMap
-    this.agents.forEach(node => node.handleTouches(agentPositionMap))
+    const worldMap = this.worldMap
+    this.agents.forEach(node => node.handleTouches(worldMap))
   }
 
+  // YY
   handleNeighbors() {
     this.agents.forEach(node => node.handleNeighbors())
   }
