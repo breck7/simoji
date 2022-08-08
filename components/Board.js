@@ -111,18 +111,17 @@ class BoardComponent extends AbstractTreeComponent {
   /// ZZZZZ
   insertAgentAtCommand(right, down) {
     const root = this.root
-    const board = this
     const positionHash = down + " " + right
-    board.resetWorldMap()
+    this.resetWorldMap()
     const { agentToInsert } = root
 
     if (!agentToInsert) return
 
     //if (parent.findNodes(agentToInsert).length > MAX_ITEMS) return true
 
-    board.prependLine(`${agentToInsert} ${positionHash}`)
-    board.renderAndGetRenderReport()
-    board.resetWorldMap()
+    this.prependLine(`${agentToInsert} ${positionHash}`)
+    this.renderAndGetRenderReport()
+    this.resetWorldMap()
 
     if (!root.isSnapshotOn) root.snapShotCommand()
 
@@ -181,6 +180,7 @@ class BoardComponent extends AbstractTreeComponent {
 
   treeComponentDidMount() {
     const that = this
+    if (this.isNodeJs()) return
     jQuery(this.getStumpNode().getShadow().element).on("click", ".Agent", function(evt) {
       const agent = evt.target
       const id = parseInt(
@@ -224,53 +224,50 @@ class BoardComponent extends AbstractTreeComponent {
     return setTime ? parseInt(setTime) : 10
   }
 
-  occupiedSpots = new Set()
-
   runInjectCommand(command) {
     this[command.getNodeTypeId()](command)
   }
 
   insertClusterNode(commandNode) {
     this.concat(
-      yodash.insertClusteredRandomAgents(
+      this.worldMap.insertClusteredRandomAgents(
         this.randomNumberGenerator,
         parseInt(commandNode.getWord(1)),
         commandNode.getWord(2),
         this.rows,
         this.cols,
-        this.worldMap.occupiedSpots,
         commandNode.getWord(3),
         commandNode.getWord(4)
       )
     )
+    this.resetWorldMap()
   }
 
   insertAtNode(commandNode) {
     this.appendLine(`${commandNode.getWord(1)} ${commandNode.getWord(3)} ${commandNode.getWord(2)}`)
-    // TODO: update occupied spots cache?
+    this.resetWorldMap()
   }
 
   rectangleDrawNode(commandNode) {
-    const newLines = yodash.makeRectangle(...yodash.parseInts(commandNode.getWords().slice(1), 1))
+    const newLines = this.worldMap.makeRectangle(...yodash.parseInts(commandNode.getWords().slice(1), 1))
     this.concat(newLines)
-    // TODO: update occupied spots cache?
+    this.resetWorldMap()
   }
 
   pasteDrawNode(commandNode) {
     const newSpots = new TreeNode(commandNode.childrenToString())
-    yodash.updateOccupiedSpots(newSpots, this.worldMap.occupiedSpots)
     this.concat(newSpots)
+    this.resetWorldMap()
   }
 
   fillNode(commandNode) {
-    this.concat(yodash.fill(this.rows, this.cols, this.worldMap.occupiedSpots, commandNode.getWord(1)))
+    this.concat(this.worldMap.fill(this.rows, this.cols, commandNode.getWord(1)))
+    this.resetWorldMap()
   }
 
   drawNode(commandNode) {
-    const { occupiedSpots } = this
-    const spots = yodash.draw(commandNode.childrenToString())
-    yodash.updateOccupiedSpots(spots, occupiedSpots)
-    this.concat(spots)
+    this.concat(this.worldMap.draw(commandNode.childrenToString()))
+    this.resetWorldMap()
   }
 
   get seed() {
@@ -285,17 +282,17 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   insertNode(commandNode) {
-    const { rows, cols, occupiedSpots } = this
+    const { rows, cols, worldMap } = this
     const emoji = commandNode.getWord(2)
     let amount = commandNode.getWord(1)
 
-    const availableSpots = yodash.getAllAvailableSpots(rows, cols, occupiedSpots)
+    const availableSpots = this.worldMap.getAllAvailableSpots(rows, cols)
     amount = amount.includes("%") ? yodash.parsePercent(amount) * (rows * cols) : parseInt(amount)
     const newAgents = yodash
       .sampleFrom(availableSpots, amount, this.randomNumberGenerator)
       .map(spot => {
         const { hash } = spot
-        occupiedSpots.add(hash)
+        worldMap.occupiedSpots.add(hash)
         return `${emoji} ${hash}`
       })
       .join("\n")
@@ -352,8 +349,7 @@ class BoardComponent extends AbstractTreeComponent {
 
   // YY
   handleTouches() {
-    const worldMap = this.worldMap
-    this.agents.forEach(node => node.handleTouches(worldMap))
+    this.agents.forEach(node => node.handleTouches())
   }
 
   // YY
@@ -443,12 +439,7 @@ class BoardComponent extends AbstractTreeComponent {
 
   spawn(command) {
     this.appendLine(
-      `${command.getWord(1)} ${yodash.getRandomLocationHash(
-        this.rows,
-        this.cols,
-        undefined,
-        this.randomNumberGenerator
-      )}`
+      `${command.getWord(1)} ${this.worldMap.getRandomLocationHash(this.rows, this.cols, this.randomNumberGenerator)}`
     )
   }
 

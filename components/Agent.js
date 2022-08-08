@@ -128,7 +128,7 @@ class Agent extends jtree.TreeNode {
 
   // ZZZZ
   setPosition(newPosition) {
-    if (!this.board.worldMap.canGoHere(newPosition, this.agentSize)) return this.bouncy ? this.bounce() : this
+    if (!this.worldMap.canGoHere(newPosition, this.agentSize)) return this.bouncy ? this.bounce() : this
     const newLine = this.getLine()
       .split(" ")
       .map(part =>
@@ -140,6 +140,7 @@ class Agent extends jtree.TreeNode {
 
   handleNeighbors() {
     if (!this.stillExists) return
+
     this.getCommandBlocks(Keywords.onNeighbors).forEach(neighborConditions => {
       if (this.skip(neighborConditions.getWord(1))) return
 
@@ -157,13 +158,14 @@ class Agent extends jtree.TreeNode {
   }
 
   // ZZZZ
-  handleTouches(worldMap) {
+  handleTouches() {
     if (!this.stillExists) return
+    const { worldMap } = this
     this.getCommandBlocks(Keywords.onTouch).forEach(touchMap => {
       if (this.skip(touchMap.getWord(1))) return
 
-      for (let pos of yodash.positionsAdjacentTo(this.position)) {
-        const hits = worldMap.objectsAtPosition(yodash.makePositionHash(pos))
+      for (let pos of worldMap.positionsAdjacentTo(this.position)) {
+        const hits = worldMap.objectsAtPosition(worldMap.makePositionHash(pos))
         for (let target of hits) {
           const targetId = target.getWord(0)
           const commandBlock = touchMap.getNode(targetId)
@@ -191,11 +193,11 @@ class Agent extends jtree.TreeNode {
 
   // ZZZZ
   get overlappingAgents() {
-    return this.board.worldMap.objectsAtPosition(this.positionHash).filter(node => node !== this)
+    return this.worldMap.objectsAtPosition(this.positionHash).filter(node => node !== this)
   }
 
   get neighorCount() {
-    return this.board.worldMap.getNeighborCount(this.position)
+    return this.worldMap.getNeighborCount(this.position)
   }
 
   // ZZZZ minus size?
@@ -223,11 +225,15 @@ class Agent extends jtree.TreeNode {
   }
 
   get position() {
-    return yodash.parsePosition(this.getWords())
+    return this.worldMap.parsePosition(this.getWords())
+  }
+
+  get worldMap() {
+    return this.board.worldMap
   }
 
   get positionHash() {
-    return yodash.makePositionHash(this.position)
+    return this.worldMap.makePositionHash(this.position)
   }
 
   get gridSize() {
