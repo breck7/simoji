@@ -138,7 +138,6 @@ class Agent extends jtree.TreeNode {
     return this.setLine(newLine)
   }
 
-  // ZZZZ
   handleNeighbors() {
     if (!this.stillExists) return
     this.getCommandBlocks(Keywords.onNeighbors).forEach(neighborConditions => {
@@ -164,7 +163,7 @@ class Agent extends jtree.TreeNode {
       if (this.skip(touchMap.getWord(1))) return
 
       for (let pos of yodash.positionsAdjacentTo(this.position)) {
-        const hits = worldMap.get(yodash.makePositionHash(pos)) ?? []
+        const hits = worldMap.objectsAtPosition(yodash.makePositionHash(pos))
         for (let target of hits) {
           const targetId = target.getWord(0)
           const commandBlock = touchMap.getNode(targetId)
@@ -192,21 +191,11 @@ class Agent extends jtree.TreeNode {
 
   // ZZZZ
   get overlappingAgents() {
-    return (this.board.worldMap.get(this.positionHash) ?? []).filter(node => node !== this)
+    return this.board.worldMap.objectsAtPosition(this.positionHash).filter(node => node !== this)
   }
 
-  // ZZZZ
   get neighorCount() {
-    const { worldMap } = this.board
-    const neighborCounts = {}
-    yodash.positionsAdjacentTo(this.position).forEach(pos => {
-      const agents = worldMap.get(yodash.makePositionHash(pos)) ?? []
-      agents.forEach(agent => {
-        if (!neighborCounts[agent.name]) neighborCounts[agent.name] = 0
-        neighborCounts[agent.name]++
-      })
-    })
-    return neighborCounts
+    return this.board.worldMap.getNeighborCount(this.position)
   }
 
   // ZZZZ minus size?
@@ -301,11 +290,22 @@ class Agent extends jtree.TreeNode {
     return elem
   }
 
-  toStumpCode() {
-    return `div ${this.html ?? this.icon}
- id agent${this._getUid()}
- class Agent ${this.selected ? SelectedClass : ""}
- style ${this.inlineStyle}`
+  toggleSelectCommand() {
+    const { root } = this
+    root.selection.includes(this) ? this.unselectCommand() : this.selectCommand()
+
+    root.ensureRender()
+    return this
+  }
+
+  unselectCommand() {
+    this.unselect()
+    this.root.selection = this.root.selection.filter(node => node !== this)
+  }
+
+  selectCommand() {
+    this.root.selection.push(this)
+    this.select()
   }
 
   needsUpdate(lastRenderedTime = 0) {

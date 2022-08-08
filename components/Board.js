@@ -109,14 +109,11 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   /// ZZZZZ
-  insertOrSelectAgentAtCommand(right, down) {
+  insertAgentAtCommand(right, down) {
     const root = this.root
     const board = this
     const positionHash = down + " " + right
     board.resetWorldMap()
-    const { worldMap } = board
-    const existingObjects = worldMap.get(positionHash) ?? []
-    if (existingObjects.length) return root.toggleSelectCommand(existingObjects)
     const { agentToInsert } = root
 
     if (!agentToInsert) return
@@ -180,6 +177,23 @@ class BoardComponent extends AbstractTreeComponent {
     if (!isMounted) this.appendAgents(this.agents)
     else this.updateAgents()
     return report
+  }
+
+  treeComponentDidMount() {
+    const that = this
+    jQuery(this.getStumpNode().getShadow().element).on("click", ".Agent", function(evt) {
+      const agent = evt.target
+      const id = parseInt(
+        jQuery(agent)
+          .attr("id")
+          .replace("agent", "")
+      )
+      that.getAgent(id).toggleSelectCommand()
+    })
+  }
+
+  getAgent(uid) {
+    return this.agents.find(agent => agent._getUid() === uid)
   }
 
   appendAgents(agents) {

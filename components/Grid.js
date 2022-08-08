@@ -3,7 +3,7 @@ const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework
 
 class GridComponent extends AbstractTreeComponent {
   gridClickCommand(right, down) {
-    return this.getParent().insertOrSelectAgentAtCommand(right + "➡️", down + "⬇️")
+    return this.getParent().insertAgentAtCommand(right + "➡️", down + "⬇️")
   }
 
   evtToRightDown(evt) {
