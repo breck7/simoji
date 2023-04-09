@@ -32,7 +32,7 @@ const MIN_GRID_ROWS = 10
 /*NODE_JS_ONLY*/ const simojiCompiler = jtree.compileGrammarFileAtPathAndReturnRootConstructor(   __dirname + "/../simoji.grammar")
 
 class githubTriangleComponent extends AbstractTreeComponent {
-  githubLink = `https://github.com/publicdomaincompany/simoji`
+  githubLink = `https://github.com/breck7/simoji`
   toHakonCode() {
     return `.AbstractGithubTriangleComponent
  display block

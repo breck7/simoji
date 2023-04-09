@@ -17,6 +17,7 @@
   "bin": {
     "simoji": "./cli.js"
   },
+  "engineStrict": true,
   "engines": {
     "node": ">=16.0.0"
   },
@@ -37,11 +38,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/publicdomaincompany/simoji.git"
+    "url": "git+https://github.com/breck7/simoji.git"
   },
   "author": "",
   "bugs": {
-    "url": "https://github.com/publicdomaincompany/simoji/issues"
+    "url": "https://github.com/breck7/simoji/issues"
   },
-  "homepage": "https://github.com/publicdomaincompany/simoji#readme"
+  "homepage": "https://github.com/breck7/simoji#readme"
 }
