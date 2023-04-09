@@ -454,6 +454,14 @@ class Agent extends TreeNode {
     return this.parent.gridSize
   }
 
+  get worldMap() {
+    return this.board.worldMap
+  }
+
+  get agentSize() {
+    return this.size ?? this.gridSize
+  }
+
   get selected() {
     return this.getWord(4) === SelectedClass
   }

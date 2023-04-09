@@ -143,7 +143,7 @@ class Agent extends TreeNode {
       const { neighorCount } = this
 
       neighborConditions.forEach(conditionAndCommandsBlock => {
-        const [emoji, operator, count] = conditionAndCommandsBlock.getWords()
+        const [emoji, operator, count] = conditionAndCommandsBlock.words
         const actual = neighorCount[emoji]
         if (!yodash.compare(actual ?? 0, operator, count)) return
         conditionAndCommandsBlock.forEach(command => this._executeCommand(this, command))
@@ -220,7 +220,7 @@ class Agent extends TreeNode {
   }
 
   get position() {
-    return this.worldMap.parsePosition(this.getWords())
+    return this.worldMap.parsePosition(this.words)
   }
 
   get positionHash() {

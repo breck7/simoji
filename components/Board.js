@@ -181,13 +181,9 @@ class BoardComponent extends AbstractTreeComponentParser {
   treeComponentDidMount() {
     const that = this
     if (this.isNodeJs()) return
-    jQuery(this.getStumpNode().getShadow().element).on("click", ".Agent", function(evt) {
+    jQuery(this.getStumpNode().getShadow().element).on("click", ".Agent", function (evt) {
       const agent = evt.target
-      const id = parseInt(
-        jQuery(agent)
-          .attr("id")
-          .replace("agent", "")
-      )
+      const id = parseInt(jQuery(agent).attr("id").replace("agent", ""))
       that.getAgent(id).toggleSelectCommand()
     })
   }
@@ -249,7 +245,7 @@ class BoardComponent extends AbstractTreeComponentParser {
   }
 
   rectangleDrawParser(commandNode) {
-    const newLines = this.worldMap.makeRectangle(...yodash.parseInts(commandNode.getWords().slice(1), 1))
+    const newLines = this.worldMap.makeRectangle(...yodash.parseInts(commandNode.words.slice(1), 1))
     this.concat(newLines)
     this.resetWorldMap()
   }
