@@ -1,7 +1,8 @@
-metaTags
-gazetteCss
+import header.scroll
 
 title Simoji Quickstart Guide
+
+startColumns 3
 
 * Simoji is a language and tool for thinkers to write shareable simulations using 😃's. You write your simulations in a simple language using mostly Emojis and then click play. Simoji is public domain, open source, and suggestions welcome!
  https://github.com/publicdomaincompany/simoji open source
@@ -123,3 +124,5 @@ pipeTable
 
 # Printable Version
  link ./cheatSheet.pdf
+
+import footer.scroll

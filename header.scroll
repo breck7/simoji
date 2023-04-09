@@ -2,3 +2,7 @@ importOnly
 metaTags
 gazetteCss
 gazetteHeader
+description Design quick simulations with Emojis
+git https://github.com/breck7/simoji
+baseUrl https://simoji.pub/
+email breck7+simoji@gmail.com
