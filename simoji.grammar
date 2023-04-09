@@ -342,7 +342,7 @@ healthParser
  extends abstractIntegerAttributeParser
  cruxFromId
 sizeParser
- extends abstractIntegerAttributeNode
+ extends abstractIntegerAttributeParser
  description Size of the agent's rectangle.
  cruxFromId
 settingDefinitionParser

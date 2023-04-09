@@ -98,158 +98,7 @@ yodash.angle = (cx, cy, ex, ey) => {
   return angle
 }
 
-yodash.getRandomLocation = (rows, cols, randomNumberGenerator) => {
-  const maxRight = cols
-  const maxBottom = rows
-  const right = Math.round(randomNumberGenerator() * maxRight)
-  const down = Math.round(randomNumberGenerator() * maxBottom)
-  return { right, down }
-}
-
-yodash.getRandomLocationHash = (rows, cols, occupiedSpots, randomNumberGenerator) => {
-  const { right, down } = yodash.getRandomLocation(rows, cols, randomNumberGenerator)
-  const hash = yodash.makePositionHash({ right, down })
-  if (occupiedSpots && occupiedSpots.has(hash))
-    return yodash.getRandomLocationHash(rows, cols, occupiedSpots, randomNumberGenerator)
-  return hash
-}
-
-yodash.fill = (rows, cols, occupiedSpots, emoji) => {
-  const board = []
-  while (rows >= 0) {
-    let col = cols
-    while (col >= 0) {
-      const hash = yodash.makePositionHash({ right: col, down: rows })
-      col--
-      if (occupiedSpots.has(hash)) continue
-      board.push(`${emoji} ${hash}`)
-    }
-    rows--
-  }
-  return board.join("\n")
-}
-
-yodash.positionsAdjacentTo = position => {
-  let { right, down } = position
-  const positions = []
-  down--
-  positions.push({ down, right })
-  right--
-  positions.push({ down, right })
-  right++
-  right++
-  positions.push({ down, right })
-  down++
-  positions.push({ down, right })
-  right--
-  right--
-  positions.push({ down, right })
-  down++
-  positions.push({ down, right })
-  right++
-  positions.push({ down, right })
-  right++
-  positions.push({ down, right })
-  return positions
-}
-
-yodash.makePositionHash = position => `${position.down + "⬇️ " + position.right + "➡️"}`
-
-yodash.makeRectangle = (character = "🧱", width = 20, height = 20, startRight = 0, startDown = 0) => {
-  if (width < 1 || height < 1) {
-    return ""
-  }
-  const cells = []
-  let row = 0
-  while (row < height) {
-    let col = 0
-    while (col < width) {
-      const isPerimeter = row === 0 || row === height - 1 || col === 0 || col === width - 1
-      if (isPerimeter)
-        cells.push(
-          `${character} ${yodash.makePositionHash({
-            down: startDown + row,
-            right: startRight + col
-          })}`
-        )
-      col++
-    }
-    row++
-  }
-  return cells.join("\n")
-}
-
-yodash.parsePosition = words => {
-  return {
-    down: parseInt(words.find(word => word.includes("⬇️")).slice(0, -1)),
-    right: parseInt(words.find(word => word.includes("➡️")).slice(0, -1))
-  }
-}
-
-yodash.draw = str => {
-  const lines = str.split("\n")
-  const output = []
-  for (let index = 0; index < lines.length; index++) {
-    const words = lines[index].split(" ")
-    for (let wordIndex = 0; wordIndex < words.length; wordIndex++) {
-      const word = words[wordIndex]
-      if (word !== "") output.push(`${word} ${yodash.makePositionHash({ down: index, right: wordIndex })}`)
-    }
-  }
-  return output.join("\n")
-}
-
-yodash.updateOccupiedSpots = (board, occupiedSpots) => {
-  new TreeNode(board).forEach(line => {
-    occupiedSpots.add(yodash.makePositionHash(yodash.parsePosition(line.words)))
-  })
-}
-
-yodash.getAllAvailableSpots = (rows, cols, occupiedSpots, rowStart = 0, colStart = 0) => {
-  const availablePositions = []
-  let down = rows
-  while (down >= rowStart) {
-    let right = cols
-    while (right >= colStart) {
-      const hash = yodash.makePositionHash({ right, down })
-      if (!occupiedSpots.has(hash)) availablePositions.push({ right, down, hash })
-      right--
-    }
-    down--
-  }
-  return availablePositions
-}
-
 yodash.parsePercent = str => parseFloat(str.replace("%", "")) / 100
-
-yodash.insertClusteredRandomAgents = (
-  randomNumberGenerator,
-  amount,
-  char,
-  rows,
-  cols,
-  occupiedSpots,
-  originRow,
-  originColumn
-) => {
-  const availableSpots = yodash.getAllAvailableSpots(rows, cols, occupiedSpots)
-  const spots = yodash.sampleFrom(availableSpots, amount * 10, randomNumberGenerator)
-  const origin = originColumn
-    ? { down: parseInt(originRow), right: parseInt(originColumn) }
-    : yodash.getRandomLocation(rows, cols, randomNumberGenerator)
-  const sortedByDistance = lodash.sortBy(spots, spot =>
-    math.distance([origin.down, origin.right], [spot.down, spot.right])
-  )
-
-  return sortedByDistance
-    .slice(0, amount)
-    .map(spot => {
-      const { hash } = spot
-      occupiedSpots.add(hash)
-      return `${char} ${hash}`
-    })
-    .join("\n")
-}
 
 yodash.getRandomNumberGenerator = seed => () => {
   const semiRand = Math.sin(seed++) * 10000
@@ -377,6 +226,7 @@ window.AbstractContextMenuComponent = AbstractContextMenuComponent
 
 
 
+
 const SelectedClass = "selected"
 
 class Agent extends TreeNode {
@@ -403,59 +253,6 @@ class Agent extends TreeNode {
   // if an element hasnt been removed. todo: cleanup
   get stillExists() {
     return !!this.element
-  }
-
-  handleNeighbors() {
-    if (!this.stillExists) return
-    this.getCommandBlocks(Keywords.onNeighbors).forEach(neighborConditions => {
-      if (this.skip(neighborConditions.getWord(1))) return
-
-      const { neighorCount } = this
-
-      neighborConditions.forEach(conditionAndCommandsBlock => {
-        const [emoji, operator, count] = conditionAndCommandsBlock.words
-        const actual = neighorCount[emoji]
-        if (!yodash.compare(actual ?? 0, operator, count)) return
-        conditionAndCommandsBlock.forEach(command => this._executeCommand(this, command))
-
-        if (this.getIndex() === -1) return {}
-      })
-    })
-  }
-
-  handleTouches(agentPositionMap) {
-    if (!this.stillExists) return
-    this.getCommandBlocks(Keywords.onTouch).forEach(touchMap => {
-      if (this.skip(touchMap.getWord(1))) return
-
-      for (let pos of yodash.positionsAdjacentTo(this.position)) {
-        const hits = agentPositionMap.get(yodash.makePositionHash(pos)) ?? []
-        for (let target of hits) {
-          const targetId = target.firstWord
-          const commandBlock = touchMap.getNode(targetId)
-          if (commandBlock) {
-            commandBlock.forEach(command => this._executeCommand(target, command))
-            if (this.getIndex() === -1) return
-          }
-        }
-      }
-    })
-  }
-
-  handleOverlaps(targets) {
-    if (!this.stillExists) return
-    this.getCommandBlocks(Keywords.onHit).forEach(hitMap => {
-      if (this.skip(hitMap.getWord(1))) return
-      targets.forEach(target => {
-        const targetId = target.firstWord
-        const commandBlock = hitMap.getNode(targetId)
-        if (commandBlock) commandBlock.forEach(command => this._executeCommand(target, command))
-      })
-    })
-  }
-
-  get overlappingAgents() {
-    return (this.board.agentPositionMap.get(this.positionHash) ?? []).filter(node => node !== this)
   }
 
   _executeCommand(target, instruction) {
@@ -485,19 +282,6 @@ class Agent extends TreeNode {
     if (this.health === 0) this.onDeathCommand()
   }
 
-  get neighorCount() {
-    const { agentPositionMap } = this.board
-    const neighborCounts = {}
-    yodash.positionsAdjacentTo(this.position).forEach(pos => {
-      const agents = agentPositionMap.get(yodash.makePositionHash(pos)) ?? []
-      agents.forEach(agent => {
-        if (!neighborCounts[agent.name]) neighborCounts[agent.name] = 0
-        neighborCounts[agent.name]++
-      })
-    })
-    return neighborCounts
-  }
-
   onDeathCommand() {
     this._executeCommandBlocks(Keywords.onDeath)
   }
@@ -523,7 +307,7 @@ class Agent extends TreeNode {
 
     if (this.holding) {
       this.holding.forEach(node => {
-        node.position = { right: this.left, down: this.top }
+        node.setPosition({ right: this.left, down: this.top })
       })
     }
   }
@@ -551,25 +335,91 @@ class Agent extends TreeNode {
   set top(value) {
     if (value > this.maxDown) value = this.maxDown
     if (value < 0) value = 0
-    this.position = {
+    this.setPosition({
       down: value,
       right: this.left
-    }
-  }
-
-  set position(value) {
-    if (this.board.isSolidAgent(value)) return this.bouncy ? this.bounce() : this
-    const newLine = this.getLine()
-      .split(" ")
-      .map(part => (part.includes("⬇️") ? value.down + "⬇️" : part.includes("➡️") ? value.right + "➡️" : part))
-      .join(" ")
-    return this.setLine(newLine)
+    })
   }
 
   get board() {
     return this.parent
   }
 
+  // ZZZZ
+  setPosition(newPosition) {
+    if (!this.worldMap.canGoHere(newPosition, this.agentSize)) return this.bouncy ? this.bounce() : this
+    const newLine = this.getLine()
+      .split(" ")
+      .map(part =>
+        part.includes("⬇️") ? newPosition.down + "⬇️" : part.includes("➡️") ? newPosition.right + "➡️" : part
+      )
+      .join(" ")
+    return this.setLine(newLine)
+  }
+
+  handleNeighbors() {
+    if (!this.stillExists) return
+
+    this.getCommandBlocks(Keywords.onNeighbors).forEach(neighborConditions => {
+      if (this.skip(neighborConditions.getWord(1))) return
+
+      const { neighorCount } = this
+
+      neighborConditions.forEach(conditionAndCommandsBlock => {
+        const [emoji, operator, count] = conditionAndCommandsBlock.getWords()
+        const actual = neighorCount[emoji]
+        if (!yodash.compare(actual ?? 0, operator, count)) return
+        conditionAndCommandsBlock.forEach(command => this._executeCommand(this, command))
+
+        if (this.getIndex() === -1) return {}
+      })
+    })
+  }
+
+  // ZZZZ
+  handleTouches() {
+    if (!this.stillExists) return
+    const { worldMap } = this
+    this.getCommandBlocks(Keywords.onTouch).forEach(touchMap => {
+      if (this.skip(touchMap.getWord(1))) return
+
+      for (let pos of worldMap.positionsAdjacentTo(this.position)) {
+        const hits = worldMap.objectsAtPosition(worldMap.makePositionHash(pos))
+        for (let target of hits) {
+          const targetId = target.getWord(0)
+          const commandBlock = touchMap.getNode(targetId)
+          if (commandBlock) {
+            commandBlock.forEach(command => this._executeCommand(target, command))
+            if (this.getIndex() === -1) return
+          }
+        }
+      }
+    })
+  }
+
+  // ZZZZ
+  handleOverlaps(targets) {
+    if (!this.stillExists) return
+    this.getCommandBlocks(Keywords.onHit).forEach(hitMap => {
+      if (this.skip(hitMap.getWord(1))) return
+      targets.forEach(target => {
+        const targetId = target.getWord(0)
+        const commandBlock = hitMap.getNode(targetId)
+        if (commandBlock) commandBlock.forEach(command => this._executeCommand(target, command))
+      })
+    })
+  }
+
+  // ZZZZ
+  get overlappingAgents() {
+    return this.worldMap.objectsAtPosition(this.positionHash).filter(node => node !== this)
+  }
+
+  get neighorCount() {
+    return this.worldMap.getNeighborCount(this.position)
+  }
+
+  // ZZZZ minus size?
   get maxRight() {
     return this.board.cols
   }
@@ -582,10 +432,10 @@ class Agent extends TreeNode {
     if (value > this.maxRight) value = this.maxRight
 
     if (value < 0) value = 0
-    this.position = {
+    this.setPosition({
       down: this.top,
       right: value
-    }
+    })
   }
 
   get left() {
@@ -593,11 +443,11 @@ class Agent extends TreeNode {
   }
 
   get position() {
-    return yodash.parsePosition(this.words)
+    return this.worldMap.parsePosition(this.getWords())
   }
 
   get positionHash() {
-    return yodash.makePositionHash(this.position)
+    return this.worldMap.makePositionHash(this.position)
   }
 
   get gridSize() {
@@ -640,11 +490,11 @@ class Agent extends TreeNode {
   }
 
   get inlineStyle() {
-    const { gridSize, health } = this
+    const { gridSize, health, agentSize } = this
     const opacity = health === undefined ? "" : `opacity:${this.health / this.startHealth};`
     return `top:${this.top * gridSize}px;left:${
       this.left * gridSize
-    }px;font-size:${gridSize}px;line-height: ${gridSize}px;${opacity};${this.style ?? ""}`
+    }px;font-size:${agentSize}px;line-height:${agentSize}px;${opacity};${this.style ?? ""}`
   }
 
   toElement() {
@@ -657,11 +507,22 @@ class Agent extends TreeNode {
     return elem
   }
 
-  toStumpCode() {
-    return `div ${this.html ?? this.icon}
- id agent${this._getUid()}
- class Agent ${this.selected ? SelectedClass : ""}
- style ${this.inlineStyle}`
+  toggleSelectCommand() {
+    const { root } = this
+    root.selection.includes(this) ? this.unselectCommand() : this.selectCommand()
+
+    root.ensureRender()
+    return this
+  }
+
+  unselectCommand() {
+    this.unselect()
+    this.root.selection = this.root.selection.filter(node => node !== this)
+  }
+
+  selectCommand() {
+    this.root.selection.push(this)
+    this.select()
   }
 
   needsUpdate(lastRenderedTime = 0) {
@@ -841,6 +702,7 @@ window.AgentPaletteComponent = AgentPaletteComponent
 
 
 
+
 let nodeJsPrefix = ""
 
 // prettier-ignore
@@ -942,23 +804,20 @@ class BoardComponent extends AbstractTreeComponentParser {
       )
   }
 
+  /// ZZZZZ
   insertAgentAtCommand(right, down) {
     const root = this.root
-    const board = this
     const positionHash = down + " " + right
-    board.resetAgentPositionMap()
-    const { agentPositionMap } = board
-    const existingObjects = agentPositionMap.get(positionHash) ?? []
-    if (existingObjects.length) return root.toggleSelectCommand(existingObjects)
+    this.resetWorldMap()
     const { agentToInsert } = root
 
     if (!agentToInsert) return
 
     //if (parent.findNodes(agentToInsert).length > MAX_ITEMS) return true
 
-    board.prependLine(`${agentToInsert} ${positionHash}`)
-    board.renderAndGetRenderReport()
-    board.resetAgentPositionMap()
+    this.prependLine(`${agentToInsert} ${positionHash}`)
+    this.renderAndGetRenderReport()
+    this.resetWorldMap()
 
     if (!root.isSnapshotOn) root.snapShotCommand()
 
@@ -988,7 +847,7 @@ class BoardComponent extends AbstractTreeComponentParser {
 
     this.agents.forEach(node => node.onTick())
 
-    this.resetAgentPositionMap()
+    this.resetWorldMap()
     this.handleOverlaps()
     this.handleTouches()
     this.handleNeighbors()
@@ -1013,6 +872,24 @@ class BoardComponent extends AbstractTreeComponentParser {
     if (!isMounted) this.appendAgents(this.agents)
     else this.updateAgents()
     return report
+  }
+
+  treeComponentDidMount() {
+    const that = this
+    if (this.isNodeJs()) return
+    jQuery(this.getStumpNode().getShadow().element).on("click", ".Agent", function(evt) {
+      const agent = evt.target
+      const id = parseInt(
+        jQuery(agent)
+          .attr("id")
+          .replace("agent", "")
+      )
+      that.getAgent(id).toggleSelectCommand()
+    })
+  }
+
+  getAgent(uid) {
+    return this.agents.find(agent => agent._getUid() === uid)
   }
 
   appendAgents(agents) {
@@ -1043,53 +920,50 @@ class BoardComponent extends AbstractTreeComponentParser {
     return setTime ? parseInt(setTime) : 10
   }
 
-  occupiedSpots = new Set()
-
   runInjectCommand(command) {
     this[command.parserId](command)
   }
 
   insertClusterParser(commandNode) {
     this.concat(
-      yodash.insertClusteredRandomAgents(
+      this.worldMap.insertClusteredRandomAgents(
         this.randomNumberGenerator,
         parseInt(commandNode.getWord(1)),
         commandNode.getWord(2),
         this.rows,
         this.cols,
-        this.occupiedSpots,
         commandNode.getWord(3),
         commandNode.getWord(4)
       )
     )
+    this.resetWorldMap()
   }
 
   insertAtParser(commandNode) {
     this.appendLine(`${commandNode.getWord(1)} ${commandNode.getWord(3)} ${commandNode.getWord(2)}`)
-    // TODO: update occupied spots cache?
+    this.resetWorldMap()
   }
 
   rectangleDrawParser(commandNode) {
-    const newLines = yodash.makeRectangle(...yodash.parseInts(commandNode.words.slice(1), 1))
+    const newLines = this.worldMap.makeRectangle(...yodash.parseInts(commandNode.getWords().slice(1), 1))
     this.concat(newLines)
-    // TODO: update occupied spots cache?
+    this.resetWorldMap()
   }
 
   pasteDrawParser(commandNode) {
     const newSpots = new TreeNode(commandNode.childrenToString())
-    yodash.updateOccupiedSpots(newSpots, this.occupiedSpots)
     this.concat(newSpots)
+    this.resetWorldMap()
   }
 
   fillParser(commandNode) {
-    this.concat(yodash.fill(this.rows, this.cols, this.occupiedSpots, commandNode.getWord(1)))
+    this.concat(this.worldMap.fill(this.rows, this.cols, commandNode.getWord(1)))
+    this.resetWorldMap()
   }
 
   drawParser(commandNode) {
-    const { occupiedSpots } = this
-    const spots = yodash.draw(commandNode.childrenToString())
-    yodash.updateOccupiedSpots(spots, occupiedSpots)
-    this.concat(spots)
+    this.concat(this.worldMap.draw(commandNode.childrenToString()))
+    this.resetWorldMap()
   }
 
   get seed() {
@@ -1104,17 +978,17 @@ class BoardComponent extends AbstractTreeComponentParser {
   }
 
   insertParser(commandNode) {
-    const { rows, cols, occupiedSpots } = this
+    const { rows, cols, worldMap } = this
     const emoji = commandNode.getWord(2)
     let amount = commandNode.getWord(1)
 
-    const availableSpots = yodash.getAllAvailableSpots(rows, cols, occupiedSpots)
+    const availableSpots = this.worldMap.getAllAvailableSpots(rows, cols)
     amount = amount.includes("%") ? yodash.parsePercent(amount) * (rows * cols) : parseInt(amount)
     const newAgents = yodash
       .sampleFrom(availableSpots, amount, this.randomNumberGenerator)
       .map(spot => {
         const { hash } = spot
-        occupiedSpots.add(hash)
+        worldMap.occupiedSpots.add(hash)
         return `${emoji} ${hash}`
       })
       .join("\n")
@@ -1141,35 +1015,8 @@ class BoardComponent extends AbstractTreeComponentParser {
     })
   }
 
-  isSolidAgent(position) {
-    if (!this._solidsSet) this.resetAgentPositionMap()
-    const hash = yodash.makePositionHash(position)
-    if (this._solidsSet.has(hash)) return true
-
-    return false
-  }
-
   get agents() {
     return this.topDownArray.filter(node => node instanceof Agent)
-  }
-
-  get agentPositionMap() {
-    if (!this._agentPositionMap) this.resetAgentPositionMap()
-    return this._agentPositionMap
-  }
-
-  resetAgentPositionMap() {
-    const map = new Map()
-    const solidsSet = new Set()
-    this.agents.forEach(agent => {
-      const { positionHash } = agent
-      if (agent.solid) solidsSet.add(positionHash)
-      if (!map.has(positionHash)) map.set(positionHash, [])
-      map.get(positionHash).push(agent)
-    })
-    this._solidsSet = solidsSet
-    this._agentPositionMap = map
-    this.occupiedSpots = new Set(map.keys())
   }
 
   get agentTypeMap() {
@@ -1182,17 +1029,26 @@ class BoardComponent extends AbstractTreeComponentParser {
     return map
   }
 
+  get worldMap() {
+    if (!this._worldMap) this.resetWorldMap()
+    return this._worldMap
+  }
+
+  resetWorldMap() {
+    this._worldMap = new WorldMap(this.agents)
+  }
+
+  // YY
   handleOverlaps() {
-    this.agentPositionMap.forEach(nodes => {
-      if (nodes.length > 1) nodes.forEach(node => node.handleOverlaps(nodes))
-    })
+    this.worldMap.overlappingAgents.forEach(nodes => nodes.forEach(node => node.handleOverlaps(nodes)))
   }
 
+  // YY
   handleTouches() {
-    const agentPositionMap = this.agentPositionMap
-    this.agents.forEach(node => node.handleTouches(agentPositionMap))
+    this.agents.forEach(node => node.handleTouches())
   }
 
+  // YY
   handleNeighbors() {
     this.agents.forEach(node => node.handleNeighbors())
   }
@@ -1279,12 +1135,7 @@ class BoardComponent extends AbstractTreeComponentParser {
 
   spawn(command) {
     this.appendLine(
-      `${command.getWord(1)} ${yodash.getRandomLocationHash(
-        this.rows,
-        this.cols,
-        undefined,
-        this.randomNumberGenerator
-      )}`
+      `${command.getWord(1)} ${this.worldMap.getRandomLocationHash(this.rows, this.cols, this.randomNumberGenerator)}`
     )
   }
 
@@ -1491,35 +1342,39 @@ window.ExampleMenuComponent = ExampleMenuComponent
 
 
 
-
 class GridComponent extends AbstractTreeComponentParser {
-  gridClickCommand(down, right) {
-    return this.parent.insertAgentAtCommand(right, down)
+  gridClickCommand(right, down) {
+    return this.parent.insertAgentAtCommand(right + "➡️", down + "⬇️")
   }
 
-  makeBlock(down, right, gridSize) {
-    return `\n div
-  class block
-  style width:${gridSize}px;height:${gridSize}px;top:${down * gridSize}px;left:${right * gridSize}px;
-  clickCommand gridClickCommand ${yodash.makePositionHash({ right, down })}`
+  evtToRightDown(evt) {
+    if (this.isNodeJs()) return { right: 1, down: 1 }
+
+    const { offsetX, offsetY } = evt
+    const el = jQuery(evt.target)
+    const height = el.height()
+    const width = el.width()
+    const { cols, rows, gridSize } = this.parent
+
+    const right = Math.round((offsetX / width) * cols)
+    const down = Math.round((offsetY / height) * rows)
+
+    return { right, down }
+  }
+
+  treeComponentDidMount() {
+    const that = this
+    if (this.isNodeJs()) return super.treeComponentDidMount()
+
+    jQuery(`.${GridComponent.name}`).on("click", function (evt) {
+      const { right, down } = that.evtToRightDown(evt)
+      that.gridClickCommand(right, down)
+    })
   }
 
   toStumpCode() {
-    const { cols, rows, gridSize } = this.parent
-    let blocks = ""
-    let rs = rows
-    while (rs >= 0) {
-      let cs = cols
-      while (cs >= 0) {
-        blocks = this.makeBlock(rs, cs, gridSize) + blocks
-        cs--
-      }
-      rs--
-    }
-    return (
-      `div
- class ${GridComponent.name}` + blocks
-    )
+    return `div
+ class ${GridComponent.name}`
   }
 }
 
@@ -2162,25 +2017,6 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
     this.renderAndGetRenderReport()
   }
 
-  toggleSelectCommand(objects) {
-    objects.forEach(object => {
-      this.selection.includes(object) ? this.unselectCommand(object) : this.selectCommand(object)
-    })
-
-    this.ensureRender()
-    return this
-  }
-
-  unselectCommand(object) {
-    object.unselect()
-    this.selection = this.selection.filter(node => node !== object)
-  }
-
-  selectCommand(object) {
-    this.selection.push(object)
-    object.select()
-  }
-
   async downloadCsvCommand() {
     let extension = "csv"
     let type = "text/csv"
@@ -2266,7 +2102,6 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
       node._move()
     })
 
-    this.boards.forEach(board => board.resetAgentPositionMap())
 
     this.ensureRender()
   }
@@ -2512,6 +2347,194 @@ window.UrlKeys = UrlKeys
 window.Directions = Directions
 
 window.ParserTypes = ParserTypes
+
+
+
+
+class WorldMap {
+  constructor(agents) {
+    const map = new Map()
+    agents.forEach(agent => {
+      const { positionHash, agentSize } = agent
+      if (!map.has(positionHash, agentSize)) map.set(positionHash, [])
+      map.get(positionHash).push(agent)
+    })
+    this._map = map
+  }
+
+  get occupiedSpots() {
+    return new Set(this._map.keys())
+  }
+
+  objectsAtPosition(positionHash) {
+    return this._map.get(positionHash) ?? []
+  }
+
+  makePositionHash(position) {
+    return `${position.down + "⬇️ " + position.right + "➡️"}`
+  }
+
+  getRandomLocationHash(rows, cols, randomNumberGenerator) {
+    const { right, down } = this.getRandomLocation(rows, cols, randomNumberGenerator)
+    const hash = this.makePositionHash({ right, down })
+    if (this.occupiedSpots.has(hash)) return this.getRandomLocationHash(rows, cols, randomNumberGenerator)
+    return hash
+  }
+
+  parsePosition(words) {
+    return {
+      down: parseInt(words.find(word => word.includes("⬇️")).slice(0, -1)),
+      right: parseInt(words.find(word => word.includes("➡️")).slice(0, -1))
+    }
+  }
+
+  canGoHere(position, size) {
+    const hash = this.makePositionHash(position)
+    const agentsHere = this._map.get(hash)
+    if (agentsHere && agentsHere.some(agent => agent.solid)) return false
+
+    return true
+  }
+
+  get overlappingAgents() {
+    let overlaps = []
+    this._map.forEach(nodes => {
+      if (nodes.length > 1) overlaps.push(nodes)
+    })
+    return overlaps
+  }
+
+  insertClusteredRandomAgents(randomNumberGenerator, amount, char, rows, cols, originRow, originColumn) {
+    const availableSpots = this.getAllAvailableSpots(rows, cols)
+    const spots = yodash.sampleFrom(availableSpots, amount * 10, randomNumberGenerator)
+    const origin = originColumn
+      ? { down: parseInt(originRow), right: parseInt(originColumn) }
+      : this.getRandomLocation(rows, cols, randomNumberGenerator)
+    const sortedByDistance = lodash.sortBy(spots, spot =>
+      math.distance([origin.down, origin.right], [spot.down, spot.right])
+    )
+
+    return sortedByDistance
+      .slice(0, amount)
+      .map(spot => `${char} ${spot.hash}`)
+      .join("\n")
+  }
+
+  getAllAvailableSpots(rows, cols, rowStart = 0, colStart = 0) {
+    const { occupiedSpots } = this
+    const availablePositions = []
+    let down = rows
+    while (down >= rowStart) {
+      let right = cols
+      while (right >= colStart) {
+        const hash = this.makePositionHash({ right, down })
+        if (!occupiedSpots.has(hash)) availablePositions.push({ right, down, hash })
+        right--
+      }
+      down--
+    }
+    return availablePositions
+  }
+
+  getRandomLocation(rows, cols, randomNumberGenerator) {
+    const maxRight = cols
+    const maxBottom = rows
+    const right = Math.round(randomNumberGenerator() * maxRight)
+    const down = Math.round(randomNumberGenerator() * maxBottom)
+    return { right, down }
+  }
+
+  draw(str) {
+    const lines = str.split("\n")
+    const output = []
+    for (let index = 0; index < lines.length; index++) {
+      const words = lines[index].split(" ")
+      for (let wordIndex = 0; wordIndex < words.length; wordIndex++) {
+        const word = words[wordIndex]
+        if (word !== "") output.push(`${word} ${this.makePositionHash({ down: index, right: wordIndex })}`)
+      }
+    }
+    return output.join("\n")
+  }
+
+  makeRectangle(character = "🧱", width = 20, height = 20, startRight = 0, startDown = 0) {
+    if (width < 1 || height < 1) {
+      return ""
+    }
+    const cells = []
+    let row = 0
+    while (row < height) {
+      let col = 0
+      while (col < width) {
+        const isPerimeter = row === 0 || row === height - 1 || col === 0 || col === width - 1
+        if (isPerimeter)
+          cells.push(
+            `${character} ${this.makePositionHash({
+              down: startDown + row,
+              right: startRight + col
+            })}`
+          )
+        col++
+      }
+      row++
+    }
+    return cells.join("\n")
+  }
+
+  fill(rows, cols, emoji) {
+    const { occupiedSpots } = this
+    const board = []
+    while (rows >= 0) {
+      let col = cols
+      while (col >= 0) {
+        const hash = this.makePositionHash({ right: col, down: rows })
+        col--
+        if (occupiedSpots.has(hash)) continue
+        board.push(`${emoji} ${hash}`)
+      }
+      rows--
+    }
+    return board.join("\n")
+  }
+
+  getNeighborCount(position) {
+    const neighborCounts = {}
+    this.positionsAdjacentTo(position).forEach(pos => {
+      const agents = this.objectsAtPosition(this.makePositionHash(pos))
+      agents.forEach(agent => {
+        if (!neighborCounts[agent.name]) neighborCounts[agent.name] = 0
+        neighborCounts[agent.name]++
+      })
+    })
+    return neighborCounts
+  }
+
+  positionsAdjacentTo(position) {
+    let { right, down } = position
+    const positions = []
+    down--
+    positions.push({ down, right })
+    right--
+    positions.push({ down, right })
+    right++
+    right++
+    positions.push({ down, right })
+    down++
+    positions.push({ down, right })
+    right--
+    right--
+    positions.push({ down, right })
+    down++
+    positions.push({ down, right })
+    right++
+    positions.push({ down, right })
+    right++
+    positions.push({ down, right })
+    return positions
+  }
+}
+
+window.WorldMap = WorldMap
 
 
 const DEFAULT_SIM = "fire"

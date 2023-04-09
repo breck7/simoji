@@ -220,15 +220,23 @@ class Agent extends TreeNode {
   }
 
   get position() {
-    return yodash.parsePosition(this.words)
+    return this.worldMap.parsePosition(this.getWords())
   }
 
   get positionHash() {
-    return yodash.makePositionHash(this.position)
+    return this.worldMap.makePositionHash(this.position)
   }
 
   get gridSize() {
     return this.parent.gridSize
+  }
+
+  get worldMap() {
+    return this.board.worldMap
+  }
+
+  get agentSize() {
+    return this.size ?? this.gridSize
   }
 
   get selected() {
@@ -269,8 +277,9 @@ class Agent extends TreeNode {
   get inlineStyle() {
     const { gridSize, health, agentSize } = this
     const opacity = health === undefined ? "" : `opacity:${this.health / this.startHealth};`
-    return `top:${this.top * gridSize}px;left:${this.left *
-      gridSize}px;font-size:${agentSize}px;line-height:${agentSize}px;${opacity};${this.style ?? ""}`
+    return `top:${this.top * gridSize}px;left:${
+      this.left * gridSize
+    }px;font-size:${agentSize}px;line-height:${agentSize}px;${opacity};${this.style ?? ""}`
   }
 
   toElement() {

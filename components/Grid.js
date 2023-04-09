@@ -1,4 +1,3 @@
-const { yodash } = require("../yodash.js")
 const { AbstractTreeComponentParser } = require("jtree/products/TreeComponentFramework.node.js")
 
 class GridComponent extends AbstractTreeComponentParser {
@@ -25,7 +24,7 @@ class GridComponent extends AbstractTreeComponentParser {
     const that = this
     if (this.isNodeJs()) return super.treeComponentDidMount()
 
-    jQuery(`.${GridComponent.name}`).on("click", function(evt) {
+    jQuery(`.${GridComponent.name}`).on("click", function (evt) {
       const { right, down } = that.evtToRightDown(evt)
       that.gridClickCommand(right, down)
     })
