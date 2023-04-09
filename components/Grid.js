@@ -2,33 +2,38 @@ const { yodash } = require("../yodash.js")
 const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework.node.js")
 
 class GridComponent extends AbstractTreeComponent {
-  gridClickCommand(down, right) {
-    return this.getParent().insertAgentAtCommand(right, down)
+  gridClickCommand(right, down) {
+    return this.getParent().insertAgentAtCommand(right + "➡️", down + "⬇️")
   }
 
-  makeBlock(down, right, gridSize) {
-    return `\n div
-  class block
-  style width:${gridSize}px;height:${gridSize}px;top:${down * gridSize}px;left:${right * gridSize}px;
-  clickCommand gridClickCommand ${yodash.makePositionHash({ right, down })}`
+  evtToRightDown(evt) {
+    if (this.isNodeJs()) return { right: 1, down: 1 }
+
+    const { offsetX, offsetY } = evt
+    const el = jQuery(evt.target)
+    const height = el.height()
+    const width = el.width()
+    const { cols, rows, gridSize } = this.getParent()
+
+    const right = Math.round((offsetX / width) * cols)
+    const down = Math.round((offsetY / height) * rows)
+
+    return { right, down }
+  }
+
+  treeComponentDidMount() {
+    const that = this
+    if (this.isNodeJs()) return super.treeComponentDidMount()
+
+    jQuery(`.${GridComponent.name}`).on("click", function(evt) {
+      const { right, down } = that.evtToRightDown(evt)
+      that.gridClickCommand(right, down)
+    })
   }
 
   toStumpCode() {
-    const { cols, rows, gridSize } = this.getParent()
-    let blocks = ""
-    let rs = rows
-    while (rs >= 0) {
-      let cs = cols
-      while (cs >= 0) {
-        blocks = this.makeBlock(rs, cs, gridSize) + blocks
-        cs--
-      }
-      rs--
-    }
-    return (
-      `div
- class ${GridComponent.name}` + blocks
-    )
+    return `div
+ class ${GridComponent.name}`
   }
 }
 

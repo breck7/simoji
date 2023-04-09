@@ -338,25 +338,6 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
     this.renderAndGetRenderReport()
   }
 
-  toggleSelectCommand(objects) {
-    objects.forEach(object => {
-      this.selection.includes(object) ? this.unselectCommand(object) : this.selectCommand(object)
-    })
-
-    this.ensureRender()
-    return this
-  }
-
-  unselectCommand(object) {
-    object.unselect()
-    this.selection = this.selection.filter(node => node !== object)
-  }
-
-  selectCommand(object) {
-    this.selection.push(object)
-    object.select()
-  }
-
   async downloadCsvCommand() {
     let extension = "csv"
     let type = "text/csv"
@@ -442,7 +423,7 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
       node._move()
     })
 
-    this.boards.forEach(board => board.resetAgentPositionMap())
+    this.boards.forEach(board => board.resetWorldMap())
 
     this.ensureRender()
   }
@@ -450,7 +431,7 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
   deleteSelectionCommand() {
     this.selection.forEach(node => node.nuke())
     this.selection = []
-    this.boards.forEach(board => board.resetAgentPositionMap())
+    this.boards.forEach(board => board.resetWorldMap())
   }
 
   get isSnapshotOn() {

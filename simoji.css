@@ -207,6 +207,14 @@ body {
 
 .Agent {
 	position: absolute;
+	z-index: 1;
+	user-select: none;
+	cursor: pointer;
+}
+
+.Agent:hover {
+	background-color: rgba(0, 0, 0, 0.2);
+	border-radius: 3px;
 }
 
 .ExamplesComponent {
