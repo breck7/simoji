@@ -1,33 +1,100 @@
 const { yodash } = require("../yodash.js")
 
+const PositionHashType = "10⬇️ 10➡️"
+
+class PositionType {
+	down = 10
+	right = 10
+}
+
+class RectType {
+	positionHash = PositionHashType
+	position = new PositionType()
+	agentSize = 10
+}
+
+class BoardType {
+	agents = [new RectType()]
+	randomNumberGenerator = yodash.getRandomNumberGenerator()
+	rows = 10
+	cols = 10
+}
+
 class WorldMap {
-	constructor(agents) {
-		const map = new Map()
-		agents.forEach(agent => {
-			const { positionHash, agentSize } = agent
-			if (!map.has(positionHash, agentSize)) map.set(positionHash, [])
-			map.get(positionHash).push(agent)
+	board = new BoardType()
+
+	constructor(boardType) {
+		this.board = boardType
+	}
+
+	get rows() {
+		return this.board.rows
+	}
+
+	get cols() {
+		return this.board.cols
+	}
+
+	get randomNumberGenerator() {
+		return this.board.randomNumberGenerator
+	}
+
+	isRectOccupied(right, down, size) {
+		return this.objectsCollidingWith(right, down, size).length > 0
+	}
+
+	objectsCollidingWith(right, down, size) {
+		return this.board.agents.filter(agent => {
+			const { position, agentSize } = agent
+			const { right: agentRight, down: agentDown } = position
+
+			return (
+				agentRight + agentSize > right &&
+				agentDown + agentSize > down &&
+				agentRight < right + size &&
+				agentDown < down + size
+			)
 		})
-		this._map = map
 	}
 
-	get occupiedSpots() {
-		return new Set(this._map.keys())
+	// ZZZ
+	objectsTouching(rect) {
+		const { position, agentSize } = rect
+		const targets = []
+		for (let pos of this.positionsAdjacentToRect(position.right, position.down, agentSize)) {
+			this.objectsCollidingWith(pos.right, pos.down, agentSize).forEach(item => targets.push(item))
+		}
+		return targets
 	}
 
-	objectsAtPosition(positionHash) {
-		return this._map.get(positionHash) ?? []
+	// ZZZ
+	canGoHere(size, right, down) {
+		const agentsHere = this.objectsCollidingWith(right, down, size)
+		if (agentsHere && agentsHere.some(agent => agent.solid)) return false
+
+		return true
 	}
 
-	makePositionHash(position) {
-		return `${position.down + "⬇️ " + position.right + "➡️"}`
+	// ZZZ
+	get collidingAgents() {
+		const agents = this.board.agents
+		const collidingAgents = []
+		for (let agent of agents) {
+			const { position, agentSize } = agent
+			const agentsHere = this.objectsCollidingWith(position.right, position.down, agentSize).filter(a => a !== agent)
+			if (agentsHere.length) collidingAgents.push(...agentsHere)
+		}
+		return collidingAgents
 	}
 
-	getRandomLocationHash(rows, cols, randomNumberGenerator) {
-		const { right, down } = this.getRandomLocation(rows, cols, randomNumberGenerator)
-		const hash = this.makePositionHash({ right, down })
-		if (this.occupiedSpots.has(hash)) return this.getRandomLocationHash(rows, cols, randomNumberGenerator)
-		return hash
+	makePositionHash(positionType) {
+		return `${positionType.down + "⬇️ " + positionType.right + "➡️"}`
+	}
+
+	getRandomLocationHash(size = 1) {
+		const { right, down } = this.getRandomLocation()
+		if (this.isRectOccupied(right, down, size)) return this.getRandomLocationHash()
+		return this.makePositionHash({ right, down })
 	}
 
 	parsePosition(words) {
@@ -37,28 +104,12 @@ class WorldMap {
 		}
 	}
 
-	canGoHere(position, size) {
-		const hash = this.makePositionHash(position)
-		const agentsHere = this._map.get(hash)
-		if (agentsHere && agentsHere.some(agent => agent.solid)) return false
-
-		return true
-	}
-
-	get overlappingAgents() {
-		let overlaps = []
-		this._map.forEach(nodes => {
-			if (nodes.length > 1) overlaps.push(nodes)
-		})
-		return overlaps
-	}
-
-	insertClusteredRandomAgents(randomNumberGenerator, amount, char, rows, cols, originRow, originColumn) {
-		const availableSpots = this.getAllAvailableSpots(rows, cols)
-		const spots = yodash.sampleFrom(availableSpots, amount * 10, randomNumberGenerator)
+	insertClusteredRandomAgents(amount, char, originRow, originColumn) {
+		const availableSpots = this.getAllAvailableSpots()
+		const spots = yodash.sampleFrom(availableSpots, amount * 10, this.randomNumberGenerator)
 		const origin = originColumn
 			? { down: parseInt(originRow), right: parseInt(originColumn) }
-			: this.getRandomLocation(rows, cols, randomNumberGenerator)
+			: this.getRandomLocation()
 		const sortedByDistance = lodash.sortBy(spots, spot =>
 			math.distance([origin.down, origin.right], [spot.down, spot.right])
 		)
@@ -69,15 +120,15 @@ class WorldMap {
 			.join("\n")
 	}
 
-	getAllAvailableSpots(rows, cols, rowStart = 0, colStart = 0) {
-		const { occupiedSpots } = this
+	getAllAvailableSpots(size = 1, rowStart = 0, colStart = 0) {
+		const { rows, cols } = this
 		const availablePositions = []
 		let down = rows
 		while (down >= rowStart) {
 			let right = cols
 			while (right >= colStart) {
-				const hash = this.makePositionHash({ right, down })
-				if (!occupiedSpots.has(hash)) availablePositions.push({ right, down, hash })
+				if (!this.isRectOccupied(right, down, size))
+					availablePositions.push({ right, down, hash: this.makePositionHash({ right, down }) })
 				right--
 			}
 			down--
@@ -85,7 +136,8 @@ class WorldMap {
 		return availablePositions
 	}
 
-	getRandomLocation(rows, cols, randomNumberGenerator) {
+	getRandomLocation() {
+		const { randomNumberGenerator, rows, cols } = this
 		const maxRight = cols
 		const maxBottom = rows
 		const right = Math.round(randomNumberGenerator() * maxRight)
@@ -130,15 +182,15 @@ class WorldMap {
 		return cells.join("\n")
 	}
 
-	fill(rows, cols, emoji) {
-		const { occupiedSpots } = this
+	fill(emoji, size = 1) {
+		let { rows, cols } = this
 		const board = []
 		while (rows >= 0) {
 			let col = cols
 			while (col >= 0) {
-				const hash = this.makePositionHash({ right: col, down: rows })
 				col--
-				if (occupiedSpots.has(hash)) continue
+				if (this.isRectOccupied(col, rows, size)) continue
+				const hash = this.makePositionHash({ right: col, down: rows })
 				board.push(`${emoji} ${hash}`)
 			}
 			rows--
@@ -146,10 +198,11 @@ class WorldMap {
 		return board.join("\n")
 	}
 
-	getNeighborCount(position) {
+	getNeighborCount(rect) {
+		const { position, agentSize } = rect
 		const neighborCounts = {}
-		this.positionsAdjacentTo(position).forEach(pos => {
-			const agents = this.objectsAtPosition(this.makePositionHash(pos))
+		this.positionsAdjacentToRect(position.right, position.down, agentSize).forEach(pos => {
+			const agents = this.objectsCollidingWith(pos.right, pos.down, agentSize)
 			agents.forEach(agent => {
 				if (!neighborCounts[agent.name]) neighborCounts[agent.name] = 0
 				neighborCounts[agent.name]++
@@ -158,29 +211,16 @@ class WorldMap {
 		return neighborCounts
 	}
 
-	positionsAdjacentTo(position) {
-		let { right, down } = position
+	positionsAdjacentToRect(x, y, size) {
 		const positions = []
-		down--
-		positions.push({ down, right })
-		right--
-		positions.push({ down, right })
-		right++
-		right++
-		positions.push({ down, right })
-		down++
-		positions.push({ down, right })
-		right--
-		right--
-		positions.push({ down, right })
-		down++
-		positions.push({ down, right })
-		right++
-		positions.push({ down, right })
-		right++
-		positions.push({ down, right })
+		for (let row = y - size; row <= y + size; row++) {
+			for (let col = x - size; col <= x + size; col++) {
+				if (row === y && col === x) continue
+				positions.push({ right: col, down: row })
+			}
+		}
 		return positions
 	}
 }
 
-module.exports = { WorldMap }
+module.exports = { WorldMap, BoardType }

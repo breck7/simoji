@@ -108,7 +108,6 @@ class BoardComponent extends AbstractTreeComponent {
       )
   }
 
-  /// ZZZZZ
   insertAgentAtCommand(right, down) {
     const root = this.root
     const positionHash = down + " " + right
@@ -152,7 +151,7 @@ class BoardComponent extends AbstractTreeComponent {
     this.agents.forEach(node => node.onTick())
 
     this.resetWorldMap()
-    this.handleOverlaps()
+    this.handleCollisions()
     this.handleTouches()
     this.handleNeighbors()
 
@@ -231,11 +230,8 @@ class BoardComponent extends AbstractTreeComponent {
   insertClusterNode(commandNode) {
     this.concat(
       this.worldMap.insertClusteredRandomAgents(
-        this.randomNumberGenerator,
         parseInt(commandNode.getWord(1)),
         commandNode.getWord(2),
-        this.rows,
-        this.cols,
         commandNode.getWord(3),
         commandNode.getWord(4)
       )
@@ -261,7 +257,7 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   fillNode(commandNode) {
-    this.concat(this.worldMap.fill(this.rows, this.cols, commandNode.getWord(1)))
+    this.concat(this.worldMap.fill(commandNode.getWord(1)))
     this.resetWorldMap()
   }
 
@@ -286,17 +282,14 @@ class BoardComponent extends AbstractTreeComponent {
     const emoji = commandNode.getWord(2)
     let amount = commandNode.getWord(1)
 
-    const availableSpots = this.worldMap.getAllAvailableSpots(rows, cols)
+    const availableSpots = this.worldMap.getAllAvailableSpots()
     amount = amount.includes("%") ? yodash.parsePercent(amount) * (rows * cols) : parseInt(amount)
     const newAgents = yodash
       .sampleFrom(availableSpots, amount, this.randomNumberGenerator)
-      .map(spot => {
-        const { hash } = spot
-        worldMap.occupiedSpots.add(hash)
-        return `${emoji} ${hash}`
-      })
+      .map(spot => `${emoji} ${spot.hash}`)
       .join("\n")
     this.concat(newAgents)
+    this.resetWorldMap()
   }
 
   handleExtinctions() {
@@ -339,12 +332,12 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   resetWorldMap() {
-    this._worldMap = new WorldMap(this.agents)
+    this._worldMap = new WorldMap(this)
   }
 
   // YY
-  handleOverlaps() {
-    this.worldMap.overlappingAgents.forEach(nodes => nodes.forEach(node => node.handleOverlaps(nodes)))
+  handleCollisions() {
+    this.worldMap.collidingAgents.forEach(agents => agents.forEach(agent => agent.handleCollisions(agents)))
   }
 
   // YY
@@ -438,9 +431,7 @@ class BoardComponent extends AbstractTreeComponent {
   // Commands available to users:
 
   spawn(command) {
-    this.appendLine(
-      `${command.getWord(1)} ${this.worldMap.getRandomLocationHash(this.rows, this.cols, this.randomNumberGenerator)}`
-    )
+    this.appendLine(`${command.getWord(1)} ${this.worldMap.getRandomLocationHash()}`)
   }
 
   alert(command) {

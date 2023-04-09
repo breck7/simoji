@@ -126,9 +126,9 @@ class Agent extends jtree.TreeNode {
     return this.getParent()
   }
 
-  // ZZZZ
   setPosition(newPosition) {
-    if (!this.worldMap.canGoHere(newPosition, this.agentSize)) return this.bouncy ? this.bounce() : this
+    if (!this.worldMap.canGoHere(this.agentSize, newPosition.right, newPosition.down))
+      return this.bouncy ? this.bounce() : this
     const newLine = this.getLine()
       .split(" ")
       .map(part =>
@@ -157,55 +157,47 @@ class Agent extends jtree.TreeNode {
     })
   }
 
-  // ZZZZ
   handleTouches() {
     if (!this.stillExists) return
     const { worldMap } = this
     this.getCommandBlocks(Keywords.onTouch).forEach(touchMap => {
       if (this.skip(touchMap.getWord(1))) return
 
-      for (let pos of worldMap.positionsAdjacentTo(this.position)) {
-        const hits = worldMap.objectsAtPosition(worldMap.makePositionHash(pos))
-        for (let target of hits) {
-          const targetId = target.getWord(0)
-          const commandBlock = touchMap.getNode(targetId)
-          if (commandBlock) {
-            commandBlock.forEach(command => this._executeCommand(target, command))
-            if (this.getIndex() === -1) return
-          }
+      for (let target of worldMap.objectsTouching(this)) {
+        const targetId = target.getWord(0)
+        const commandBlock = touchMap.getNode(targetId)
+        if (commandBlock) {
+          commandBlock.forEach(command => this._executeCommand(target, command))
+          if (this.getIndex() === -1) return
         }
       }
     })
   }
 
-  // ZZZZ
-  handleOverlaps(targets) {
+  handleCollisions(targetAgents) {
     if (!this.stillExists) return
     this.getCommandBlocks(Keywords.onHit).forEach(hitMap => {
       if (this.skip(hitMap.getWord(1))) return
-      targets.forEach(target => {
-        const targetId = target.getWord(0)
+      targetAgents.forEach(targetAgent => {
+        const targetId = targetAgent.getWord(0)
         const commandBlock = hitMap.getNode(targetId)
-        if (commandBlock) commandBlock.forEach(command => this._executeCommand(target, command))
+        if (commandBlock) commandBlock.forEach(command => this._executeCommand(targetAgent, command))
       })
     })
   }
 
-  // ZZZZ
-  get overlappingAgents() {
-    return this.worldMap.objectsAtPosition(this.positionHash).filter(node => node !== this)
+  get collidingAgents() {
+    return this.worldMap.objectsCollidingWith(this.right, this.down, this.agentSize).filter(node => node !== this)
   }
 
   get neighorCount() {
-    return this.worldMap.getNeighborCount(this.position)
+    return this.worldMap.getNeighborCount(this)
   }
 
-  // ZZZZ minus size?
   get maxRight() {
     return this.board.cols - Math.floor(this.size / this.gridSize)
   }
 
-  // ZZZZ minus size?
   get maxDown() {
     return this.board.rows - Math.floor(this.size / this.gridSize)
   }
@@ -425,7 +417,7 @@ class Agent extends jtree.TreeNode {
   }
 
   moveToEmptySpot() {
-    while (this.overlappingAgents.length) {
+    while (this.collidingAgents.length) {
       this.move()
     }
   }
