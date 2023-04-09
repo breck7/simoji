@@ -1,40 +1,59 @@
+import header.scroll
+
 title Simoji - Write simulations with Emojis
 
-paragraph
- An early work in progress.
+## A work in progress.
 
-section Documentation
+startColumns 2
 
-paragraph
- Check out the QuickStart🔗./cheatSheet.html Guide.
+# Documentation
+* QuickStart
+ link ./cheatSheet.html
 
-section Related Work
+# Related Work
+- Agent Based Modelling and Simulation tools: A review of the state-of-art software
+ https://www2.econ.iastate.edu/tesfatsi/ABMSoftwareReview.AbarEtAl2017.pdf
+- Comparison of agent-based modeling software
+ https://en.wikipedia.org/wiki/Comparison_of_agent-based_modeling_software
+- NetLogo - 2D/3D, Web/Desktop, Open
+ https://www.netlogoweb.org/launch#http://www.netlogoweb.org/assets/modelslib/Sample%20Models/Biology/Flocking%20Vee%20Formations.nlogo NetLogo
+- GAMA
+ https://gama-platform.github.io
+- GAML Language - Desktop, OpenSource
+ https://gama-platform.github.io/wiki/Introduction GAML Language
+- EmojiSimulator - After shipping I learned Nicky had a similar idea 5+ years before me and executed very well!
+ https://ncase.me/sim/ EmojiSimulator
+- InsightMaker
+ https://insightmaker.com
+- AnyLogic - 2D/3D
+ https://www.anylogic.com AnyLogic
+- SARL
+ https://en.wikipedia.org/wiki/SARL_language
+- Framsticks - 3D, Desktop
+ https://www.framsticks.com/ Framsticks
+- Hash.ai
+ https://hash.ai
+- SOAR
+ https://en.wikipedia.org/wiki/Soar_(cognitive_architecture)
+- JADE
+ https://en.wikipedia.org/wiki/Java_Agent_Development_Framework
+- MASON
+ https://cs.gmu.edu/~eclab/projects/mason/
+- REPAST
+ https://repast.github.io
+- Simulations in Mathematica
+ https://demonstrations.wolfram.com/SugarscapeAgentBasedModeling/
+- Swarm
+ https://swarm.org/wiki/Swarm_main_page
+- Altreva
+ https://www.altreva.com
+- sandspiel
+ https://sandspiel.club
+- The-Powder-Toy
+ https://github.com/The-Powder-Toy/The-Powder-Toy
 
-list
- - Agent Based Modelling and Simulation tools: A review🔗www2.econ.iastate.edu/tesfatsi/ABMSoftwareReview.AbarEtAl2017.pdf of the state-of-art software
- - Comparison🔗en.wikipedia.org/wiki/Comparison_of_agent-based_modeling_software of agent-based modeling software
- - NetLogo🔗www.netlogoweb.org/launch#http://www.netlogoweb.org/assets/modelslib/Sample%20Models/Biology/Flocking%20Vee%20Formations.nlogo - 2D/3D, Web/Desktop, Open
- - GAMA🔗gama-platform.github.io
- - GAML🔗gama-platform.github.io/wiki/Introduction Language - Desktop, OpenSource
- - EmojiSimulator🔗ncase.me/sim/ - After shipping I learned Nicky had a similar idea 5+ years before me and executed very well!
- - InsightMaker🔗insightmaker.comSource
- - AnyLogic🔗www.anylogic.com - 2D/3D
- - SARL🔗en.wikipedia.org/wiki/SARL_language
- - Framsticks🔗www.framsticks.com/ - 3D, Desktop
- - Hash.ai🔗hash.ai
- - SOAR🔗en.wikipedia.org/wiki/Soar_(cognitive_architecture)
- - JADE🔗en.wikipedia.org/wiki/Java_Agent_Development_Framework
- - MASON🔗cs.gmu.edu/~eclab/projects/mason/
- - REPAST🔗repast.github.io
- - Simulations in Mathematica🔗demonstrations.wolfram.com/SugarscapeAgentBasedModeling/
- - Swarm🔗swarm.org/wiki/Swarm_main_page
- - Altreva🔗www.altreva.com
- - sandspiel🔗sandspiel.club
- - The-Powder-Toy🔗github.com/The-Powder-Toy/The-Powder-Toy
-
-section Development
-
-question What is the dev loop like?
+## Development
+? What is the dev loop like?
 
 1. Start the dev server with `node server.js`.
 2. Open `localhost/dev.html`
@@ -43,15 +62,15 @@ question What is the dev loop like?
 5. Run tests with `npm test`
 6. Build distribution with `./build.js`
 
-section Roadmap
+## Roadmap
+- Run sims with 8x as many agents
+- Run 8x more sims at once
+- Write 8x more kinds of sims with the same number of words
+- Write models that are 8x less wrong
+- Generate 8x better distributables
 
-list
- - Run sims with 8x as many agents
- - Run 8x more sims at once
- - Write 8x more kinds of sims with the same number of words
- - Write models that are 8x less wrong
- - Generate 8x better distributables
+# ❤️ Public Domain ❤️ 
 
-section ❤️ Public Domain ❤️ 
+endColumns
 
-skipIndexPage
+import footer.scroll

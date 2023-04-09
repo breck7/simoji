@@ -1,13 +1,12 @@
+metaTags
+gazetteCss
+
 title Simoji Quickstart Guide
-skipIndexPage
-header
-footer
 
-paragraph
- Simoji is a language and tool for thinkers to write shareable simulations using 😃's. You write your simulations in a simple language using mostly Emojis and then click play. Simoji is public domain, open source🔗github.com/publicdomaincompany/simoji and suggestions welcome!
+* Simoji is a language and tool for thinkers to write shareable simulations using 😃's. You write your simulations in a simple language using mostly Emojis and then click play. Simoji is public domain, open source, and suggestions welcome!
+ https://github.com/publicdomaincompany/simoji open source
 
-subsection Example Program
-
+# Example Program
 code
  comment Define an ant agent
  🐜
@@ -34,71 +33,46 @@ code
  insert 1 ⛰
 
 
-section Concepts
+# Concepts
+## Board
+* The Board is the rectangle on which your simulation takes place. It has a width and height and is divided into a grid.
 
-subsection Board
+## Agents
+* Agents are the key concept in Simoji. Everything you see on your board is an agent. In the code above, the ant, hill, and food are all agent types.
 
-paragraph
- The Board is the rectangle on which your simulation takes place. It has a width and height and is divided into a grid.
+## Events
+* Events are blocks of commands that execute during the running of the experiments. Probabilities can be assigned so blocks run stochastically.
+- onTick
+- onHit
+- onTouch
+- onDeath
 
-subsection Agents
+* Some events can also happen on the board level:
+- onTick
+- onExtinct
 
-paragraph
- Agents are the key concept in Simoji. Everything you see on your board is an agent. In the code above, the ant, hill, and food are all agent types.
+## Commands
+- kickIt
+- replaceWith
+- spawn
+- remove
+- pickItUp
+- turnRandomly
+- turnToward
 
-subsection Events
+## Attributes
+* Agents can have attributes. You can define your own. Some are built in like:
+- health
 
-paragraph
- Events are blocks of commands that execute during the running of the experiments. Probabilities can be assigned so blocks run stochastically.
+* Some attributes are booleans with only 2 states like:
+- solid
+- bouncy
 
-list
- - onTick
- - onHit
- - onTouch
- - onDeath
+## Experiments
+* You can run multiple boards at the same time using the `experiment` keyword. You can tweak any words in your experiments. Usually you want to change Settings. The maximum boards at one time is currently 4.
 
-paragraph
- Some events can also happen on the board level:
-
-list
- - onTick
- - onExtinct
-
-subsection Commands
-
-list
- - kickIt
- - replaceWith
- - spawn
- - remove
- - pickItUp
- - turnRandomly
- - turnToward
-
-subsection Attributes
-
-paragraph
- Agents can have attributes. You can define your own. Some are built in like:
-
-list
- - health
-
-paragraph
- Some attributes are booleans with only 2 states like:
-
-list
- - solid
- - bouncy
-
-subsection Experiments
-
-paragraph
- You can run multiple boards at the same time using the `experiment` keyword. You can tweak any words in your experiments. Usually you want to change Settings. The maximum boards at one time is currently 4.
-
-subsection Parameters
-
-paragraph
- You can define parameters that you use throughout your simulation code. This makes it easy to tweak them in experiments. For example:
+## Parameters
+* You can define parameters that you use throughout your simulation code. This makes it easy to tweak them in experiments. For example:
 
 code
  lightningFrequencySetting .1
@@ -107,32 +81,23 @@ code
   comment Lots of lightning
   lightningFrequencySetting .5
 
-subsection Reports
+## Reports
+* Data is collected during the running of every experiment. You can export this data to CSV and/or start analyizing it immediately in the Ohayo app.
 
-paragraph
- Data is collected during the running of every experiment. You can export this data to CSV and/or start analyizing it immediately in the Ohayo app.
+## Board Setup
+* You can setup your board with the following commands.
+- insert
+- paste
 
-section Board Setup
+## Agent Palette
+* You can drop new Agents onto your board using the Agent Palette on the right side of your screen.
 
-paragraph
- You can setup your board with the following commands.
+# Tree Notation
+* Simoji the language is a Tree Language. There are no visible syntax characters. Indentation is used for parent/child relationships. Here is the grammar.
+ https://treenotation.org Tree Language
+ https://jtree.treenotation.org/designer#url%20https%3A%2F%2Fsimoji.pub%2Fsimoji.grammar grammar
 
-list
- - insert
- - paste
-
-section Agent Palette
-
-paragraph
- You can drop new Agents onto your board using the Agent Palette on the right side of your screen.
-
-section Tree Notation
-
-paragraph
- Simoji the language is a TreeLanguage🔗treenotation.org. There are no visible syntax characters. Indentation is used for parent/child relationships. Here is the grammar🔗jtree.treenotation.org/designer#url%20https%3A%2F%2Fsimoji.pub%2Fsimoji.grammar.
-
-section Keyboard shortcuts
-
+# Keyboard shortcuts
 pipeTable
  Combo|Command
  Spacebar|Play/Pause
@@ -146,22 +111,15 @@ pipeTable
  Arrows|Move selection
  Backspace|Delete selection
 
-section Sharing Your Simulations
+# Sharing Your Simulations
+* At the top of the page you should see a link that you can copy and paste to share your sim. When you update your simulation code that link will update.
 
-paragraph
- At the top of the page you should see a link that you can copy and paste to share your sim. When you update your simulation code that link will update.
+## Loading a Simulation from a URL
+* You can load any simulation from a publicly accessible URL by prefixing it with: `https://simoji.pub/#url `. For example: https://simoji.pub/#url%20https://simoji.pub/examples/eatTheBacon.simoji
 
-subsection Loading a Simulation from a URL
+# Getting Involved
+* The source code for Simoji and all development happens on Github.
+ https://github.com/publicdomaincompany/simoji Github
 
-paragraph
- You can load any simulation from a publicly accessible URL by prefixing it with: `https://simoji.pub/#url `. For example: https://simoji.pub/#url%20https://simoji.pub/examples/eatTheBacon.simoji
-
-section Getting Involved
-
-paragraph
- The source code for Simoji and all development happens on Github🔗github.com/publicdomaincompany/simoji.
-
-section Printable Version
-
-paragraph
- This cheat sheet is also available as a printable🔗./cheatSheet.pdf version.
+# Printable Version
+ link ./cheatSheet.pdf
