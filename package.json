@@ -7,14 +7,18 @@
     "example": "examples"
   },
   "prettier": {
+    "useTabs": false,
+    "tabWidth": 2,
+    "semi": false,
     "printWidth": 120,
-    "semi": false
+    "trailingComma": "none",
+    "arrowParens": "avoid"
   },
   "bin": {
     "simoji": "./cli.js"
   },
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=16.0.0"
   },
   "dependencies": {
     "jquery": "^3.6.0",

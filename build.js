@@ -27,22 +27,22 @@ ourPaths.unshift(__dirname + "/yodash.js")
 ourPaths.push(__dirname + "/BrowserGlue.js")
 
 const simCode = ourPaths
-	.map(path => {
-		const code = Disk.read(path)
+  .map(path => {
+    const code = Disk.read(path)
 
-		return new TypeScriptRewriter(code)
-			.removeRequires()
-			.removeNodeJsOnlyLines()
-			.changeNodeExportsToWindowExports()
-			.getString()
-	})
-	.join("\n\n")
+    return new TypeScriptRewriter(code)
+      .removeRequires()
+      .removeNodeJsOnlyLines()
+      .changeNodeExportsToWindowExports()
+      .getString()
+  })
+  .join("\n\n")
 
 Disk.write(__dirname + "/dist/simoji.js", simCode)
 
 const SimConstants = {
-	grammar: Disk.read(__dirname + "/simoji.grammar"),
-	examples: getExamples()
+  grammar: Disk.read(__dirname + "/simoji.grammar"),
+  examples: getExamples()
 }
 
 Disk.write(__dirname + "/dist/constants.js", `const SimConstants = ` + JSON.stringify(SimConstants))

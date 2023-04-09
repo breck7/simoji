@@ -54,7 +54,6 @@ startColumns 2
 
 ## Development
 ? What is the dev loop like?
-
 1. Start the dev server with `node server.js`.
 2. Open `localhost/dev.html`
 3. Edit files
