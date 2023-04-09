@@ -2,6 +2,7 @@ const { AbstractTreeComponentParser } = require("jtree/products/TreeComponentFra
 const { yodash } = require("../yodash.js")
 const { TreeNode } = require("jtree/products/TreeNode.js")
 const { Keywords, Directions } = require("./Types.js")
+const { WorldMap } = require("./WorldMap.js")
 
 const SelectedClass = "selected"
 
@@ -31,59 +32,6 @@ class Agent extends TreeNode {
     return !!this.element
   }
 
-  handleNeighbors() {
-    if (!this.stillExists) return
-    this.getCommandBlocks(Keywords.onNeighbors).forEach(neighborConditions => {
-      if (this.skip(neighborConditions.getWord(1))) return
-
-      const { neighorCount } = this
-
-      neighborConditions.forEach(conditionAndCommandsBlock => {
-        const [emoji, operator, count] = conditionAndCommandsBlock.words
-        const actual = neighorCount[emoji]
-        if (!yodash.compare(actual ?? 0, operator, count)) return
-        conditionAndCommandsBlock.forEach(command => this._executeCommand(this, command))
-
-        if (this.getIndex() === -1) return {}
-      })
-    })
-  }
-
-  handleTouches(agentPositionMap) {
-    if (!this.stillExists) return
-    this.getCommandBlocks(Keywords.onTouch).forEach(touchMap => {
-      if (this.skip(touchMap.getWord(1))) return
-
-      for (let pos of yodash.positionsAdjacentTo(this.position)) {
-        const hits = agentPositionMap.get(yodash.makePositionHash(pos)) ?? []
-        for (let target of hits) {
-          const targetId = target.firstWord
-          const commandBlock = touchMap.getNode(targetId)
-          if (commandBlock) {
-            commandBlock.forEach(command => this._executeCommand(target, command))
-            if (this.getIndex() === -1) return
-          }
-        }
-      }
-    })
-  }
-
-  handleOverlaps(targets) {
-    if (!this.stillExists) return
-    this.getCommandBlocks(Keywords.onHit).forEach(hitMap => {
-      if (this.skip(hitMap.getWord(1))) return
-      targets.forEach(target => {
-        const targetId = target.firstWord
-        const commandBlock = hitMap.getNode(targetId)
-        if (commandBlock) commandBlock.forEach(command => this._executeCommand(target, command))
-      })
-    })
-  }
-
-  get overlappingAgents() {
-    return (this.board.agentPositionMap.get(this.positionHash) ?? []).filter(node => node !== this)
-  }
-
   _executeCommand(target, instruction) {
     const commandName = instruction.firstWord
     if (this[commandName]) this[commandName](target, instruction)
@@ -111,19 +59,6 @@ class Agent extends TreeNode {
     if (this.health === 0) this.onDeathCommand()
   }
 
-  get neighorCount() {
-    const { agentPositionMap } = this.board
-    const neighborCounts = {}
-    yodash.positionsAdjacentTo(this.position).forEach(pos => {
-      const agents = agentPositionMap.get(yodash.makePositionHash(pos)) ?? []
-      agents.forEach(agent => {
-        if (!neighborCounts[agent.name]) neighborCounts[agent.name] = 0
-        neighborCounts[agent.name]++
-      })
-    })
-    return neighborCounts
-  }
-
   onDeathCommand() {
     this._executeCommandBlocks(Keywords.onDeath)
   }
@@ -149,7 +84,7 @@ class Agent extends TreeNode {
 
     if (this.holding) {
       this.holding.forEach(node => {
-        node.position = { right: this.left, down: this.top }
+        node.setPosition({ right: this.left, down: this.top })
       })
     }
   }
@@ -177,25 +112,91 @@ class Agent extends TreeNode {
   set top(value) {
     if (value > this.maxDown) value = this.maxDown
     if (value < 0) value = 0
-    this.position = {
+    this.setPosition({
       down: value,
       right: this.left
-    }
-  }
-
-  set position(value) {
-    if (this.board.isSolidAgent(value)) return this.bouncy ? this.bounce() : this
-    const newLine = this.getLine()
-      .split(" ")
-      .map(part => (part.includes("⬇️") ? value.down + "⬇️" : part.includes("➡️") ? value.right + "➡️" : part))
-      .join(" ")
-    return this.setLine(newLine)
+    })
   }
 
   get board() {
     return this.parent
   }
 
+  // ZZZZ
+  setPosition(newPosition) {
+    if (!this.worldMap.canGoHere(newPosition, this.agentSize)) return this.bouncy ? this.bounce() : this
+    const newLine = this.getLine()
+      .split(" ")
+      .map(part =>
+        part.includes("⬇️") ? newPosition.down + "⬇️" : part.includes("➡️") ? newPosition.right + "➡️" : part
+      )
+      .join(" ")
+    return this.setLine(newLine)
+  }
+
+  handleNeighbors() {
+    if (!this.stillExists) return
+
+    this.getCommandBlocks(Keywords.onNeighbors).forEach(neighborConditions => {
+      if (this.skip(neighborConditions.getWord(1))) return
+
+      const { neighorCount } = this
+
+      neighborConditions.forEach(conditionAndCommandsBlock => {
+        const [emoji, operator, count] = conditionAndCommandsBlock.getWords()
+        const actual = neighorCount[emoji]
+        if (!yodash.compare(actual ?? 0, operator, count)) return
+        conditionAndCommandsBlock.forEach(command => this._executeCommand(this, command))
+
+        if (this.getIndex() === -1) return {}
+      })
+    })
+  }
+
+  // ZZZZ
+  handleTouches() {
+    if (!this.stillExists) return
+    const { worldMap } = this
+    this.getCommandBlocks(Keywords.onTouch).forEach(touchMap => {
+      if (this.skip(touchMap.getWord(1))) return
+
+      for (let pos of worldMap.positionsAdjacentTo(this.position)) {
+        const hits = worldMap.objectsAtPosition(worldMap.makePositionHash(pos))
+        for (let target of hits) {
+          const targetId = target.getWord(0)
+          const commandBlock = touchMap.getNode(targetId)
+          if (commandBlock) {
+            commandBlock.forEach(command => this._executeCommand(target, command))
+            if (this.getIndex() === -1) return
+          }
+        }
+      }
+    })
+  }
+
+  // ZZZZ
+  handleOverlaps(targets) {
+    if (!this.stillExists) return
+    this.getCommandBlocks(Keywords.onHit).forEach(hitMap => {
+      if (this.skip(hitMap.getWord(1))) return
+      targets.forEach(target => {
+        const targetId = target.getWord(0)
+        const commandBlock = hitMap.getNode(targetId)
+        if (commandBlock) commandBlock.forEach(command => this._executeCommand(target, command))
+      })
+    })
+  }
+
+  // ZZZZ
+  get overlappingAgents() {
+    return this.worldMap.objectsAtPosition(this.positionHash).filter(node => node !== this)
+  }
+
+  get neighorCount() {
+    return this.worldMap.getNeighborCount(this.position)
+  }
+
+  // ZZZZ minus size?
   get maxRight() {
     return this.board.cols
   }
@@ -208,10 +209,10 @@ class Agent extends TreeNode {
     if (value > this.maxRight) value = this.maxRight
 
     if (value < 0) value = 0
-    this.position = {
+    this.setPosition({
       down: this.top,
       right: value
-    }
+    })
   }
 
   get left() {
@@ -266,11 +267,10 @@ class Agent extends TreeNode {
   }
 
   get inlineStyle() {
-    const { gridSize, health } = this
+    const { gridSize, health, agentSize } = this
     const opacity = health === undefined ? "" : `opacity:${this.health / this.startHealth};`
-    return `top:${this.top * gridSize}px;left:${
-      this.left * gridSize
-    }px;font-size:${gridSize}px;line-height: ${gridSize}px;${opacity};${this.style ?? ""}`
+    return `top:${this.top * gridSize}px;left:${this.left *
+      gridSize}px;font-size:${agentSize}px;line-height:${agentSize}px;${opacity};${this.style ?? ""}`
   }
 
   toElement() {
@@ -283,11 +283,22 @@ class Agent extends TreeNode {
     return elem
   }
 
-  toStumpCode() {
-    return `div ${this.html ?? this.icon}
- id agent${this._getUid()}
- class Agent ${this.selected ? SelectedClass : ""}
- style ${this.inlineStyle}`
+  toggleSelectCommand() {
+    const { root } = this
+    root.selection.includes(this) ? this.unselectCommand() : this.selectCommand()
+
+    root.ensureRender()
+    return this
+  }
+
+  unselectCommand() {
+    this.unselect()
+    this.root.selection = this.root.selection.filter(node => node !== this)
+  }
+
+  selectCommand() {
+    this.root.selection.push(this)
+    this.select()
   }
 
   needsUpdate(lastRenderedTime = 0) {

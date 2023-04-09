@@ -90,10 +90,10 @@ abstractSetupNumberParser
   compile() {
    return ""
   }
-sizeParser
+gridSizeParser
  description Size of a grid cell in pixels. Min is 10. Max is 200.
  extends abstractSetupNumberParser
- cruxFromId
+ crux size
 rowsParser
  description Number of rows in the grid. Default is based on screen size.
  extends abstractSetupNumberParser
@@ -340,6 +340,10 @@ customIntegerAttributeParser
  extends abstractIntegerAttributeParser
 healthParser
  extends abstractIntegerAttributeParser
+ cruxFromId
+sizeParser
+ extends abstractIntegerAttributeNode
+ description Size of the agent's rectangle.
  cruxFromId
 settingDefinitionParser
  description Define a configurable input.
