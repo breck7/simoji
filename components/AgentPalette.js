@@ -1,11 +1,11 @@
-const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework.node.js")
+const { AbstractTreeComponentParser } = require("jtree/products/TreeComponentFramework.node.js")
 
-class AgentPaletteComponent extends AbstractTreeComponent {
+class AgentPaletteComponent extends AbstractTreeComponentParser {
   toStumpCode() {
-    const root = this.getRootNode()
+    const root = this.root
     const { agentToInsert } = root
     const items = this.paletteItems
-      .map(item => item.getWord(0))
+      .map(item => item.firstWord)
       .map(
         word => ` div ${word}
   class ${agentToInsert === word ? "ActiveAgent" : ""}
@@ -18,16 +18,16 @@ ${items}`
   }
 
   get paletteItems() {
-    return this.getRootNode().allAgentTypes.filter(item => !item.has("noPalette"))
+    return this.root.allAgentTypes.filter(item => !item.has("noPalette"))
   }
 
   changeAgentBrushCommand(x) {
-    this.getRootNode().changeAgentBrushCommand(x)
+    this.root.changeAgentBrushCommand(x)
     this.setContent(Date.now()).renderAndGetRenderReport()
   }
 
   getDependencies() {
-    return [this.getRootNode().board]
+    return [this.root.board]
   }
 }
 

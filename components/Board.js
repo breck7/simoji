@@ -1,17 +1,17 @@
-const { jtree } = require("jtree")
+const { TreeNode } = require("jtree/products/TreeNode.js")
 const { yodash } = require("../yodash.js")
-const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework.node.js")
+const { AbstractTreeComponentParser } = require("jtree/products/TreeComponentFramework.node.js")
 const { GridComponent } = require("./Grid.js")
 const { Agent } = require("./Agent.js")
-const { Keywords, NodeTypes } = require("./Types.js")
+const { Keywords, ParserTypes } = require("./Types.js")
 
 let nodeJsPrefix = ""
 
 // prettier-ignore
 /*NODE_JS_ONLY*/ nodeJsPrefix = `const { Agent } = require("${__dirname}/Agent.js");`
 
-class BoardErrorNode extends AbstractTreeComponent {
-  _isErrorNodeType() {
+class BoardErrorParser extends AbstractTreeComponentParser {
+  _isErrorParser() {
     return true
   }
   toStumpCode() {
@@ -21,17 +21,17 @@ class BoardErrorNode extends AbstractTreeComponent {
   }
 }
 
-class leftStartPosition extends jtree.TreeNode {
+class leftStartPosition extends TreeNode {
   get width() {
     return parseInt(this.getWord(1))
   }
 }
 
-class BoardComponent extends AbstractTreeComponent {
+class BoardComponent extends AbstractTreeComponentParser {
   // override default parser creation.
   _getParser() {
     if (!this._parser)
-      this._parser = new jtree.TreeNode.Parser(BoardErrorNode, {
+      this._parser = new TreeNode.ParserCombinator(BoardErrorParser, {
         ...this.agentMap,
         GridComponent,
         BoardStyleComponent,
@@ -72,7 +72,7 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   get populationCsv() {
-    const csv = new TreeNode(this._populationCounts).toCsv()
+    const csv = new TreeNode(this._populationCounts).asCsv
     // add 0's for missing values
     return csv
       .split("\n")
@@ -102,7 +102,7 @@ class BoardComponent extends AbstractTreeComponent {
     if (blocks)
       blocks.forEach(block =>
         block
-          .filter(node => node.doesExtend(NodeTypes.abstractInjectCommandNode))
+          .filter(node => node.doesExtend(ParserTypes.abstractInjectCommandParser))
           .forEach(command => this.runInjectCommand(command))
       )
   }
@@ -168,7 +168,7 @@ class BoardComponent extends AbstractTreeComponent {
 
     if (this.resetAfterLoop) {
       this.resetAfterLoop = false
-      this.getRootNode().resetAllCommand()
+      this.root.resetAllCommand()
     }
   }
 
@@ -200,7 +200,7 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   get root() {
-    return this.getParent()
+    return this.parent
   }
 
   get ticksPerSecond() {
@@ -211,10 +211,10 @@ class BoardComponent extends AbstractTreeComponent {
   occupiedSpots = new Set()
 
   runInjectCommand(command) {
-    this[command.getNodeTypeId()](command)
+    this[command.parserId](command)
   }
 
-  insertClusterNode(commandNode) {
+  insertClusterParser(commandNode) {
     this.concat(
       yodash.insertClusteredRandomAgents(
         this.randomNumberGenerator,
@@ -229,28 +229,28 @@ class BoardComponent extends AbstractTreeComponent {
     )
   }
 
-  insertAtNode(commandNode) {
+  insertAtParser(commandNode) {
     this.appendLine(`${commandNode.getWord(1)} ${commandNode.getWord(3)} ${commandNode.getWord(2)}`)
     // TODO: update occupied spots cache?
   }
 
-  rectangleDrawNode(commandNode) {
-    const newLines = yodash.makeRectangle(...yodash.parseInts(commandNode.getWords().slice(1), 1))
+  rectangleDrawParser(commandNode) {
+    const newLines = yodash.makeRectangle(...yodash.parseInts(commandNode.words.slice(1), 1))
     this.concat(newLines)
     // TODO: update occupied spots cache?
   }
 
-  pasteDrawNode(commandNode) {
+  pasteDrawParser(commandNode) {
     const newSpots = new TreeNode(commandNode.childrenToString())
     yodash.updateOccupiedSpots(newSpots, this.occupiedSpots)
     this.concat(newSpots)
   }
 
-  fillNode(commandNode) {
+  fillParser(commandNode) {
     this.concat(yodash.fill(this.rows, this.cols, this.occupiedSpots, commandNode.getWord(1)))
   }
 
-  drawNode(commandNode) {
+  drawParser(commandNode) {
     const { occupiedSpots } = this
     const spots = yodash.draw(commandNode.childrenToString())
     yodash.updateOccupiedSpots(spots, occupiedSpots)
@@ -268,7 +268,7 @@ class BoardComponent extends AbstractTreeComponent {
     return this._rng
   }
 
-  insertNode(commandNode) {
+  insertParser(commandNode) {
     const { rows, cols, occupiedSpots } = this
     const emoji = commandNode.getWord(2)
     let amount = commandNode.getWord(1)
@@ -291,7 +291,7 @@ class BoardComponent extends AbstractTreeComponent {
       const emoji = commands.getWord(1)
       if (emoji && this.has(emoji)) return
       commands.forEach(instruction => {
-        this[instruction.getWord(0)](instruction)
+        this[instruction.firstWord](instruction)
       })
     })
   }
@@ -301,7 +301,7 @@ class BoardComponent extends AbstractTreeComponent {
       const probability = commands.getWord(1)
       if (probability && this.randomNumberGenerator() > parseFloat(probability)) return
       commands.forEach(instruction => {
-        this[instruction.getWord(0)](instruction)
+        this[instruction.firstWord](instruction)
       })
     })
   }
@@ -315,7 +315,7 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   get agents() {
-    return this.getTopDownArray().filter(node => node instanceof Agent)
+    return this.topDownArray.filter(node => node instanceof Agent)
   }
 
   get agentPositionMap() {
@@ -407,7 +407,7 @@ class BoardComponent extends AbstractTreeComponent {
 
   get experimentTitle() {
     if (!this.hasMultipleBoards) return ""
-    return this.root.mainExperiment.findNodes(Keywords.experiment)[this.boardIndex].getContent() ?? ""
+    return this.root.mainExperiment.findNodes(Keywords.experiment)[this.boardIndex].content ?? ""
   }
 
   startInterval() {
@@ -454,7 +454,7 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   alert(command) {
-    const message = command.getContent()
+    const message = command.content
     if (!this.isNodeJs())
       // todo: willow should shim this
       alert(message)
@@ -472,13 +472,13 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   log(command) {
-    this.root.log(command.getContent())
+    this.root.log(command.content)
   }
 }
 
-class BoardStyleComponent extends AbstractTreeComponent {
-  createParser() {
-    return new jtree.TreeNode.Parser(TreeNode)
+class BoardStyleComponent extends AbstractTreeComponentParser {
+  createParserCombinator() {
+    return new TreeNode.ParserCombinator(TreeNode)
   }
 
   toStumpCode() {

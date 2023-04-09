@@ -1,6 +1,6 @@
-const { jtree } = require("jtree")
+const { TreeNode } = require("jtree/products/TreeNode.js")
 
-const ExampleSims = new jtree.TreeNode()
+const ExampleSims = new TreeNode()
 
 // prettier-ignore
 /*NODE_JS_ONLY*/ ExampleSims.setChildren(require("../examples.js").getExamples().toString())

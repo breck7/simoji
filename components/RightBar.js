@@ -1,10 +1,10 @@
-const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework.node.js")
-const { jtree } = require("jtree")
+const { AbstractTreeComponentParser } = require("jtree/products/TreeComponentFramework.node.js")
+const { TreeNode } = require("jtree/products/TreeNode.js")
 const { AgentPaletteComponent } = require("./AgentPalette.js")
 
-class RightBarComponent extends AbstractTreeComponent {
-  createParser() {
-    return new jtree.TreeNode.Parser(undefined, {
+class RightBarComponent extends AbstractTreeComponentParser {
+  createParserCombinator() {
+    return new TreeNode.ParserCombinator(undefined, {
       AgentPaletteComponent
     })
   }

@@ -1,6 +1,6 @@
-const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework.node.js")
+const { AbstractTreeComponentParser } = require("jtree/products/TreeComponentFramework.node.js")
 
-class ResetButtonComponent extends AbstractTreeComponent {
+class ResetButtonComponent extends AbstractTreeComponentParser {
   toStumpCode() {
     return `span ≪
  title Clear and reset
@@ -9,8 +9,8 @@ class ResetButtonComponent extends AbstractTreeComponent {
   }
 
   resetAllCommand() {
-    this.getRootNode().pauseAllCommand()
-    this.getRootNode().resetAllCommand()
+    this.root.pauseAllCommand()
+    this.root.resetAllCommand()
   }
 }
 

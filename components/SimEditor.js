@@ -1,8 +1,8 @@
-const { jtree } = require("jtree")
-const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework.node.js")
+const { TreeNode } = require("jtree/products/TreeNode.js")
+const { AbstractTreeComponentParser } = require("jtree/products/TreeComponentFramework.node.js")
 
 // prettier-ignore
-/*NODE_JS_ONLY*/ const simojiCompiler = jtree.compileGrammarFileAtPathAndReturnRootConstructor(   __dirname + "/../simoji.grammar")
+/*NODE_JS_ONLY*/ const simojiParser = require("jtree/products/GrammarCompiler.js").GrammarCompiler.compileGrammarFileAtPathAndReturnRootParser(   __dirname + "/../simoji.grammar")
 
 class CodeMirrorShim {
   setSize() {}
@@ -14,7 +14,7 @@ class CodeMirrorShim {
   }
 }
 
-class SimEditorComponent extends AbstractTreeComponent {
+class SimEditorComponent extends AbstractTreeComponentParser {
   toStumpCode() {
     return `div
  class ${SimEditorComponent.name}
@@ -26,9 +26,9 @@ class SimEditorComponent extends AbstractTreeComponent {
   id codeErrorsConsole`
   }
 
-  createParser() {
-    return new jtree.TreeNode.Parser(undefined, {
-      value: jtree.TreeNode
+  createParserCombinator() {
+    return new TreeNode.ParserCombinator(undefined, {
+      value: TreeNode
     })
   }
 
@@ -43,11 +43,11 @@ class SimEditorComponent extends AbstractTreeComponent {
     const code = this.codeMirrorValue
     if (this._code === code) return
     this._code = code
-    const root = this.getRootNode()
+    const root = this.root
     root.pauseAllCommand()
     // this._updateLocalStorage()
 
-    this.program = new simojiCompiler(code)
+    this.program = new simojiParser(code)
     const errs = this.program.getAllErrors()
 
     const errMessage = errs.length ? `${errs.length} errors` : "&nbsp;"
@@ -70,7 +70,7 @@ class SimEditorComponent extends AbstractTreeComponent {
             this._onCodeKeyUp()
           })
           this.codeWidgets.push(
-            this.codeMirrorInstance.addLineWidget(err.getLineNumber() - 1, el, { coverGutter: false, noHScroll: false })
+            this.codeMirrorInstance.addLineWidget(err.lineNumber - 1, el, { coverGutter: false, noHScroll: false })
           )
         })
       const info = this.codeMirrorInstance.getScrollInfo()
@@ -85,7 +85,7 @@ class SimEditorComponent extends AbstractTreeComponent {
   }
 
   loadFromEditor() {
-    this.getRootNode().loadNewSim(this._code)
+    this.root.loadNewSim(this._code)
   }
 
   get simCode() {
@@ -116,12 +116,7 @@ class SimEditorComponent extends AbstractTreeComponent {
 
   _initCodeMirror() {
     if (this.isNodeJs()) return (this.codeMirrorInstance = new CodeMirrorShim())
-    this.codeMirrorInstance = new jtree.TreeNotationCodeMirrorMode(
-      "custom",
-      () => simojiCompiler,
-      undefined,
-      CodeMirror
-    )
+    this.codeMirrorInstance = new GrammarCodeMirrorMode("custom", () => simojiParser, undefined, CodeMirror)
       .register()
       .fromTextAreaWithAutocomplete(document.getElementById("EditorTextarea"), {
         lineWrapping: false,

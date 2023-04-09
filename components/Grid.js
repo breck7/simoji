@@ -1,9 +1,9 @@
 const { yodash } = require("../yodash.js")
-const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework.node.js")
+const { AbstractTreeComponentParser } = require("jtree/products/TreeComponentFramework.node.js")
 
-class GridComponent extends AbstractTreeComponent {
+class GridComponent extends AbstractTreeComponentParser {
   gridClickCommand(down, right) {
-    return this.getParent().insertAgentAtCommand(right, down)
+    return this.parent.insertAgentAtCommand(right, down)
   }
 
   makeBlock(down, right, gridSize) {
@@ -14,7 +14,7 @@ class GridComponent extends AbstractTreeComponent {
   }
 
   toStumpCode() {
-    const { cols, rows, gridSize } = this.getParent()
+    const { cols, rows, gridSize } = this.parent
     let blocks = ""
     let rs = rows
     while (rs >= 0) {

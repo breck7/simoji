@@ -46,14 +46,14 @@ propertyNameCell
 angleCell
  enum North South East West NorthWest NorthEast SouthWest SouthEast
  highlightScope constant.numeric
-errorNode
- baseNodeType errorNode
-simojiNode
+errorParser
+ baseParser errorParser
+simojiParser
  extensions simoji
  description A Tree Language that compiles to a TreeComponentFramework app.
  root
- inScope abstractIgnoreNode abstractSetupNode abstractInjectCommandNode onTickNode onExtinctNode behaviorDefinitionNode experimentNode settingDefinitionNode
- catchAllNodeType agentDefinitionNode
+ inScope abstractIgnoreParser abstractSetupParser abstractInjectCommandParser onTickParser onExtinctParser behaviorDefinitionParser experimentParser settingDefinitionParser
+ catchAllParser agentDefinitionParser
  compilesTo javascript
  example
   🦋
@@ -69,373 +69,373 @@ simojiNode
   insert 2 💡
  javascript
   get agentTypes() {
-   return this.filter(node => node.getNodeTypeId() === "agentDefinitionNode")
+   return this.filter(node => node.parserId === "agentDefinitionParser")
   }
-experimentNode
- crux experiment
+experimentParser
+ cruxFromId
  cells keywordCell
- inScope abstractIgnoreNode abstractSetupNode abstractInjectCommandNode onTickNode onExtinctNode settingDefinitionNode
+ inScope abstractIgnoreParser abstractSetupParser abstractInjectCommandParser onTickParser onExtinctParser settingDefinitionParser
  catchAllCellType stringCell
-abstractSetupNode
-atTimeNode
- crux atTime
+abstractSetupParser
+atTimeParser
+ cruxFromId
  description Run commands at a certain tick.
  cells keywordCell integerCell
- extends abstractSetupNode
- inScope abstractInjectCommandNode
-abstractSetupNumberNode
+ extends abstractSetupParser
+ inScope abstractInjectCommandParser
+abstractSetupNumberParser
  cells keywordCell integerCell
- extends abstractSetupNode
+ extends abstractSetupParser
  javascript
   compile() {
    return ""
   }
-sizeNode
+sizeParser
  description Size of a grid cell in pixels. Min is 10. Max is 200.
- extends abstractSetupNumberNode
- crux size
-rowsNode
+ extends abstractSetupNumberParser
+ cruxFromId
+rowsParser
  description Number of rows in the grid. Default is based on screen size.
- extends abstractSetupNumberNode
- crux rows
-columnsNode
+ extends abstractSetupNumberParser
+ cruxFromId
+columnsParser
  description Number of columns in the grid. Default is based on screen size.
- extends abstractSetupNumberNode
- crux columns
-seedNode
+ extends abstractSetupNumberParser
+ cruxFromId
+seedParser
  description If you'd like reproducible runs set a seed for the random number generator.
- extends abstractSetupNumberNode
- crux seed
-ticksPerSecondNode
+ extends abstractSetupNumberParser
+ cruxFromId
+ticksPerSecondParser
  description Time in milliseconds of one step.
- extends abstractSetupNumberNode
- crux ticksPerSecond
-reportNode
- crux report
+ extends abstractSetupNumberParser
+ cruxFromId
+reportParser
+ cruxFromId
  description Define a custom report template.
- catchAllNodeType ohayoLineNode
- extends abstractSetupNode
+ catchAllParser ohayoLineParser
+ extends abstractSetupParser
  cells keywordCell
  javascript
   compile() {
    return ""
   }
-styleNode
+styleParser
  description Optional CSS to load in BoardStyleComponent
- extends abstractSetupNode
+ extends abstractSetupParser
  cells keywordCell
- crux style
- catchAllNodeType styleLineNode
+ cruxFromId
+ catchAllParser styleLineParser
  javascript
   compile() {
    return ""
   }
-questionNode
- crux question
+questionParser
+ cruxFromId
  description What are you trying to figure out?
  cells keywordCell
  catchAllCellType stringCell
- extends abstractSetupNode
-abstractInjectCommandNode
-fillNode
+ extends abstractSetupParser
+abstractInjectCommandParser
+fillParser
  description Fill all blank cells with this agent.
- extends abstractInjectCommandNode
+ extends abstractInjectCommandParser
  cells keywordCell emojiCell
- crux fill
-drawNode
- extends abstractInjectCommandNode
+ cruxFromId
+drawParser
+ extends abstractInjectCommandParser
  cells keywordCell
- crux draw
- catchAllNodeType drawLineNode
-insertNode
- extends abstractInjectCommandNode
+ cruxFromId
+ catchAllParser drawLineParser
+insertParser
+ extends abstractInjectCommandParser
  cells keywordCell integerOrPercentCell emojiCell
- crux insert
-insertAtNode
- extends insertNode
+ cruxFromId
+insertAtParser
+ extends insertParser
  description Insert at X Y
  cells keywordCell emojiCell positionCell positionCell
- crux insertAt
-insertClusterNode
- extends insertNode
- crux insertCluster
+ cruxFromId
+insertClusterParser
+ extends insertParser
+ cruxFromId
  catchAllCellType integerCell
-rectangleDrawNode
- extends abstractInjectCommandNode
+rectangleDrawParser
+ extends abstractInjectCommandParser
  cells keywordCell emojiCell integerCell integerCell
  catchAllCellType integerCell
  crux rectangle
-pasteDrawNode
- extends abstractInjectCommandNode
+pasteDrawParser
+ extends abstractInjectCommandParser
  cells keywordCell
  crux paste
- catchAllNodeType pasteLineNode
-drawLineNode
+ catchAllParser pasteLineParser
+drawLineParser
  catchAllCellType emojiCell
-pasteLineNode
+pasteLineParser
  catchAllCellType anyCell
- catchAllNodeType pasteLineNode
-agentDefinitionNode
- inScope abstractIgnoreNode abstractEventNode abstractAgentAttributeNode abstractBehaviorAttributeNode
+ catchAllParser pasteLineParser
+agentDefinitionParser
+ inScope abstractIgnoreParser abstractEventParser abstractAgentAttributeParser behaviorAttributeParser
  cells keywordCell
- catchAllNodeType errorNode
+ catchAllParser errorParser
  compiler
   stringTemplate 
  javascript
   compile() {
-   const root = this.getRootNode()
-   const name = root.agentKeywordMap[this.getWord(0)]
+   const root = this.root
+   const name = root.agentKeywordMap[this.firstWord]
    const normal = super.compile()
-   const behaviors = this.filter(node => node.getNodeTypeId() === "abstractBehaviorAttributeNode")
+   const behaviors = this.filter(node => node.parserId === "behaviorAttributeParser")
     .map(behavior => `"${behavior.getLine()}"`)
     .join(",")
    return `class ${name} extends Agent {
-      icon = "${this.getWord(0)}"
+      icon = "${this.firstWord}"
       behaviors = [${behaviors}]
       ${normal}
     }`
   }
-abstractCommandNode
+abstractCommandParser
  cells keywordCell
-abstractSubjectObjectCommandNode
- extends abstractCommandNode
-replaceWithCommandNode
- extends abstractSubjectObjectCommandNode
+abstractSubjectObjectCommandParser
+ extends abstractCommandParser
+replaceWithCommandParser
+ extends abstractSubjectObjectCommandParser
  crux replaceWith
  cells keywordCell emojiCell
-kickItCommandNode
- extends abstractSubjectObjectCommandNode
+kickItCommandParser
+ extends abstractSubjectObjectCommandParser
  crux kickIt
-shootCommandNode
- extends abstractSubjectObjectCommandNode
+shootCommandParser
+ extends abstractSubjectObjectCommandParser
  crux shoot
-pickItUpCommandNode
- extends abstractSubjectObjectCommandNode
+pickItUpCommandParser
+ extends abstractSubjectObjectCommandParser
  crux pickItUp
-spawnCommandNode
+spawnCommandParser
  crux spawn
- extends abstractCommandNode
+ extends abstractCommandParser
  cells keywordCell emojiCell
  catchAllCellType positionCell
-moveToEmptySpotCommandNode
+moveToEmptySpotCommandParser
  crux moveToEmptySpot
- extends abstractCommandNode
+ extends abstractCommandParser
  cells keywordCell
-removeCommandNode
+removeCommandParser
  description Remove this agent from the board.
  crux remove
- extends abstractCommandNode
+ extends abstractCommandParser
  cells keywordCell
-javascriptCommandNode
+javascriptCommandParser
  description An escape hatch so you can write custom javascript in a pinch.
- extends abstractCommandNode
+ extends abstractCommandParser
  crux javascript
- catchAllNodeType javascriptLineNode
+ catchAllParser javascriptLineParser
  cells keywordCell
-alertCommandNode
- extends abstractCommandNode
+alertCommandParser
+ extends abstractCommandParser
  crux alert
  catchAllCellType stringCell
-logCommandNode
- extends abstractCommandNode
+logCommandParser
+ extends abstractCommandParser
  crux log
  catchAllCellType stringCell
-narrateCommandNode
- extends abstractCommandNode
+narrateCommandParser
+ extends abstractCommandParser
  crux narrate
  catchAllCellType stringCell
-pauseCommandNode
- extends abstractCommandNode
+pauseCommandParser
+ extends abstractCommandParser
  crux pause
-decreaseCommandNode
- extends abstractCommandNode
+decreaseCommandParser
+ extends abstractCommandParser
  description Decrease a property by 1.
  crux decrease
  cells keywordCell propertyNameCell
-increaseCommandNode
- extends abstractCommandNode
+increaseCommandParser
+ extends abstractCommandParser
  description Increase a property by 1.
  crux increase
  cells keywordCell propertyNameCell
-moveCommandNode
- extends abstractCommandNode
+moveCommandParser
+ extends abstractCommandParser
  crux move
-turnRandomlyCommandNode
- extends abstractCommandNode
+turnRandomlyCommandParser
+ extends abstractCommandParser
  crux turnRandomly
-jitterCommandNode
- extends abstractCommandNode
+jitterCommandParser
+ extends abstractCommandParser
  crux jitter
-turnTowardCommandNode
+turnTowardCommandParser
  description Turn to the closest agent of a certain type.
- extends abstractCommandNode
+ extends abstractCommandParser
  crux turnToward
  cells keywordCell emojiCell
-turnFromCommandNode
+turnFromCommandParser
  description Turn away from the closest agent of a certain type.
- extends abstractCommandNode
+ extends abstractCommandParser
  crux turnFrom
  cells keywordCell emojiCell
-learnCommandNode
+learnCommandParser
  crux learn
- extends abstractCommandNode
+ extends abstractCommandParser
  cells keywordCell behaviorNameCell
-unlearnCommandNode
+unlearnCommandParser
  crux unlearn
- extends abstractCommandNode
+ extends abstractCommandParser
  cells keywordCell behaviorNameCell
-abstractAgentAttributeNode
+abstractAgentAttributeParser
  cells keywordCell
-abstractStringAttributeNode
- extends abstractAgentAttributeNode
+stringAttributeParser
+ extends abstractAgentAttributeParser
  pattern ^\w+ .+$
  catchAllCellType stringCell
  javascript
   compile() {
-   return `${this.getWord(0)} = "${this.getWord(1)}"`
+   return `${this.firstWord} = "${this.getWord(1)}"`
   }
-angleNode
- extends abstractStringAttributeNode
+angleParser
+ extends stringAttributeParser
  cells keywordCell angleCell
- crux angle
-agentStyleNode
+ cruxFromId
+agentStyleParser
  description Provide custom CSS for an agent type.
- extends abstractStringAttributeNode
+ extends stringAttributeParser
  cells keywordCell cssCell
  crux style
-agentHtmlNode
+agentHtmlParser
  description Provide custom HTML for each rendered agent.
- extends abstractStringAttributeNode
+ extends stringAttributeParser
  cells keywordCell htmlCell
  crux html
-abstractBooleanAttributeNode
+abstractBooleanAttributeParser
  description A boolean attribute.
- extends abstractAgentAttributeNode
+ extends abstractAgentAttributeParser
  javascript
   compile() {
-   return `${this.getWord(0)} = true`
+   return `${this.firstWord} = true`
   }
-noPaletteNode
- extends abstractBooleanAttributeNode
+noPaletteParser
+ extends abstractBooleanAttributeParser
  cruxFromId
  description Don't show this agent in the palette.
-solidTraitNode
+solidTraitParser
  description If set other agents won't pass through these.
- extends abstractBooleanAttributeNode
+ extends abstractBooleanAttributeParser
  crux solid
-bouncyTraitNode
+bouncyTraitParser
  description If set other agents will bounce off this after a collision.
- extends abstractBooleanAttributeNode
+ extends abstractBooleanAttributeParser
  crux bouncy
-abstractIntegerAttributeNode
- extends abstractAgentAttributeNode
+abstractIntegerAttributeParser
+ extends abstractAgentAttributeParser
  description An integer attribute.
  cells keywordCell integerCell
  javascript
   compile() {
-   return `${this.getWord(0)} = ${this.getWord(1)}`
+   return `${this.firstWord} = ${this.getWord(1)}`
   }
-customIntegerAttributeNode
+customIntegerAttributeParser
  pattern ^\w+ \d+$
- extends abstractIntegerAttributeNode
-healthNode
- extends abstractIntegerAttributeNode
- crux health
-settingDefinitionNode
+ extends abstractIntegerAttributeParser
+healthParser
+ extends abstractIntegerAttributeParser
+ cruxFromId
+settingDefinitionParser
  description Define a configurable input.
  cells keywordCell settingValueCell
  pattern ^\w+Setting .+$
-ohayoLineNode
+ohayoLineParser
  description Data visualization code written for Ohayo.
  catchAllCellType ohayoCell
-styleLineNode
+styleLineParser
  catchAllCellType cssCell
- catchAllNodeType styleLineNode
-targetEmojiNode
- inScope abstractCommandNode
+ catchAllParser styleLineParser
+targetEmojiParser
+ inScope abstractCommandParser
  cells emojiCell
-abstractEventNode
+abstractEventParser
  cells keywordCell
  catchAllCellType probabilityCell
  javascript
   compile() {
    return ``
   }
-abstractInteractionEventNode
- extends abstractEventNode
- catchAllNodeType targetEmojiNode
-onHitNode
- extends abstractInteractionEventNode
- crux onHit
+abstractInteractionEventParser
+ extends abstractEventParser
+ catchAllParser targetEmojiParser
+onHitParser
+ extends abstractInteractionEventParser
+ cruxFromId
  description Define what happens when this agent collides with other agents.
-onTouchNode
- extends abstractInteractionEventNode
- crux onTouch
+onTouchParser
+ extends abstractInteractionEventParser
+ cruxFromId
  description Define what happens when this agent is adjacent to other agents.
-onNeighborsNode
+onNeighborsParser
  description Define what happens when a certain amount of neighbors are nearby.
- extends abstractInteractionEventNode
- inScope emojiAndNeighborConditionNode
- crux onNeighbors
-onDeathNode
- extends abstractEventNode
- crux onDeath
- inScope abstractCommandNode
+ extends abstractInteractionEventParser
+ inScope emojiAndNeighborConditionParser
+ cruxFromId
+onDeathParser
+ extends abstractEventParser
+ cruxFromId
+ inScope abstractCommandParser
  description Define what happens when this agent runs out of health.
-onTickNode
- extends abstractEventNode
- crux onTick
- inScope abstractCommandNode
+onTickParser
+ extends abstractEventParser
+ cruxFromId
+ inScope abstractCommandParser
  description Define what happens each tick.
-emojiAndNeighborConditionNode
- inScope abstractCommandNode
+emojiAndNeighborConditionParser
+ inScope abstractCommandParser
  pattern ^.+ (<|>|=|<=|>=)+ .+$
  cells emojiCell conditionalOperatorCell neighborCountCell
-onExtinctNode
- crux onExtinct
- inScope abstractCommandNode
+onExtinctParser
+ cruxFromId
+ inScope abstractCommandParser
  cells keywordCell emojiCell
  description Define what happens when a type of agent goes extinct from the board.
  javascript
   compile() {
    return ""
   }
-abstractIgnoreNode
+abstractIgnoreParser
  tags doNotSynthesize
  javascript
   compile () {
     return ""
   }
-commentNode
- extends abstractIgnoreNode
+commentParser
+ extends abstractIgnoreParser
  catchAllCellType commentCell
- crux comment
- catchAllNodeType commentLineNode
-commentAliasNode
+ cruxFromId
+ catchAllParser commentLineParser
+commentAliasParser
  description Alternate alias for a comment.
  crux #
- extends commentNode
-blankLineNode
- extends abstractIgnoreNode
+ extends commentParser
+blankLineParser
+ extends abstractIgnoreParser
  description Blank lines compile do nothing.
  cells blankCell
  pattern ^$
-commentLineNode
+commentLineParser
  catchAllCellType commentCell
-javascriptLineNode
+javascriptLineParser
  catchAllCellType javascriptCell
-abstractBehaviorAttributeNode
+behaviorAttributeParser
  cells behaviorNameCell
  pattern ^.*Behavior$
  javascript
   compile() {
    return ""
   }
-behaviorDefinitionNode
- inScope abstractIgnoreNode abstractEventNode
+behaviorDefinitionParser
+ inScope abstractIgnoreParser abstractEventParser
  cells behaviorNameCell
  pattern ^.*Behavior$
- catchAllNodeType errorNode
+ catchAllParser errorParser
  javascript
   compile() {
    return ""

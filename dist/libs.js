@@ -10484,10 +10484,9 @@ Z.prototype.chain=tf,Z.prototype.commit=rf,Z.prototype.next=ef,Z.prototype.plant
 })
 
 
-"use strict"
 class Timer {
   constructor() {
-    this._tickTime = Date.now() - (TreeUtils.isNodeJs() ? 1000 * process.uptime() : 0)
+    this._tickTime = Date.now() - (Utils.isNodeJs() ? 1000 * process.uptime() : 0)
     this._firstTickTime = this._tickTime
   }
   tick(msg) {
@@ -10500,10 +10499,107 @@ class Timer {
     return Date.now() - this._firstTickTime
   }
 }
-class TreeUtils {
+class Utils {
   static getFileExtension(filepath = "") {
     const match = filepath.match(/\.([^\.]+)$/)
     return (match && match[1]) || ""
+  }
+  static runCommand(instance, command = "", param = undefined) {
+    const run = name => {
+      console.log(`Running ${name}:`)
+      instance[name](param)
+    }
+    if (instance[command + "Command"]) return run(command + "Command")
+    // Get commands from both the child and parent classes
+    const classes = [Object.getPrototypeOf(instance), Object.getPrototypeOf(Object.getPrototypeOf(instance))]
+    const allCommands = classes.map(classInstance => Object.getOwnPropertyNames(classInstance).filter(word => word.endsWith("Command"))).flat()
+    allCommands.sort()
+    const commandAsNumber = parseInt(command) - 1
+    if (command.match(/^\d+$/) && allCommands[commandAsNumber]) return run(allCommands[commandAsNumber])
+    console.log(`\n❌ No command provided. Available commands:\n\n` + allCommands.map((name, index) => `${index + 1}. ${name.replace("Command", "")}`).join("\n") + "\n")
+  }
+  static removeReturnChars(str = "") {
+    return str.replace(/\r/g, "")
+  }
+  static isAbsoluteUrl(url) {
+    return url.startsWith("https://") || url.startsWith("http://")
+  }
+  static removeEmptyLines(str = "") {
+    return str.replace(/\n\n+/g, "\n")
+  }
+  static shiftRight(str = "", numSpaces = 1) {
+    let spaces = " ".repeat(numSpaces)
+    return str.replace(/\n/g, `\n${spaces}`)
+  }
+  static getLinks(str = "") {
+    const _re = new RegExp("(^|[ \t\r\n])((ftp|http|https):(([A-Za-z0-9$_.+!*(),;/?:@&~=-])|%[A-Fa-f0-9]{2}){2,}(#([a-zA-Z0-9][a-zA-Z0-9$_.+!*(),;/?:@&~=%-]*))?([A-Za-z0-9$_+!*();/?:~-]))", "g")
+    return str.match(_re) || []
+  }
+  // Only allow text content and inline styling. Don't allow HTML tags or any nested scroll tags or escape characters.
+  static escapeScrollAndHtml(content = "") {
+    return content.replace(/</g, "&lt;").replace(/\n/g, "").replace(/\r/g, "").replace(/\\/g, "")
+  }
+  static ensureDelimiterNotFound(strings, delimiter) {
+    const hit = strings.find(word => word.includes(delimiter))
+    if (hit) throw `Delimiter "${delimiter}" found in hit`
+  }
+  // https://github.com/rigoneri/indefinite-article.js/blob/master/indefinite-article.js
+  static getIndefiniteArticle(phrase) {
+    // Getting the first word
+    const match = /\w+/.exec(phrase)
+    let word
+    if (match) word = match[0]
+    else return "an"
+    var l_word = word.toLowerCase()
+    // Specific start of words that should be preceded by 'an'
+    var alt_cases = ["honest", "hour", "hono"]
+    for (var i in alt_cases) {
+      if (l_word.indexOf(alt_cases[i]) == 0) return "an"
+    }
+    // Single letter word which should be preceded by 'an'
+    if (l_word.length == 1) {
+      if ("aedhilmnorsx".indexOf(l_word) >= 0) return "an"
+      else return "a"
+    }
+    // Capital words which should likely be preceded by 'an'
+    if (word.match(/(?!FJO|[HLMNS]Y.|RY[EO]|SQU|(F[LR]?|[HL]|MN?|N|RH?|S[CHKLMNPTVW]?|X(YL)?)[AEIOU])[FHLMNRSX][A-Z]/)) {
+      return "an"
+    }
+    // Special cases where a word that begins with a vowel should be preceded by 'a'
+    const regexes = [/^e[uw]/, /^onc?e\b/, /^uni([^nmd]|mo)/, /^u[bcfhjkqrst][aeiou]/]
+    for (var i in regexes) {
+      if (l_word.match(regexes[i])) return "a"
+    }
+    // Special capital words (UK, UN)
+    if (word.match(/^U[NK][AIEO]/)) {
+      return "a"
+    } else if (word == word.toUpperCase()) {
+      if ("aedhilmnorsx".indexOf(l_word[0]) >= 0) return "an"
+      else return "a"
+    }
+    // Basic method of words that begin with a vowel being preceded by 'an'
+    if ("aeiou".indexOf(l_word[0]) >= 0) return "an"
+    // Instances where y follwed by specific letters is preceded by 'an'
+    if (l_word.match(/^y(b[lor]|cl[ea]|fere|gg|p[ios]|rou|tt)/)) return "an"
+    return "a"
+  }
+  static htmlEscaped(content = "") {
+    return content.replace(/</g, "&lt;")
+  }
+  static isValidEmail(email = "") {
+    return email.toLowerCase().match(/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/)
+  }
+  static capitalizeFirstLetter(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1)
+  }
+  // generate a random alpha numeric hash:
+  static getRandomCharacters(length) {
+    const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+    let result = ""
+    for (let i = 0; i < length; i++) {
+      result += characters.charAt(Math.floor(Math.random() * characters.length))
+    }
+    return result
   }
   static isNodeJs() {
     return typeof exports !== "undefined"
@@ -10525,6 +10621,34 @@ class TreeUtils {
     if (result.length === 0) throw new Error(`Project root "${projectName}" in folder ${startingDirName} not found.`)
     return result
   }
+  static titleToPermalink(str) {
+    return str
+      .replace(/[\/\_\:\\\[\]]/g, "-")
+      .replace(/π/g, "pi")
+      .replace(/`/g, "tick")
+      .replace(/\$/g, "dollar-sign")
+      .replace(/\*$/g, "-star")
+      .replace(/^\*/g, "star-")
+      .replace(/\*/g, "-star-")
+      .replace(/\'+$/g, "q")
+      .replace(/^@/g, "at-")
+      .replace(/@$/g, "-at")
+      .replace(/@/g, "-at-")
+      .replace(/[\'\"\,\ū]/g, "")
+      .replace(/^\#/g, "sharp-")
+      .replace(/\#$/g, "-sharp")
+      .replace(/\#/g, "-sharp-")
+      .replace(/[\(\)]/g, "")
+      .replace(/\+\+$/g, "pp")
+      .replace(/\+$/g, "p")
+      .replace(/^\!/g, "bang-")
+      .replace(/\!$/g, "-bang")
+      .replace(/\!/g, "-bang-")
+      .replace(/\&/g, "-n-")
+      .replace(/[\+ ]/g, "-")
+      .replace(/[^a-zA-Z0-9\-\.]/g, "")
+      .toLowerCase()
+  }
   static escapeRegExp(str) {
     return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
   }
@@ -10537,7 +10661,7 @@ class TreeUtils {
   static makeMatrix(cols, rows, fill = 0) {
     const matrix = []
     while (rows) {
-      matrix.push(TreeUtils.makeVector(cols, fill))
+      matrix.push(Utils.makeVector(cols, fill))
       rows--
     }
     return matrix
@@ -10578,7 +10702,7 @@ class TreeUtils {
   }
   static shuffleInPlace(arr, seed = Date.now()) {
     // https://stackoverflow.com/questions/6274339/how-can-i-shuffle-an-array
-    const randFn = TreeUtils._getPseudoRandom0to1FloatGenerator(seed)
+    const randFn = Utils._getPseudoRandom0to1FloatGenerator(seed)
     for (let index = arr.length - 1; index > 0; index--) {
       const tempIndex = Math.floor(randFn() * (index + 1))
       ;[arr[index], arr[tempIndex]] = [arr[tempIndex], arr[index]]
@@ -10587,12 +10711,7 @@ class TreeUtils {
   }
   // Only allows a-zA-Z0-9-_  (And optionally .)
   static _permalink(str, reg) {
-    return str.length
-      ? str
-          .toLowerCase()
-          .replace(reg, "")
-          .replace(/ /g, "-")
-      : ""
+    return str.length ? str.toLowerCase().replace(reg, "").replace(/ /g, "-") : ""
   }
   static isValueEmpty(value) {
     return value === undefined || value === "" || (typeof value === "number" && isNaN(value)) || (value instanceof Date && isNaN(value))
@@ -10690,7 +10809,7 @@ class TreeUtils {
     for (let optionIndex = 0; optionIndex < len; optionIndex++) {
       const candidate = options[optionIndex]
       if (!candidate) continue
-      const editDistance = TreeUtils._getEditDistance(str, caseSensitive ? candidate : candidate.toLowerCase(), maximumEditDistanceToBeBestMatch)
+      const editDistance = Utils._getEditDistance(str, caseSensitive ? candidate : candidate.toLowerCase(), maximumEditDistanceToBeBestMatch)
       if (editDistance < maximumEditDistanceToBeBestMatch) {
         maximumEditDistanceToBeBestMatch = editDistance
         closestMatch = candidate
@@ -10701,7 +10820,7 @@ class TreeUtils {
   // Adapted from: https://github.com/dcporter/didyoumean.js/blob/master/didYouMean-1.2.1.js
   static _getEditDistance(stringA, stringB, maxInt) {
     // Handle null or undefined max.
-    maxInt = maxInt || maxInt === 0 ? maxInt : TreeUtils.MAX_INT
+    maxInt = maxInt || maxInt === 0 ? maxInt : Utils.MAX_INT
     const aLength = stringA.length
     const bLength = stringB.length
     // Fast path - no A or B.
@@ -10724,7 +10843,7 @@ class TreeUtils {
     let maxJ
     // Loop over the rest of the columns.
     for (let bIndex = 1; bIndex <= bLength; bIndex++) {
-      colMin = TreeUtils.MAX_INT
+      colMin = Utils.MAX_INT
       minJ = 1
       if (bIndex > maxInt) minJ = bIndex - maxInt
       maxJ = bLength + 1
@@ -10809,7 +10928,7 @@ class TreeUtils {
   }
   static getRandomString(length = 30, letters = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(""), seed = Date.now()) {
     let str = ""
-    const randFn = TreeUtils._getPseudoRandom0to1FloatGenerator(seed)
+    const randFn = Utils._getPseudoRandom0to1FloatGenerator(seed)
     while (length) {
       str += letters[Math.round(Math.min(randFn() * letters.length, letters.length - 1))]
       length--
@@ -10820,7 +10939,7 @@ class TreeUtils {
   static makeRandomTree(lines = 1000, seed = Date.now()) {
     let str = ""
     let letters = " 123abc".split("")
-    const randFn = TreeUtils._getPseudoRandom0to1FloatGenerator(seed)
+    const randFn = Utils._getPseudoRandom0to1FloatGenerator(seed)
     while (lines) {
       let indent = " ".repeat(Math.round(randFn() * 6))
       let bit = indent
@@ -10838,7 +10957,7 @@ class TreeUtils {
   // adapted from https://gist.github.com/blixt/f17b47c62508be59987b
   // 1993 Park-Miller LCG
   static _getPseudoRandom0to1FloatGenerator(seed) {
-    return function() {
+    return function () {
       seed = Math.imul(48271, seed) | 0 % 2147483647
       return (seed & 2147483647) / 2147483648
     }
@@ -10966,277 +11085,49 @@ class TreeUtils {
     }
   }
 }
-TreeUtils.Timer = Timer
+Utils.Timer = Timer
 //http://stackoverflow.com/questions/37684/how-to-replace-plain-urls-with-links#21925491
-TreeUtils.linkify = text => {
+Utils.linkify = (text, target = "_blank") => {
   let replacedText
   let replacePattern1
   let replacePattern2
   let replacePattern3
   //URLs starting with http://, https://, or ftp://
-  replacePattern1 = /(\b(https?|ftp):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gim
-  replacedText = text.replace(replacePattern1, '<a href="$1" target="_blank">$1</a>')
+  replacePattern1 = /(\b(https?|ftp):\/\/[-A-Z\(\)0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+\(\)&@#\/%=~_|])/gim
+  replacedText = text.replace(replacePattern1, `<a href="$1" target="${target}">$1</a>`)
   //URLs starting with "www." (without // before it, or it'd re-link the ones done above).
   replacePattern2 = /(^|[^\/])(www\.[\S]+(\b|$))/gim
-  replacedText = replacedText.replace(replacePattern2, '$1<a href="http://$2" target="_blank">$2</a>')
+  replacedText = replacedText.replace(replacePattern2, `$1<a href="http://$2" target="${target}">$2</a>`)
   //Change email addresses to mailto:: links.
   replacePattern3 = /(([a-zA-Z0-9\-\_\.])+@[a-zA-Z\_]+?(\.[a-zA-Z]{2,6})+)/gim
   replacedText = replacedText.replace(replacePattern3, '<a href="mailto:$1">$1</a>')
   return replacedText
 }
 // todo: switch algo to: http://indiegamr.com/generate-repeatable-random-numbers-in-js/?
-TreeUtils.makeSemiRandomFn = (seed = Date.now()) => {
+Utils.makeSemiRandomFn = (seed = Date.now()) => {
   return () => {
     const semiRand = Math.sin(seed++) * 10000
     return semiRand - Math.floor(semiRand)
   }
 }
-TreeUtils.randomUniformInt = (min, max, seed = Date.now()) => {
-  return Math.floor(TreeUtils.randomUniformFloat(min, max, seed))
+Utils.randomUniformInt = (min, max, seed = Date.now()) => {
+  return Math.floor(Utils.randomUniformFloat(min, max, seed))
 }
-TreeUtils.randomUniformFloat = (min, max, seed = Date.now()) => {
-  const randFn = TreeUtils.makeSemiRandomFn(seed)
+Utils.randomUniformFloat = (min, max, seed = Date.now()) => {
+  const randFn = Utils.makeSemiRandomFn(seed)
   return min + (max - min) * randFn()
 }
-TreeUtils.getRange = (startIndex, endIndexExclusive, increment = 1) => {
+Utils.getRange = (startIndex, endIndexExclusive, increment = 1) => {
   const range = []
   for (let index = startIndex; index < endIndexExclusive; index = index + increment) {
     range.push(index)
   }
   return range
 }
-TreeUtils.MAX_INT = Math.pow(2, 32) - 1
-window.TreeUtils = TreeUtils
-class TestRacerTestBlock {
-  constructor(testFile, testName, fn) {
-    this._parentFile = testFile
-    this._testName = testName
-    this._testFn = fn
-  }
-  _emitMessage(message) {
-    this._parentFile.getRunner()._emitMessage(message)
-    return message
-  }
-  async execute() {
-    let passes = []
-    let failures = []
-    const assertEqual = (actual, expected, message = "") => {
-      if (expected === actual) {
-        passes.push(message)
-      } else {
-        failures.push([actual, expected, message])
-      }
-    }
-    try {
-      await this._testFn(assertEqual)
-    } catch (err) {
-      failures.push([
-        "1",
-        "0",
-        `Should not have uncaught errors but in ${this._testName} got error:
- toString:
-  ${new TreeNode(err.toString()).toString(2)}
- stack:
-  ${new TreeNode(err.stack).toString(2)}`
-      ])
-    }
-    failures.length ? this._emitBlockFailedMessage(failures) : this._emitBlockPassedMessage(passes)
-    return {
-      passes,
-      failures
-    }
-  }
-  _emitBlockPassedMessage(passes) {
-    this._emitMessage(`ok block ${this._testName} - ${passes.length} passed`)
-  }
-  _emitBlockFailedMessage(failures) {
-    // todo: should replace not replace last newline?
-    // todo: do side by side.
-    // todo: add diff.
-    this._emitMessage(`failed block ${this._testName}`)
-    this._emitMessage(
-      failures
-        .map(failure => {
-          const actualVal = failure[0] === undefined ? "undefined" : failure[0].toString()
-          const expectedVal = failure[1] === undefined ? "undefined" : failure[1].toString()
-          const actual = new jtree.TreeNode(`actual\n${new jtree.TreeNode(actualVal).toString(1)}`)
-          const expected = new jtree.TreeNode(`expected\n${new jtree.TreeNode(expectedVal.toString()).toString(1)}`)
-          const comparison = actual.toComparison(expected)
-          return new jtree.TreeNode(` assertion ${failure[2]}\n${comparison.toSideBySide([actual, expected]).toString(2)}`)
-        })
-        .join("\n")
-    )
-  }
-}
-class TestRacerFile {
-  constructor(runner, testTree, fileName) {
-    this._runner = runner
-    this._testTree = {}
-    this._fileName = fileName
-    Object.keys(testTree).forEach(key => {
-      this._testTree[key] = new TestRacerTestBlock(this, key, testTree[key])
-    })
-  }
-  getRunner() {
-    return this._runner
-  }
-  getFileName() {
-    return this._fileName
-  }
-  get length() {
-    return Object.values(this._testTree).length
-  }
-  get skippedTestBlockNames() {
-    const testsToRun = this._filterSkippedTestBlocks()
-    return Object.keys(this._testTree).filter(blockName => !testsToRun.includes(blockName))
-  }
-  _emitMessage(message) {
-    this.getRunner()._emitMessage(message)
-  }
-  _filterSkippedTestBlocks() {
-    // _ prefix = run on these tests block
-    // $ prefix = skip this test
-    const runOnlyTheseTestBlocks = Object.keys(this._testTree).filter(key => key.startsWith("_"))
-    if (runOnlyTheseTestBlocks.length) return runOnlyTheseTestBlocks
-    return Object.keys(this._testTree).filter(key => !key.startsWith("$"))
-  }
-  async execute() {
-    const testBlockNames = this._filterSkippedTestBlocks()
-    this._emitStartFileMessage(testBlockNames.length)
-    const fileTimer = new TreeUtils.Timer()
-    const blockResults = {}
-    const blockPromises = testBlockNames.map(async testName => {
-      const results = await this._testTree[testName].execute()
-      blockResults[testName] = results
-    })
-    await Promise.all(blockPromises)
-    const fileStats = this._aggregateBlockResultsIntoFileResults(blockResults)
-    const fileTimeElapsed = fileTimer.tick()
-    fileStats.blocksFailed ? this._emitFileFailedMessage(fileStats, fileTimeElapsed, testBlockNames.length) : this._emitFilePassedMessage(fileStats, fileTimeElapsed, testBlockNames.length)
-    return fileStats
-  }
-  _aggregateBlockResultsIntoFileResults(fileBlockResults) {
-    const fileStats = {
-      assertionsPassed: 0,
-      assertionsFailed: 0,
-      blocksPassed: 0,
-      blocksFailed: 0,
-      failedBlocks: []
-    }
-    Object.keys(fileBlockResults).forEach(blockName => {
-      const results = fileBlockResults[blockName]
-      fileStats.assertionsPassed += results.passes.length
-      fileStats.assertionsFailed += results.failures.length
-      if (results.failures.length) {
-        fileStats.blocksFailed++
-        fileStats.failedBlocks.push(blockName)
-      } else fileStats.blocksPassed++
-    })
-    return fileStats
-  }
-  _emitStartFileMessage(blockCount) {
-    this._emitMessage(`start file ${blockCount} test blocks in file ${this._fileName}`)
-  }
-  _emitFilePassedMessage(fileStats, fileTimeElapsed, blockCount) {
-    this._emitMessage(`ok file ${this._fileName} in ${fileTimeElapsed}ms. ${blockCount} blocks and ${fileStats.assertionsPassed} assertions passed.`)
-  }
-  _emitFileFailedMessage(fileStats, fileTimeElapsed, blockCount) {
-    this._emitMessage(
-      `failed file ${this._fileName} over ${fileTimeElapsed}ms. ${fileStats.blocksFailed} blocks and ${fileStats.assertionsFailed} failed. ${blockCount - fileStats.blocksFailed} blocks and ${fileStats.assertionsPassed} assertions passed`
-    )
-  }
-}
-class TestRacer {
-  constructor(fileTestTree) {
-    this._logFunction = console.log
-    this._timer = new TreeUtils.Timer()
-    this._sessionFilesPassed = 0
-    this._sessionFilesFailed = {}
-    this._sessionBlocksFailed = 0
-    this._sessionBlocksPassed = 0
-    this._sessionAssertionsFailed = 0
-    this._sessionAssertionsPassed = 0
-    this._fileTestTree = {}
-    Object.keys(fileTestTree).forEach(fileName => {
-      this._fileTestTree[fileName] = new TestRacerFile(this, fileTestTree[fileName], fileName)
-    })
-  }
-  setLogFunction(logFunction) {
-    this._logFunction = logFunction
-    return this
-  }
-  _addFileResultsToSessionResults(fileStats, fileName) {
-    this._sessionAssertionsPassed += fileStats.assertionsPassed
-    this._sessionAssertionsFailed += fileStats.assertionsFailed
-    this._sessionBlocksPassed += fileStats.blocksPassed
-    this._sessionBlocksFailed += fileStats.blocksFailed
-    if (!fileStats.blocksFailed) this._sessionFilesPassed++
-    else {
-      this._sessionFilesFailed[fileName] = fileStats.failedBlocks
-    }
-  }
-  async execute() {
-    this._emitSessionPlanMessage()
-    const proms = Object.values(this._fileTestTree).map(async testFile => {
-      const results = await testFile.execute()
-      this._addFileResultsToSessionResults(results, testFile.getFileName())
-    })
-    await Promise.all(proms)
-    return this
-  }
-  finish() {
-    return this._emitSessionFinishMessage()
-  }
-  _emitMessage(message) {
-    this._logFunction(message)
-    return message
-  }
-  get length() {
-    return Object.values(this._fileTestTree).length
-  }
-  _emitSessionPlanMessage() {
-    let blocks = 0
-    Object.values(this._fileTestTree).forEach(value => (blocks += value.length))
-    this._emitMessage(`${this.length} files and ${blocks} blocks to run. ${this._getSkippedBlockNames().length} skipped blocks.`)
-  }
-  _getSkippedBlockNames() {
-    const skippedBlocks = []
-    Object.values(this._fileTestTree).forEach(file => {
-      file.skippedTestBlockNames.forEach(blockName => {
-        skippedBlocks.push(blockName)
-      })
-    })
-    return skippedBlocks
-  }
-  _getFailures() {
-    if (!Object.keys(this._sessionFilesFailed).length) return ""
-    return `
- failures
-${new TreeNode(this._sessionFilesFailed).forEach(row => row.forEach(line => line.deleteWordAt(0))).toString(2)}`
-  }
-  _emitSessionFinishMessage() {
-    const skipped = this._getSkippedBlockNames()
-    return this._emitMessage(`finished in ${this._timer.getTotalElapsedTime()}ms
- skipped
-  ${skipped.length} blocks${skipped ? " " + skipped.join(" ") : ""}
- passed
-  ${this._sessionFilesPassed} files
-  ${this._sessionBlocksPassed} blocks
-  ${this._sessionAssertionsPassed} assertions
- failed
-  ${Object.keys(this._sessionFilesFailed).length} files
-  ${this._sessionBlocksFailed} blocks
-  ${this._sessionAssertionsFailed} assertions${this._getFailures()}`)
-  }
-  static async testSingleFile(fileName, testTree) {
-    const obj = {}
-    obj[fileName] = testTree
-    const session = new TestRacer(obj)
-    await session.execute()
-    session.finish()
-  }
-}
-window.TestRacer = TestRacer
+Utils.MAX_INT = Math.pow(2, 32) - 1
+window.Utils = Utils
+
+
 let _jtreeLatestTime = 0
 let _jtreeMinTimeIncrement = 0.000000000001
 class AbstractNode {
@@ -11255,7 +11146,7 @@ class AbstractNode {
   }
 }
 var FileFormat
-;(function(FileFormat) {
+;(function (FileFormat) {
   FileFormat["csv"] = "csv"
   FileFormat["tsv"] = "tsv"
   FileFormat["tree"] = "tree"
@@ -11283,7 +11174,7 @@ class TreeWord {
 }
 const TreeEvents = { ChildAddedTreeEvent, ChildRemovedTreeEvent, DescendantChangedTreeEvent, LineChangedTreeEvent }
 var WhereOperators
-;(function(WhereOperators) {
+;(function (WhereOperators) {
   WhereOperators["equal"] = "="
   WhereOperators["notEqual"] = "!="
   WhereOperators["lessThan"] = "<"
@@ -11298,12 +11189,12 @@ var WhereOperators
   WhereOperators["notEmpty"] = "notEmpty"
 })(WhereOperators || (WhereOperators = {}))
 var TreeNotationConstants
-;(function(TreeNotationConstants) {
+;(function (TreeNotationConstants) {
   TreeNotationConstants["extends"] = "extends"
 })(TreeNotationConstants || (TreeNotationConstants = {}))
-class Parser {
-  constructor(catchAllNodeConstructor, firstWordMap = {}, regexTests = undefined) {
-    this._catchAllNodeConstructor = catchAllNodeConstructor
+class ParserCombinator {
+  constructor(catchAllParser, firstWordMap = {}, regexTests = undefined) {
+    this._catchAllParser = catchAllParser
     this._firstWordMap = new Map(Object.entries(firstWordMap))
     this._regexTests = regexTests
   }
@@ -11323,19 +11214,19 @@ class Parser {
     }
     return obj
   }
-  _getNodeConstructor(line, contextNode, wordBreakSymbol = " ") {
-    return this._getFirstWordMap().get(this._getFirstWord(line, wordBreakSymbol)) || this._getConstructorFromRegexTests(line) || this._getCatchAllNodeConstructor(contextNode)
+  _getParser(line, contextNode, wordBreakSymbol = " ") {
+    return this._getFirstWordMap().get(this._getFirstWord(line, wordBreakSymbol)) || this._getParserFromRegexTests(line) || this._getCatchAllParser(contextNode)
   }
-  _getCatchAllNodeConstructor(contextNode) {
-    if (this._catchAllNodeConstructor) return this._catchAllNodeConstructor
-    const parent = contextNode.getParent()
-    if (parent) return parent._getParser()._getCatchAllNodeConstructor(parent)
+  _getCatchAllParser(contextNode) {
+    if (this._catchAllParser) return this._catchAllParser
+    const parent = contextNode.parent
+    if (parent) return parent._getParser()._getCatchAllParser(parent)
     return contextNode.constructor
   }
-  _getConstructorFromRegexTests(line) {
+  _getParserFromRegexTests(line) {
     if (!this._regexTests) return undefined
     const hit = this._regexTests.find(test => test.regex.test(line))
-    if (hit) return hit.nodeConstructor
+    if (hit) return hit.parser
     return undefined
   }
   _getFirstWord(line, wordBreakSymbol) {
@@ -11360,9 +11251,9 @@ class TreeNode extends AbstractNode {
   getErrors() {
     return []
   }
-  getLineCellTypes() {
+  get lineCellTypes() {
     // todo: make this any a constant
-    return "undefinedCellType ".repeat(this.getWords().length).trim()
+    return "undefinedCellType ".repeat(this.words.length).trim()
   }
   isNodeJs() {
     return typeof exports !== "undefined"
@@ -11372,7 +11263,7 @@ class TreeNode extends AbstractNode {
   }
   getOlderSiblings() {
     if (this.isRoot()) return []
-    return this.getParent().slice(0, this.getIndex())
+    return this.parent.slice(0, this.getIndex())
   }
   _getClosestOlderSibling() {
     const olderSiblings = this.getOlderSiblings()
@@ -11380,27 +11271,27 @@ class TreeNode extends AbstractNode {
   }
   getYoungerSiblings() {
     if (this.isRoot()) return []
-    return this.getParent().slice(this.getIndex() + 1)
+    return this.parent.slice(this.getIndex() + 1)
   }
   getSiblings() {
     if (this.isRoot()) return []
-    return this.getParent().filter(node => node !== this)
+    return this.parent.filter(node => node !== this)
   }
   _getUid() {
     if (!this._uid) this._uid = TreeNode._makeUniqueId()
     return this._uid
   }
   // todo: rename getMother? grandMother et cetera?
-  getParent() {
+  get parent() {
     return this._parent
   }
   getIndentLevel(relativeTo) {
     return this._getIndentLevel(relativeTo)
   }
-  getIndentation(relativeTo) {
-    const indentLevel = this._getIndentLevel(relativeTo) - 1
+  get indentation() {
+    const indentLevel = this._getIndentLevel() - 1
     if (indentLevel < 0) return ""
-    return this.getEdgeSymbol().repeat(indentLevel)
+    return this.edgeSymbol.repeat(indentLevel)
   }
   _getTopDownArray(arr) {
     this.forEach(child => {
@@ -11408,7 +11299,7 @@ class TreeNode extends AbstractNode {
       child._getTopDownArray(arr)
     })
   }
-  getTopDownArray() {
+  get topDownArray() {
     const arr = []
     this._getTopDownArray(arr)
     return arr
@@ -11426,7 +11317,7 @@ class TreeNode extends AbstractNode {
       index++
     }
   }
-  getNumberOfLines() {
+  get numberOfLines() {
     let lineCount = 0
     for (let node of this.getTopDownArrayIterator()) {
       lineCount++
@@ -11436,25 +11327,25 @@ class TreeNode extends AbstractNode {
   _getMaxUnitsOnALine() {
     let max = 0
     for (let node of this.getTopDownArrayIterator()) {
-      const count = node.getWords().length + node.getIndentLevel()
+      const count = node.words.length + node.getIndentLevel()
       if (count > max) max = count
     }
     return max
   }
-  getNumberOfWords() {
+  get numberOfWords() {
     let wordCount = 0
     for (let node of this.getTopDownArrayIterator()) {
-      wordCount += node.getWords().length
+      wordCount += node.words.length
     }
     return wordCount
   }
-  getLineNumber() {
+  get lineNumber() {
     return this._getLineNumberRelativeTo()
   }
   _getLineNumber(target = this) {
     if (this._cachedLineNumber) return this._cachedLineNumber
     let lineNumber = 1
-    for (let node of this.getRootNode().getTopDownArrayIterator()) {
+    for (let node of this.root.getTopDownArrayIterator()) {
       if (node === target) return lineNumber
       lineNumber++
     }
@@ -11467,26 +11358,29 @@ class TreeNode extends AbstractNode {
     return this.length ? new Set(this.getFirstWords()).size !== this.length : false
   }
   isEmpty() {
-    return !this.length && !this.getContent()
+    return !this.length && !this.content
   }
   _getLineNumberRelativeTo(relativeTo) {
     if (this.isRoot(relativeTo)) return 0
-    const start = relativeTo || this.getRootNode()
+    const start = relativeTo || this.root
     return start._getLineNumber(this)
   }
   isRoot(relativeTo) {
-    return relativeTo === this || !this.getParent()
+    return relativeTo === this || !this.parent
   }
-  getRootNode() {
+  get root() {
     return this._getRootNode()
   }
   _getRootNode(relativeTo) {
     if (this.isRoot(relativeTo)) return this
-    return this.getParent()._getRootNode(relativeTo)
+    return this.parent._getRootNode(relativeTo)
   }
   toString(indentCount = 0, language = this) {
     if (this.isRoot()) return this._childrenToString(indentCount, language)
-    return language.getEdgeSymbol().repeat(indentCount) + this.getLine(language) + (this.length ? language.getNodeBreakSymbol() + this._childrenToString(indentCount + 1, language) : "")
+    return language.edgeSymbol.repeat(indentCount) + this.getLine(language) + (this.length ? language.nodeBreakSymbol + this._childrenToString(indentCount + 1, language) : "")
+  }
+  get asString() {
+    return this.toString()
   }
   printLinesFrom(start, quantity) {
     return this._printLinesFrom(start, quantity, false)
@@ -11511,6 +11405,9 @@ class TreeNode extends AbstractNode {
     if (index < 0) index = words.length + index
     return words[index]
   }
+  get list() {
+    return this.getWordsFrom(1)
+  }
   _toHtml(indentCount) {
     const path = this.getPathVector().join(" ")
     const classes = {
@@ -11519,21 +11416,21 @@ class TreeNode extends AbstractNode {
       nodeBreakSymbol: "nodeBreakSymbol",
       nodeChildren: "nodeChildren"
     }
-    const edge = this.getEdgeSymbol().repeat(indentCount)
+    const edge = this.edgeSymbol.repeat(indentCount)
     // Set up the firstWord part of the node
     const edgeHtml = `<span class="${classes.nodeLine}" data-pathVector="${path}"><span class="${classes.edgeSymbol}">${edge}</span>`
     const lineHtml = this._getLineHtml()
-    const childrenHtml = this.length ? `<span class="${classes.nodeBreakSymbol}">${this.getNodeBreakSymbol()}</span>` + `<span class="${classes.nodeChildren}">${this._childrenToHtml(indentCount + 1)}</span>` : ""
+    const childrenHtml = this.length ? `<span class="${classes.nodeBreakSymbol}">${this.nodeBreakSymbol}</span>` + `<span class="${classes.nodeChildren}">${this._childrenToHtml(indentCount + 1)}</span>` : ""
     return `${edgeHtml}${lineHtml}${childrenHtml}</span>`
   }
   _getWords(startFrom) {
-    if (!this._words) this._words = this._getLine().split(this.getWordBreakSymbol())
+    if (!this._words) this._words = this._getLine().split(this.wordBreakSymbol)
     return startFrom ? this._words.slice(startFrom) : this._words
   }
-  getWords() {
+  get words() {
     return this._getWords(0)
   }
-  doesExtend(nodeTypeId) {
+  doesExtend(parserId) {
     return false
   }
   require(moduleName, filePath) {
@@ -11544,7 +11441,7 @@ class TreeNode extends AbstractNode {
     return this._getWords(startFrom)
   }
   getFirstAncestor() {
-    const parent = this.getParent()
+    const parent = this.parent
     return parent.isRoot() ? this : parent.getFirstAncestor()
   }
   isLoaded() {
@@ -11571,7 +11468,19 @@ class TreeNode extends AbstractNode {
     return chain
   }
   _getProjectRootDir() {
-    return this.isRoot() ? "" : this.getRootNode()._getProjectRootDir()
+    return this.isRoot() ? "" : this.root._getProjectRootDir()
+  }
+  // Concat 2 trees amd return a new true, but replace any nodes
+  // in this tree that start with the same node from the first tree with
+  // that patched version. Does not recurse.
+  patch(two) {
+    const copy = this.clone()
+    two.forEach(node => {
+      const hit = copy.getNode(node.getWord(0))
+      if (hit) hit.destroy()
+    })
+    copy.concat(two)
+    return copy
   }
   getSparsity() {
     const nodes = this.getChildren()
@@ -11606,17 +11515,11 @@ class TreeNode extends AbstractNode {
     return [oneToTwo, twoToOne]
   }
   _getWordIndexCharacterStartPosition(wordIndex) {
-    const xiLength = this.getEdgeSymbol().length
-    const numIndents = this._getIndentLevel(undefined) - 1
+    const xiLength = this.edgeSymbol.length
+    const numIndents = this._getIndentLevel() - 1
     const indentPosition = xiLength * numIndents
     if (wordIndex < 1) return xiLength * (numIndents + wordIndex)
-    return (
-      indentPosition +
-      this.getWords()
-        .slice(0, wordIndex)
-        .join(this.getWordBreakSymbol()).length +
-      this.getWordBreakSymbol().length
-    )
+    return indentPosition + this.words.slice(0, wordIndex).join(this.wordBreakSymbol).length + this.wordBreakSymbol.length
   }
   getNodeInScopeAtCharIndex(charIndex) {
     if (this.isRoot()) return this
@@ -11624,7 +11527,7 @@ class TreeNode extends AbstractNode {
     if (wordIndex > 0) return this
     let node = this
     while (wordIndex < 1) {
-      node = node.getParent()
+      node = node.parent
       wordIndex++
     }
     return node
@@ -11639,10 +11542,8 @@ class TreeNode extends AbstractNode {
     }
   }
   fill(fill = "") {
-    this.getTopDownArray().forEach(line => {
-      line.getWords().forEach((word, index) => {
-        line.setWord(index, fill)
-      })
+    this.topDownArray.forEach(line => {
+      line.words.forEach((word, index) => line.setWord(index, fill))
     })
     return this
   }
@@ -11663,9 +11564,9 @@ class TreeNode extends AbstractNode {
   }
   getWordBoundaryCharIndices() {
     let indentLevel = this._getIndentLevel()
-    const wordBreakSymbolLength = this.getWordBreakSymbol().length
+    const wordBreakSymbolLength = this.wordBreakSymbol.length
     let elapsed = indentLevel
-    return this.getWords().map((word, wordIndex) => {
+    return this.words.map((word, wordIndex) => {
       const boundary = elapsed
       elapsed += word.length + wordBreakSymbolLength
       return boundary
@@ -11680,7 +11581,7 @@ class TreeNode extends AbstractNode {
     while (spots.length < numberOfIndents) {
       spots.push(-(numberOfIndents - spots.length))
     }
-    this.getWords().forEach((word, wordIndex) => {
+    this.words.forEach((word, wordIndex) => {
       word.split("").forEach(letter => {
         spots.push(wordIndex)
       })
@@ -11691,7 +11592,7 @@ class TreeNode extends AbstractNode {
   // Note: This currently does not return any errors resulting from "required" or "single"
   getAllErrors(lineStartsAt = 1) {
     const errors = []
-    for (let node of this.getTopDownArray()) {
+    for (let node of this.topDownArray) {
       node._cachedLineNumber = lineStartsAt // todo: cleanup
       const errs = node.getErrors()
       errs.forEach(err => errors.push(err))
@@ -11710,17 +11611,17 @@ class TreeNode extends AbstractNode {
       line++
     }
   }
-  getFirstWord() {
-    return this.getWords()[0]
+  get firstWord() {
+    return this.words[0]
   }
-  getContent() {
+  get content() {
     const words = this.getWordsFrom(1)
-    return words.length ? words.join(this.getWordBreakSymbol()) : undefined
+    return words.length ? words.join(this.wordBreakSymbol) : undefined
   }
-  getContentWithChildren() {
+  get contentWithChildren() {
     // todo: deprecate
-    const content = this.getContent()
-    return (content ? content : "") + (this.length ? this.getNodeBreakSymbol() + this._childrenToString() : "")
+    const content = this.content
+    return (content ? content : "") + (this.length ? this.nodeBreakSymbol + this._childrenToString() : "")
   }
   getFirstNode() {
     return this.nodeAt(0)
@@ -11730,18 +11631,18 @@ class TreeNode extends AbstractNode {
   }
   _getStack(relativeTo) {
     if (this.isRoot(relativeTo)) return []
-    const parent = this.getParent()
+    const parent = this.parent
     if (parent.isRoot(relativeTo)) return [this]
     else return parent._getStack(relativeTo).concat([this])
   }
   getStackString() {
     return this._getStack()
-      .map((node, index) => this.getEdgeSymbol().repeat(index) + node.getLine())
-      .join(this.getNodeBreakSymbol())
+      .map((node, index) => this.edgeSymbol.repeat(index) + node.getLine())
+      .join(this.nodeBreakSymbol)
   }
   getLine(language) {
     if (!this._words && !language) return this._getLine() // todo: how does this interact with "language" param?
-    return this.getWords().join((language || this).getWordBreakSymbol())
+    return this.words.join((language || this).wordBreakSymbol)
   }
   getColumnNames() {
     return this._getUnionNames()
@@ -11761,8 +11662,8 @@ class TreeNode extends AbstractNode {
   // todo: return array? getPathArray?
   _getFirstWordPath(relativeTo) {
     if (this.isRoot(relativeTo)) return ""
-    else if (this.getParent().isRoot(relativeTo)) return this.getFirstWord()
-    return this.getParent()._getFirstWordPath(relativeTo) + this.getEdgeSymbol() + this.getFirstWord()
+    else if (this.parent.isRoot(relativeTo)) return this.firstWord
+    return this.parent._getFirstWordPath(relativeTo) + this.edgeSymbol + this.firstWord
   }
   getFirstWordPathRelativeTo(relativeTo) {
     return this._getFirstWordPath(relativeTo)
@@ -11778,39 +11679,37 @@ class TreeNode extends AbstractNode {
   }
   _getPathVector(relativeTo) {
     if (this.isRoot(relativeTo)) return []
-    const path = this.getParent()._getPathVector(relativeTo)
+    const path = this.parent._getPathVector(relativeTo)
     path.push(this.getIndex())
     return path
   }
   getIndex() {
-    return this.getParent()._indexOfNode(this)
+    return this.parent._indexOfNode(this)
   }
   isTerminal() {
     return !this.length
   }
   _getLineHtml() {
-    return this.getWords()
-      .map((word, index) => `<span class="word${index}">${TreeUtils.stripHtml(word)}</span>`)
-      .join(`<span class="zIncrement">${this.getWordBreakSymbol()}</span>`)
+    return this.words.map((word, index) => `<span class="word${index}">${Utils.stripHtml(word)}</span>`).join(`<span class="zIncrement">${this.wordBreakSymbol}</span>`)
   }
   _getXmlContent(indentCount) {
-    if (this.getContent() !== undefined) return this.getContentWithChildren()
+    if (this.content !== undefined) return this.contentWithChildren
     return this.length ? `${indentCount === -1 ? "" : "\n"}${this._childrenToXml(indentCount > -1 ? indentCount + 2 : -1)}${" ".repeat(indentCount)}` : ""
   }
   _toXml(indentCount) {
     const indent = " ".repeat(indentCount)
-    const tag = this.getFirstWord()
+    const tag = this.firstWord
     return `${indent}<${tag}>${this._getXmlContent(indentCount)}</${tag}>${indentCount === -1 ? "" : "\n"}`
   }
   _toObjectTuple() {
-    const content = this.getContent()
+    const content = this.content
     const length = this.length
     const hasChildrenNoContent = content === undefined && length
     const hasContentAndHasChildren = content !== undefined && length
     // If the node has a content and a subtree return it as a string, as
     // Javascript object values can't be both a leaf and a tree.
-    const tupleValue = hasChildrenNoContent ? this.toObject() : hasContentAndHasChildren ? this.getContentWithChildren() : content
-    return [this.getFirstWord(), tupleValue]
+    const tupleValue = hasChildrenNoContent ? this.toObject() : hasContentAndHasChildren ? this.contentWithChildren : content
+    return [this.firstWord, tupleValue]
   }
   _indexOfNode(needleNode) {
     let result = -1
@@ -11840,11 +11739,11 @@ class TreeNode extends AbstractNode {
   }
   rightPad(padCharacter = " ") {
     const newWidth = this.getMaxLineWidth()
-    this.getTopDownArray().forEach(node => node._rightPad(newWidth, padCharacter))
+    this.topDownArray.forEach(node => node._rightPad(newWidth, padCharacter))
     return this
   }
   lengthen(numberOfLines) {
-    let linesToAdd = numberOfLines - this.getNumberOfLines()
+    let linesToAdd = numberOfLines - this.numberOfLines
     while (linesToAdd > 0) {
       this.appendLine("")
       linesToAdd--
@@ -11857,7 +11756,7 @@ class TreeNode extends AbstractNode {
     const nodeBreakSymbol = "\n"
     let next
     while ((next = treesOrStrings.shift())) {
-      clone.lengthen(next.getNumberOfLines())
+      clone.lengthen(next.numberOfLines)
       clone.rightPad()
       next
         .toString()
@@ -11881,9 +11780,9 @@ class TreeNode extends AbstractNode {
   }
   toBraid(treesOrStrings) {
     treesOrStrings.unshift(this)
-    const nodeDelimiter = this.getNodeBreakSymbol()
+    const nodeDelimiter = this.nodeBreakSymbol
     return new TreeNode(
-      TreeUtils.interweave(treesOrStrings.map(tree => tree.toString().split(nodeDelimiter)))
+      Utils.interweave(treesOrStrings.map(tree => tree.toString().split(nodeDelimiter)))
         .map(line => (line === undefined ? "" : line))
         .join(nodeDelimiter)
     )
@@ -11896,14 +11795,14 @@ class TreeNode extends AbstractNode {
     )
   }
   _hasColumns(columns) {
-    const words = this.getWords()
+    const words = this.words
     return columns.every((searchTerm, index) => searchTerm === words[index])
   }
   hasWord(index, word) {
     return this.getWord(index) === word
   }
   getNodeByColumns(...columns) {
-    return this.getTopDownArray().find(node => node._hasColumns(columns))
+    return this.topDownArray.find(node => node._hasColumns(columns))
   }
   getNodeByColumn(index, name) {
     return this.find(node => node.getWord(index) === name)
@@ -11930,7 +11829,7 @@ class TreeNode extends AbstractNode {
       .join("\n")
   }
   getSelectedNodes() {
-    return this.getTopDownArray().filter(node => node.isSelected())
+    return this.topDownArray.filter(node => node.isSelected())
   }
   clearSelection() {
     this.getSelectedNodes().forEach(node => node.unselectNode())
@@ -12016,7 +11915,7 @@ class TreeNode extends AbstractNode {
   }
   _getLevels() {
     const levels = {}
-    this.getTopDownArray().forEach(node => {
+    this.topDownArray.forEach(node => {
       const level = node._getIndentLevel()
       if (!levels[level]) levels[level] = []
       levels[level].push(node)
@@ -12048,6 +11947,21 @@ class TreeNode extends AbstractNode {
     if (!node) return undefined
     return node.nodeAt(indexOrIndexArray.slice(1))
   }
+  // Flatten a tree node into an object like {twitter:"pldb", "twitter.followers":123}.
+  // Assumes you have a nested key/value list with no multiline strings.
+  toFlatObject(delimiter = ".") {
+    let newObject = {}
+    const { edgeSymbolRegex } = this
+    this.forEach((child, index) => {
+      newObject[child.getWord(0)] = child.content
+      child.topDownArray.forEach(node => {
+        const newColumnName = node.getFirstWordPathRelativeTo(this).replace(edgeSymbolRegex, delimiter)
+        const value = node.content
+        newObject[newColumnName] = value
+      })
+    })
+    return newObject
+  }
   _toObject() {
     const obj = {}
     this.forEach(node => {
@@ -12056,33 +11970,28 @@ class TreeNode extends AbstractNode {
     })
     return obj
   }
-  toHtml() {
+  get asHtml() {
     return this._childrenToHtml(0)
   }
   _toHtmlCubeLine(indents = 0, lineIndex = 0, planeIndex = 0) {
     const getLine = (cellIndex, word = "") =>
       `<span class="htmlCubeSpan" style="top: calc(var(--topIncrement) * ${planeIndex} + var(--rowHeight) * ${lineIndex}); left:calc(var(--leftIncrement) * ${planeIndex} + var(--cellWidth) * ${cellIndex});">${word}</span>`
     let cells = []
-    this.getWords().forEach((word, index) => (word ? cells.push(getLine(index + indents, word)) : ""))
+    this.words.forEach((word, index) => (word ? cells.push(getLine(index + indents, word)) : ""))
     return cells.join("")
   }
-  toHtmlCube() {
-    return this.map((plane, planeIndex) =>
-      plane
-        .getTopDownArray()
-        .map((line, lineIndex) => line._toHtmlCubeLine(line.getIndentLevel() - 2, lineIndex, planeIndex))
-        .join("")
-    ).join("")
+  get asHtmlCube() {
+    return this.map((plane, planeIndex) => plane.topDownArray.map((line, lineIndex) => line._toHtmlCubeLine(line.getIndentLevel() - 2, lineIndex, planeIndex)).join("")).join("")
   }
   _getHtmlJoinByCharacter() {
-    return `<span class="nodeBreakSymbol">${this.getNodeBreakSymbol()}</span>`
+    return `<span class="nodeBreakSymbol">${this.nodeBreakSymbol}</span>`
   }
   _childrenToHtml(indentCount) {
     const joinBy = this._getHtmlJoinByCharacter()
     return this.map(node => node._toHtml(indentCount)).join(joinBy)
   }
   _childrenToString(indentCount, language = this) {
-    return this.map(node => node.toString(indentCount, language)).join(language.getNodeBreakSymbol())
+    return this.map(node => node.toString(indentCount, language)).join(language.nodeBreakSymbol)
   }
   childrenToString(indentCount = 0) {
     return this._childrenToString(indentCount)
@@ -12098,7 +12007,7 @@ class TreeNode extends AbstractNode {
   compile() {
     return this.map(child => child.compile()).join(this._getChildJoinCharacter())
   }
-  toXml() {
+  get asXml() {
     return this._childrenToXml(0)
   }
   toDisk(path) {
@@ -12106,8 +12015,8 @@ class TreeNode extends AbstractNode {
     const format = TreeNode._getFileFormat(path)
     const formats = {
       tree: tree => tree.toString(),
-      csv: tree => tree.toCsv(),
-      tsv: tree => tree.toTsv()
+      csv: tree => tree.asCsv,
+      tsv: tree => tree.asTsv
     }
     this.require("fs").writeFileSync(path, formats[format](this), "utf8")
     return this
@@ -12115,12 +12024,12 @@ class TreeNode extends AbstractNode {
   _lineToYaml(indentLevel, listTag = "") {
     let prefix = " ".repeat(indentLevel)
     if (listTag && indentLevel > 1) prefix = " ".repeat(indentLevel - 2) + listTag + " "
-    return prefix + `${this.getFirstWord()}:` + (this.getContent() ? " " + this.getContent() : "")
+    return prefix + `${this.firstWord}:` + (this.content ? " " + this.content : "")
   }
   _isYamlList() {
     return this.hasDuplicateFirstWords()
   }
-  toYaml() {
+  get asYaml() {
     return `%YAML 1.2
 ---\n${this._childrenToYaml(0).join("\n")}`
   }
@@ -12154,37 +12063,37 @@ class TreeNode extends AbstractNode {
   _childrenToYamlAssociativeArray(indentLevel) {
     return this.map(node => node._toYamlAssociativeArrayElement(indentLevel))
   }
-  toJsonSubset() {
+  get asJsonSubset() {
     return JSON.stringify(this.toObject(), null, " ")
   }
   _toObjectForSerialization() {
     return this.length
       ? {
-          cells: this.getWords(),
+          cells: this.words,
           children: this.map(child => child._toObjectForSerialization())
         }
       : {
-          cells: this.getWords()
+          cells: this.words
         }
   }
-  toJson() {
+  get asJson() {
     return JSON.stringify({ children: this.map(child => child._toObjectForSerialization()) }, null, " ")
   }
-  toGrid() {
-    const WordBreakSymbol = this.getWordBreakSymbol()
+  get asGrid() {
+    const WordBreakSymbol = this.wordBreakSymbol
     return this.toString()
-      .split(this.getNodeBreakSymbol())
+      .split(this.nodeBreakSymbol)
       .map(line => line.split(WordBreakSymbol))
   }
-  toGridJson() {
-    return JSON.stringify(this.toGrid(), null, 2)
+  get asGridJson() {
+    return JSON.stringify(this.asGrid, null, 2)
   }
   findNodes(firstWordPath) {
     // todo: can easily speed this up
     const map = {}
     if (!Array.isArray(firstWordPath)) firstWordPath = [firstWordPath]
     firstWordPath.forEach(path => (map[path] = true))
-    return this.getTopDownArray().filter(node => {
+    return this.topDownArray.filter(node => {
       if (map[node._getFirstWordPath(this)]) return true
       return false
     })
@@ -12213,11 +12122,11 @@ class TreeNode extends AbstractNode {
   }
   getFrom(prefix) {
     const hit = this.filter(node => node.getLine().startsWith(prefix))[0]
-    if (hit) return hit.getLine().substr((prefix + this.getWordBreakSymbol()).length)
+    if (hit) return hit.getLine().substr((prefix + this.wordBreakSymbol).length)
   }
   get(firstWordPath) {
     const node = this._getNodeByPath(firstWordPath)
-    return node === undefined ? undefined : node.getContent()
+    return node === undefined ? undefined : node.content
   }
   getOneOf(keys) {
     for (let i = 0; i < keys.length; i++) {
@@ -12229,7 +12138,7 @@ class TreeNode extends AbstractNode {
   // move to treenode
   pick(fields) {
     const newTree = new TreeNode(this.toString()) // todo: why not clone?
-    const map = TreeUtils.arrayToMap(fields)
+    const map = Utils.arrayToMap(fields)
     newTree.nodeAt(0).forEach(node => {
       if (!map[node.getWord(0)]) node.destroy()
     })
@@ -12239,19 +12148,22 @@ class TreeNode extends AbstractNode {
     return this._getNodesByGlobPath(query)
   }
   _getNodesByGlobPath(globPath) {
-    const edgeSymbol = this.getEdgeSymbol()
+    const edgeSymbol = this.edgeSymbol
     if (!globPath.includes(edgeSymbol)) {
       if (globPath === "*") return this.getChildren()
-      return this.filter(node => node.getFirstWord() === globPath)
+      return this.filter(node => node.firstWord === globPath)
     }
     const parts = globPath.split(edgeSymbol)
     const current = parts.shift()
     const rest = parts.join(edgeSymbol)
-    const matchingNodes = current === "*" ? this.getChildren() : this.filter(child => child.getFirstWord() === current)
-    return [].concat.apply([], matchingNodes.map(node => node._getNodesByGlobPath(rest)))
+    const matchingNodes = current === "*" ? this.getChildren() : this.filter(child => child.firstWord === current)
+    return [].concat.apply(
+      [],
+      matchingNodes.map(node => node._getNodesByGlobPath(rest))
+    )
   }
   _getNodeByPath(firstWordPath) {
-    const edgeSymbol = this.getEdgeSymbol()
+    const edgeSymbol = this.edgeSymbol
     if (!firstWordPath.includes(edgeSymbol)) {
       const index = this.indexOfLast(firstWordPath)
       return index === -1 ? undefined : this._nodeAt(index)
@@ -12261,18 +12173,18 @@ class TreeNode extends AbstractNode {
     const currentNode = this._getChildrenArray()[this._getIndex()[current]]
     return currentNode ? currentNode._getNodeByPath(parts.join(edgeSymbol)) : undefined
   }
-  getNext() {
+  get next() {
     if (this.isRoot()) return this
     const index = this.getIndex()
-    const parent = this.getParent()
+    const parent = this.parent
     const length = parent.length
     const next = index + 1
     return next === length ? parent._getChildrenArray()[0] : parent._getChildrenArray()[next]
   }
-  getPrevious() {
+  get previous() {
     if (this.isRoot()) return this
     const index = this.getIndex()
-    const parent = this.getParent()
+    const parent = this.parent
     const length = parent.length
     const prev = index - 1
     return prev === -1 ? parent._getChildrenArray()[length - 1] : parent._getChildrenArray()[prev]
@@ -12283,26 +12195,34 @@ class TreeNode extends AbstractNode {
     this.forEach(node => {
       if (!node.length) return undefined
       node.forEach(node => {
-        obj[node.getFirstWord()] = 1
+        obj[node.firstWord] = 1
       })
     })
     return Object.keys(obj)
   }
   getAncestorNodesByInheritanceViaExtendsKeyword(key) {
-    const ancestorNodes = this._getAncestorNodes((node, id) => node._getNodesByColumn(0, id), node => node.get(key), this)
+    const ancestorNodes = this._getAncestorNodes(
+      (node, id) => node._getNodesByColumn(0, id),
+      node => node.get(key),
+      this
+    )
     ancestorNodes.push(this)
     return ancestorNodes
   }
   // Note: as you can probably tell by the name of this method, I don't recommend using this as it will likely be replaced by something better.
   getAncestorNodesByInheritanceViaColumnIndices(thisColumnNumber, extendsColumnNumber) {
-    const ancestorNodes = this._getAncestorNodes((node, id) => node._getNodesByColumn(thisColumnNumber, id), node => node.getWord(extendsColumnNumber), this)
+    const ancestorNodes = this._getAncestorNodes(
+      (node, id) => node._getNodesByColumn(thisColumnNumber, id),
+      node => node.getWord(extendsColumnNumber),
+      this
+    )
     ancestorNodes.push(this)
     return ancestorNodes
   }
   _getAncestorNodes(getPotentialParentNodesByIdFn, getParentIdFn, cannotContainNode) {
     const parentId = getParentIdFn(this)
     if (!parentId) return []
-    const potentialParentNodes = getPotentialParentNodesByIdFn(this.getParent(), parentId)
+    const potentialParentNodes = getPotentialParentNodesByIdFn(this.parent, parentId)
     if (!potentialParentNodes.length) throw new Error(`"${this.getLine()} tried to extend "${parentId}" but "${parentId}" not found.`)
     if (potentialParentNodes.length > 1) throw new Error(`Invalid inheritance family tree. Multiple unique ids found for "${parentId}"`)
     const parentNode = potentialParentNodes[0]
@@ -12318,7 +12238,7 @@ class TreeNode extends AbstractNode {
     let node = this
     while (path.length) {
       if (!node) return names
-      names.push(node.nodeAt(path[0]).getFirstWord())
+      names.push(node.nodeAt(path[0]).firstWord)
       node = node.nodeAt(path.shift())
     }
     return names
@@ -12329,7 +12249,7 @@ class TreeNode extends AbstractNode {
       .map((line, index) => `${index + 1} ${line}`)
       .join("\n")
   }
-  toCsv() {
+  get asCsv() {
     return this.toDelimited(",")
   }
   _getTypes(header) {
@@ -12378,26 +12298,26 @@ class TreeNode extends AbstractNode {
     })
     return matrix
   }
-  _toArrays(header, cellFn) {
+  _toArrays(columnNames, cellFn) {
     const skipHeaderRow = 1
-    const headerArray = header.map((columnName, index) => cellFn(columnName, 0, index))
+    const header = columnNames.map((columnName, index) => cellFn(columnName, 0, index))
     const rows = this.map((node, rowNumber) =>
-      header.map((columnName, columnIndex) => {
+      columnNames.map((columnName, columnIndex) => {
         const childNode = node.getNode(columnName)
-        const content = childNode ? childNode.getContentWithChildren() : ""
+        const content = childNode ? childNode.contentWithChildren : ""
         return cellFn(content, rowNumber + skipHeaderRow, columnIndex)
       })
     )
     return {
-      rows: rows,
-      header: headerArray
+      rows,
+      header
     }
   }
   _toDelimited(delimiter, header, cellFn) {
     const data = this._toArrays(header, cellFn)
     return data.header.join(delimiter) + "\n" + data.rows.map(row => row.join(delimiter)).join("\n")
   }
-  toTable() {
+  get asTable() {
     // Output a table for printing
     return this._toTable(100, false)
   }
@@ -12429,10 +12349,10 @@ class TreeNode extends AbstractNode {
     }
     return this._toDelimited(" ", header, cellFn)
   }
-  toSsv() {
+  get asSsv() {
     return this.toDelimited(" ")
   }
-  toOutline() {
+  get asOutline() {
     return this._toOutline(node => node.getLine())
   }
   toMappedOutline(nodeFn) {
@@ -12475,14 +12395,14 @@ class TreeNode extends AbstractNode {
   // this.split("foo").join("\n") === this.toString()
   split(firstWord) {
     const constructor = this.constructor
-    const NodeBreakSymbol = this.getNodeBreakSymbol()
-    const WordBreakSymbol = this.getWordBreakSymbol()
+    const NodeBreakSymbol = this.nodeBreakSymbol
+    const WordBreakSymbol = this.wordBreakSymbol
     // todo: cleanup. the escaping is wierd.
     return this.toString()
       .split(new RegExp(`\\${NodeBreakSymbol}(?=${firstWord}(?:${WordBreakSymbol}|\\${NodeBreakSymbol}))`, "g"))
       .map(str => new constructor(str))
   }
-  toMarkdownTable() {
+  get asMarkdownTable() {
     return this.toMarkdownTableAdvanced(this._getUnionNames(), val => val)
   }
   toMarkdownTableAdvanced(columns, formatFn) {
@@ -12496,30 +12416,33 @@ class TreeNode extends AbstractNode {
     })
     return lines.join("\n")
   }
-  toTsv() {
+  get asTsv() {
     return this.toDelimited("\t")
   }
-  getNodeBreakSymbol() {
+  get nodeBreakSymbol() {
     return "\n"
   }
-  getWordBreakSymbol() {
+  get wordBreakSymbol() {
     return " "
   }
-  getNodeBreakSymbolRegex() {
-    return new RegExp(this.getNodeBreakSymbol(), "g")
+  get edgeSymbolRegex() {
+    return new RegExp(this.edgeSymbol, "g")
   }
-  getEdgeSymbol() {
+  get nodeBreakSymbolRegex() {
+    return new RegExp(this.nodeBreakSymbol, "g")
+  }
+  get edgeSymbol() {
     return " "
   }
   _textToContentAndChildrenTuple(text) {
-    const lines = text.split(this.getNodeBreakSymbolRegex())
+    const lines = text.split(this.nodeBreakSymbolRegex)
     const firstLine = lines.shift()
     const children = !lines.length
       ? undefined
       : lines
-          .map(line => (line.substr(0, 1) === this.getEdgeSymbol() ? line : this.getEdgeSymbol() + line))
+          .map(line => (line.substr(0, 1) === this.edgeSymbol ? line : this.edgeSymbol + line))
           .map(line => line.substr(1))
-          .join(this.getNodeBreakSymbol())
+          .join(this.nodeBreakSymbol)
     return [firstLine, children]
   }
   _getLine() {
@@ -12531,7 +12454,7 @@ class TreeNode extends AbstractNode {
     return this
   }
   _clearChildren() {
-    this._deleteByIndexes(TreeUtils.getRange(0, this.length))
+    this._deleteByIndexes(Utils.getRange(0, this.length))
     delete this._children
     return this
   }
@@ -12589,15 +12512,16 @@ class TreeNode extends AbstractNode {
     this._insertLineAndChildren(line, children)
   }
   _insertLineAndChildren(line, children, index = this.length) {
-    const nodeConstructor = this._getParser()._getNodeConstructor(line, this)
-    const newNode = new nodeConstructor(children, line, this)
+    const parser = this._getParser()._getParser(line, this)
+    const newNode = new parser(children, line, this)
     const adjustedIndex = index < 0 ? this.length + index : index
     this._getChildrenArray().splice(adjustedIndex, 0, newNode)
     if (this._index) this._makeIndex(adjustedIndex)
+    this.clearQuickCache()
     return newNode
   }
   _appendChildrenFromString(str) {
-    const lines = str.split(this.getNodeBreakSymbolRegex())
+    const lines = str.split(this.nodeBreakSymbolRegex)
     const parentStack = []
     let currentIndentCount = -1
     let lastNode = this
@@ -12615,8 +12539,8 @@ class TreeNode extends AbstractNode {
       }
       const lineContent = line.substr(currentIndentCount)
       const parent = parentStack[parentStack.length - 1]
-      const nodeConstructor = parent._getParser()._getNodeConstructor(lineContent, parent)
-      lastNode = new nodeConstructor(undefined, lineContent, parent)
+      const parser = parent._getParser()._getParser(lineContent, parent)
+      lastNode = new parser(undefined, lineContent, parent)
       parent._getChildrenArray().push(lastNode)
     })
   }
@@ -12627,21 +12551,19 @@ class TreeNode extends AbstractNode {
     return this._index || this._makeIndex()
   }
   getContentsArray() {
-    return this.map(node => node.getContent())
+    return this.map(node => node.content)
   }
-  // todo: rename to getChildrenByConstructor(?)
-  getChildrenByNodeConstructor(constructor) {
-    return this.filter(child => child instanceof constructor)
+  getChildrenByParser(parser) {
+    return this.filter(child => child instanceof parser)
   }
-  getAncestorByNodeConstructor(constructor) {
-    if (this instanceof constructor) return this
+  getAncestorByParser(parser) {
+    if (this instanceof parser) return this
     if (this.isRoot()) return undefined
-    const parent = this.getParent()
-    return parent instanceof constructor ? parent : parent.getAncestorByNodeConstructor(constructor)
+    const parent = this.parent
+    return parent instanceof parser ? parent : parent.getAncestorByParser(parser)
   }
-  // todo: rename to getNodeByConstructor(?)
-  getNodeByType(constructor) {
-    return this.find(child => child instanceof constructor)
+  getNodeByParser(parser) {
+    return this.find(child => child instanceof parser)
   }
   indexOfLast(firstWord) {
     const result = this._getIndex()[firstWord]
@@ -12653,7 +12575,7 @@ class TreeNode extends AbstractNode {
     const length = this.length
     const nodes = this._getChildrenArray()
     for (let index = 0; index < length; index++) {
-      if (nodes[index].getFirstWord() === firstWord) return index
+      if (nodes[index].firstWord === firstWord) return index
     }
   }
   // todo: rename this. it is a particular type of object.
@@ -12661,7 +12583,7 @@ class TreeNode extends AbstractNode {
     return this._toObject()
   }
   getFirstWords() {
-    return this.map(node => node.getFirstWord())
+    return this.map(node => node.firstWord)
   }
   _makeIndex(startAt = 0) {
     if (!this._index || !startAt) this._index = {}
@@ -12669,7 +12591,7 @@ class TreeNode extends AbstractNode {
     const newIndex = this._index
     const length = nodes.length
     for (let index = startAt; index < length; index++) {
-      newIndex[nodes[index].getFirstWord()] = index
+      newIndex[nodes[index].firstWord] = index
     }
     return newIndex
   }
@@ -12678,18 +12600,25 @@ class TreeNode extends AbstractNode {
   }
   _getIndentCount(str) {
     let level = 0
-    const edgeChar = this.getEdgeSymbol()
+    const edgeChar = this.edgeSymbol
     while (str[level] === edgeChar) {
       level++
     }
     return level
   }
-  clone() {
-    return new this.constructor(this.childrenToString(), this.getLine())
+  clone(children = this.childrenToString(), line = this.getLine()) {
+    return new this.constructor(children, line)
   }
-  // todo: rename to hasFirstWord
-  has(firstWord) {
+  hasFirstWord(firstWord) {
     return this._hasFirstWord(firstWord)
+  }
+  has(firstWordPath) {
+    const edgeSymbol = this.edgeSymbol
+    if (!firstWordPath.includes(edgeSymbol)) return this.hasFirstWord(firstWordPath)
+    const parts = firstWordPath.split(edgeSymbol)
+    const next = this.getNode(parts.shift())
+    if (!next) return false
+    return next.has(parts.join(edgeSymbol))
   }
   hasNode(node) {
     const needle = node.toString()
@@ -12708,9 +12637,7 @@ class TreeNode extends AbstractNode {
     return this.getChildren().find(fn)
   }
   findLast(fn) {
-    return this.getChildren()
-      .reverse()
-      .find(fn)
+    return this.getChildren().reverse().find(fn)
   }
   every(fn) {
     let index = 0
@@ -12730,9 +12657,30 @@ class TreeNode extends AbstractNode {
       if (predicate(node) !== false) node.deepVisit(predicate)
     })
   }
+  get quickCache() {
+    if (!this._quickCache) this._quickCache = {}
+    return this._quickCache
+  }
+  getCustomIndex(key) {
+    if (!this.quickCache.customIndexes) this.quickCache.customIndexes = {}
+    const customIndexes = this.quickCache.customIndexes
+    if (customIndexes[key]) return customIndexes[key]
+    const customIndex = {}
+    customIndexes[key] = customIndex
+    this.filter(file => file.has(key)).forEach(file => {
+      const value = file.get(key)
+      if (!customIndex[value]) customIndex[value] = []
+      customIndex[value].push(file)
+    })
+    return customIndex
+  }
+  clearQuickCache() {
+    delete this._quickCache
+  }
   // todo: protected?
   _clearIndex() {
     delete this._index
+    this.clearQuickCache()
   }
   slice(start, end) {
     return this.getChildren().slice(start, end)
@@ -12751,14 +12699,14 @@ class TreeNode extends AbstractNode {
     return result
   }
   _getGrandParent() {
-    return this.isRoot() || this.getParent().isRoot() ? undefined : this.getParent().getParent()
+    return this.isRoot() || this.parent.isRoot() ? undefined : this.parent.parent
   }
   _getParser() {
-    if (!TreeNode._parsers.has(this.constructor)) TreeNode._parsers.set(this.constructor, this.createParser())
-    return TreeNode._parsers.get(this.constructor)
+    if (!TreeNode._parserCombinators.has(this.constructor)) TreeNode._parserCombinators.set(this.constructor, this.createParserCombinator())
+    return TreeNode._parserCombinators.get(this.constructor)
   }
-  createParser() {
-    return new Parser(this.constructor)
+  createParserCombinator() {
+    return new ParserCombinator(this.constructor)
   }
   static _makeUniqueId() {
     if (this._uniqueId === undefined) this._uniqueId = 0
@@ -12780,7 +12728,14 @@ class TreeNode extends AbstractNode {
     return this
   }
   getLineOrChildrenModifiedTime() {
-    return Math.max(this.getLineModifiedTime(), this.getChildArrayModifiedTime(), Math.max.apply(null, this.map(child => child.getLineOrChildrenModifiedTime())))
+    return Math.max(
+      this.getLineModifiedTime(),
+      this.getChildArrayModifiedTime(),
+      Math.max.apply(
+        null,
+        this.map(child => child.getLineOrChildrenModifiedTime())
+      )
+    )
   }
   _setVirtualParentTree(tree) {
     this._virtualParentTree = tree
@@ -12836,7 +12791,7 @@ class TreeNode extends AbstractNode {
     const node = nodeOrStr instanceof TreeNode ? nodeOrStr : new TreeNode(nodeOrStr)
     const usedFirstWords = new Set()
     node.forEach(sourceNode => {
-      const firstWord = sourceNode.getFirstWord()
+      const firstWord = sourceNode.firstWord
       let targetNode
       const isAnArrayNotMap = usedFirstWords.has(firstWord)
       if (!this.has(firstWord)) {
@@ -12846,7 +12801,7 @@ class TreeNode extends AbstractNode {
       }
       if (isAnArrayNotMap) targetNode = this.appendLine(sourceNode.getLine())
       else {
-        targetNode = this.touchNode(firstWord).setContent(sourceNode.getContent())
+        targetNode = this.touchNode(firstWord).setContent(sourceNode.content)
         usedFirstWords.add(firstWord)
       }
       if (sourceNode.length) targetNode.extend(sourceNode)
@@ -12861,7 +12816,7 @@ class TreeNode extends AbstractNode {
     const map = new Map()
     const lastNode = clone.lastNode()
     lastNode.getOlderSiblings().forEach(node => map.set(node.getWord(0), node))
-    lastNode.getTopDownArray().forEach(node => {
+    lastNode.topDownArray.forEach(node => {
       const replacement = map.get(node.getWord(0))
       if (!replacement) return
       node.replaceNode(str => replacement.toString())
@@ -12872,7 +12827,7 @@ class TreeNode extends AbstractNode {
     const clone = this.clone()
     const defs = clone.findNodes(macroDefinitionWord)
     const allUses = clone.findNodes(macroUsageWord)
-    const wordBreakSymbol = clone.getWordBreakSymbol()
+    const wordBreakSymbol = clone.wordBreakSymbol
     defs.forEach(def => {
       const macroName = def.getWord(1)
       const uses = allUses.filter(node => node.hasWord(1, macroName))
@@ -12899,7 +12854,7 @@ class TreeNode extends AbstractNode {
     this._lineModifiedTime = this._getProcessTimeInMilliseconds()
   }
   insertWord(index, word) {
-    const wi = this.getWordBreakSymbol()
+    const wi = this.wordBreakSymbol
     const words = this._getLine().split(wi)
     words.splice(index, 0, word)
     this.setLine(words.join(wi))
@@ -12907,7 +12862,7 @@ class TreeNode extends AbstractNode {
   }
   deleteDuplicates() {
     const set = new Set()
-    this.getTopDownArray().forEach(node => {
+    this.topDownArray.forEach(node => {
       const str = node.toString()
       if (set.has(str)) node.destroy()
       else set.add(str)
@@ -12915,7 +12870,7 @@ class TreeNode extends AbstractNode {
     return this
   }
   setWord(index, word) {
-    const wi = this.getWordBreakSymbol()
+    const wi = this.wordBreakSymbol
     const words = this._getLine().split(wi)
     words[index] = word
     this.setLine(words.join(wi))
@@ -12925,34 +12880,34 @@ class TreeNode extends AbstractNode {
     return this._clearChildren()
   }
   setContent(content) {
-    if (content === this.getContent()) return this
-    const newArray = [this.getFirstWord()]
+    if (content === this.content) return this
+    const newArray = [this.firstWord]
     if (content !== undefined) {
       content = content.toString()
-      if (content.match(this.getNodeBreakSymbol())) return this.setContentWithChildren(content)
+      if (content.match(this.nodeBreakSymbol)) return this.setContentWithChildren(content)
       newArray.push(content)
     }
-    this._setLine(newArray.join(this.getWordBreakSymbol()))
+    this._setLine(newArray.join(this.wordBreakSymbol))
     this._updateLineModifiedTimeAndTriggerEvent()
     return this
   }
   prependSibling(line, children) {
-    return this.getParent().insertLineAndChildren(line, children, this.getIndex())
+    return this.parent.insertLineAndChildren(line, children, this.getIndex())
   }
   appendSibling(line, children) {
-    return this.getParent().insertLineAndChildren(line, children, this.getIndex() + 1)
+    return this.parent.insertLineAndChildren(line, children, this.getIndex() + 1)
   }
   setContentWithChildren(text) {
     // todo: deprecate
-    if (!text.includes(this.getNodeBreakSymbol())) {
+    if (!text.includes(this.nodeBreakSymbol)) {
       this._clearChildren()
       return this.setContent(text)
     }
-    const lines = text.split(this.getNodeBreakSymbolRegex())
+    const lines = text.split(this.nodeBreakSymbolRegex)
     const firstLine = lines.shift()
     this.setContent(firstLine)
     // tood: cleanup.
-    const remainingString = lines.join(this.getNodeBreakSymbol())
+    const remainingString = lines.join(this.nodeBreakSymbol)
     const children = new TreeNode(remainingString)
     if (!remainingString) children.appendLine("")
     this.setChildren(children)
@@ -12964,13 +12919,13 @@ class TreeNode extends AbstractNode {
   setLine(line) {
     if (line === this.getLine()) return this
     // todo: clear parent TMTimes
-    this.getParent()._clearIndex()
+    this.parent._clearIndex()
     this._setLine(line)
     this._updateLineModifiedTimeAndTriggerEvent()
     return this
   }
   duplicate() {
-    return this.getParent()._insertLineAndChildren(this.getLine(), this.childrenToString(), this.getIndex() + 1)
+    return this.parent._insertLineAndChildren(this.getLine(), this.childrenToString(), this.getIndex() + 1)
   }
   trim() {
     // todo: could do this so only the trimmed rows are deleted.
@@ -12978,7 +12933,7 @@ class TreeNode extends AbstractNode {
     return this
   }
   destroy() {
-    this.getParent()._deleteNode(this)
+    this.parent._deleteNode(this)
   }
   set(firstWordPath, text) {
     return this.touchNode(firstWordPath).setContentWithChildren(text)
@@ -13009,6 +12964,10 @@ class TreeNode extends AbstractNode {
   appendLine(line) {
     return this._insertLineAndChildren(line)
   }
+  appendUniqueLine(line) {
+    if (!this.hasLine(line)) return this.appendLine(line)
+    return this.findLine(line)
+  }
   appendLineAndChildren(line, children) {
     return this._insertLineAndChildren(line, children)
   }
@@ -13021,7 +12980,10 @@ class TreeNode extends AbstractNode {
   // todo: remove?
   getNodesByLinePrefixes(columns) {
     const matches = []
-    this._getNodesByLineRegex(matches, columns.map(str => new RegExp("^" + str)))
+    this._getNodesByLineRegex(
+      matches,
+      columns.map(str => new RegExp("^" + str))
+    )
     return matches
   }
   nodesThatStartWith(prefix) {
@@ -13066,7 +13028,7 @@ class TreeNode extends AbstractNode {
     return this
   }
   invert() {
-    this.forEach(node => node.getWords().reverse())
+    this.forEach(node => node.words.reverse())
     return this
   }
   _rename(oldFirstWord, newFirstWord) {
@@ -13080,7 +13042,7 @@ class TreeNode extends AbstractNode {
   // Does not recurse.
   remap(map) {
     this.forEach(node => {
-      const firstWord = node.getFirstWord()
+      const firstWord = node.firstWord
       if (map[firstWord] !== undefined) node.setFirstWord(map[firstWord])
     })
     return this
@@ -13098,12 +13060,12 @@ class TreeNode extends AbstractNode {
     const allNodes = this._getChildrenArray()
     const indexesToDelete = []
     allNodes.forEach((node, index) => {
-      if (node.getFirstWord() === firstWord) indexesToDelete.push(index)
+      if (node.firstWord === firstWord) indexesToDelete.push(index)
     })
     return this._deleteByIndexes(indexesToDelete)
   }
   delete(path = "") {
-    const edgeSymbol = this.getEdgeSymbol()
+    const edgeSymbol = this.edgeSymbol
     if (!path.includes(edgeSymbol)) return this._deleteAllChildNodesWithFirstWord(path)
     const parts = path.split(edgeSymbol)
     const nextFirstWord = parts.pop()
@@ -13115,12 +13077,12 @@ class TreeNode extends AbstractNode {
     return this
   }
   _getNonMaps() {
-    const results = this.getTopDownArray().filter(node => node.hasDuplicateFirstWords())
+    const results = this.topDownArray.filter(node => node.hasDuplicateFirstWords())
     if (this.hasDuplicateFirstWords()) results.unshift(this)
     return results
   }
   replaceNode(fn) {
-    const parent = this.getParent()
+    const parent = this.parent
     const index = this.getIndex()
     const newNodes = new TreeNode(fn(this.toString()))
     const returnedNodes = []
@@ -13145,7 +13107,7 @@ class TreeNode extends AbstractNode {
     while (this.has(index.toString())) {
       index++
     }
-    const line = index.toString() + (content === undefined ? "" : this.getWordBreakSymbol() + content)
+    const line = index.toString() + (content === undefined ? "" : this.wordBreakSymbol + content)
     return this.appendLineAndChildren(line, children)
   }
   deleteBlanks() {
@@ -13159,7 +13121,7 @@ class TreeNode extends AbstractNode {
     return this._firstWordSort(firstWordOrder)
   }
   deleteWordAt(wordIndex) {
-    const words = this.getWords()
+    const words = this.words
     words.splice(wordIndex, 1)
     return this.setWords(words)
   }
@@ -13176,7 +13138,7 @@ class TreeNode extends AbstractNode {
   }
   triggerAncestors(event) {
     if (this.isRoot()) return
-    const parent = this.getParent()
+    const parent = this.parent
     parent.trigger(event)
     parent.triggerAncestors(event)
   }
@@ -13199,18 +13161,14 @@ class TreeNode extends AbstractNode {
     return this
   }
   setWords(words) {
-    return this.setLine(words.join(this.getWordBreakSymbol()))
+    return this.setLine(words.join(this.wordBreakSymbol))
   }
   setWordsFrom(index, words) {
-    this.setWords(
-      this.getWords()
-        .slice(0, index)
-        .concat(words)
-    )
+    this.setWords(this.words.slice(0, index).concat(words))
     return this
   }
   appendWord(word) {
-    const words = this.getWords()
+    const words = this.words
     words.push(word)
     return this.setWords(words)
   }
@@ -13222,8 +13180,8 @@ class TreeNode extends AbstractNode {
       map[word] = index
     })
     this.sort((nodeA, nodeB) => {
-      const valA = map[nodeA.getFirstWord()]
-      const valB = map[nodeB.getFirstWord()]
+      const valA = map[nodeA.firstWord]
+      const valB = map[nodeB.firstWord]
       if (valA > valB) return nodeBFirst
       if (valA < valB) return nodeAFirst
       return secondarySortFn ? secondarySortFn(nodeA, nodeB) : 0
@@ -13238,8 +13196,8 @@ class TreeNode extends AbstractNode {
     return contextNode
   }
   _touchNodeByString(str) {
-    str = str.replace(this.getNodeBreakSymbolRegex(), "") // todo: do we want to do this sanitization?
-    return this._touchNode(str.split(this.getWordBreakSymbol()))
+    str = str.replace(this.nodeBreakSymbolRegex, "") // todo: do we want to do this sanitization?
+    return this._touchNode(str.split(this.wordBreakSymbol))
   }
   touchNode(str) {
     return this._touchNodeByString(str)
@@ -13249,6 +13207,9 @@ class TreeNode extends AbstractNode {
   }
   hasLine(line) {
     return this.getChildren().some(node => node.getLine() === line)
+  }
+  findLine(line) {
+    return this.getChildren().find(node => node.getLine() === line)
   }
   getNodesByLine(line) {
     return this.filter(node => node.getLine() === line)
@@ -13266,8 +13227,8 @@ class TreeNode extends AbstractNode {
     const indices = indexOrIndices instanceof Array ? indexOrIndices : [indexOrIndices]
     const length = indices.length
     this.sort((nodeA, nodeB) => {
-      const wordsA = nodeA.getWords()
-      const wordsB = nodeB.getWords()
+      const wordsA = nodeA.words
+      const wordsB = nodeB.words
       for (let index = 0; index < length; index++) {
         const col = indices[index]
         const av = wordsA[col]
@@ -13289,7 +13250,7 @@ class TreeNode extends AbstractNode {
     return this.appendWord(word)
   }
   // todo: check to ensure identical objects
-  addObjectsAsDelimited(arrayOfObjects, delimiter = TreeUtils._chooseDelimiter(new TreeNode(arrayOfObjects).toString())) {
+  addObjectsAsDelimited(arrayOfObjects, delimiter = Utils._chooseDelimiter(new TreeNode(arrayOfObjects).toString())) {
     const header = Object.keys(arrayOfObjects[0])
       .join(delimiter)
       .replace(/[\n\r]/g, "")
@@ -13300,11 +13261,11 @@ class TreeNode extends AbstractNode {
     )
     return this.addUniqueRowsToNestedDelimited(header, rows)
   }
-  setChildrenAsDelimited(tree, delimiter = TreeUtils._chooseDelimiter(tree.toString())) {
+  setChildrenAsDelimited(tree, delimiter = Utils._chooseDelimiter(tree.toString())) {
     tree = tree instanceof TreeNode ? tree : new TreeNode(tree)
     return this.setChildren(tree.toDelimited(delimiter))
   }
-  convertChildrenToDelimited(delimiter = TreeUtils._chooseDelimiter(this.childrenToString())) {
+  convertChildrenToDelimited(delimiter = Utils._chooseDelimiter(this.childrenToString())) {
     // todo: handle newlines!!!
     return this.setChildren(this.toDelimited(delimiter))
   }
@@ -13319,13 +13280,13 @@ class TreeNode extends AbstractNode {
   shiftLeft() {
     const grandParent = this._getGrandParent()
     if (!grandParent) return this
-    const parentIndex = this.getParent().getIndex()
+    const parentIndex = this.parent.getIndex()
     const newNode = grandParent.insertLineAndChildren(this.getLine(), this.length ? this.childrenToString() : undefined, parentIndex + 1)
     this.destroy()
     return newNode
   }
   pasteText(text) {
-    const parent = this.getParent()
+    const parent = this.parent
     const index = this.getIndex()
     const newNodes = new TreeNode(text)
     const firstNode = newNodes.nodeAt(0)
@@ -13346,7 +13307,7 @@ class TreeNode extends AbstractNode {
   templateToString(obj) {
     // todo: compile/cache for perf?
     const tree = this.clone()
-    tree.getTopDownArray().forEach(node => {
+    tree.topDownArray.forEach(node => {
       const line = node.getLine().replace(/{([^\}]+)}/g, (match, path) => {
         const replacement = obj[path]
         if (replacement === undefined) throw new Error(`In string template no match found on line "${node.getLine()}"`)
@@ -13462,8 +13423,8 @@ class TreeNode extends AbstractNode {
   }
   static serializedTreeNodeToTree(treeNode) {
     const language = new TreeNode()
-    const cellDelimiter = language.getWordBreakSymbol()
-    const nodeDelimiter = language.getNodeBreakSymbol()
+    const cellDelimiter = language.wordBreakSymbol
+    const nodeDelimiter = language.nodeBreakSymbol
     const line = treeNode.cells ? treeNode.cells.join(cellDelimiter) : undefined
     const tree = new TreeNode(undefined, line)
     if (treeNode.children)
@@ -13478,8 +13439,8 @@ class TreeNode extends AbstractNode {
   static fromGridJson(str) {
     const lines = JSON.parse(str)
     const language = new TreeNode()
-    const cellDelimiter = language.getWordBreakSymbol()
-    const nodeDelimiter = language.getNodeBreakSymbol()
+    const cellDelimiter = language.wordBreakSymbol
+    const nodeDelimiter = language.nodeBreakSymbol
     return new TreeNode(lines.map(line => line.join(cellDelimiter)).join(nodeDelimiter))
   }
   static fromSsv(str) {
@@ -13696,9 +13657,20 @@ class TreeNode extends AbstractNode {
     }
     return methods[format](content)
   }
+  static fromFolder(folderPath, filepathPredicate = filepath => filepath !== ".DS_Store") {
+    const path = require("path")
+    const fs = require("fs")
+    const tree = new TreeNode()
+    const files = fs
+      .readdirSync(folderPath)
+      .map(filename => path.join(folderPath, filename))
+      .filter(filepath => !fs.statSync(filepath).isDirectory() && filepathPredicate(filepath))
+      .forEach(filePath => tree.appendLineAndChildren(filePath, fs.readFileSync(filePath, "utf8")))
+    return tree
+  }
 }
-TreeNode._parsers = new Map()
-TreeNode.Parser = Parser
+TreeNode._parserCombinators = new Map()
+TreeNode.ParserCombinator = ParserCombinator
 TreeNode.iris = `sepal_length,sepal_width,petal_length,petal_width,species
 6.1,3,4.9,1.8,virginica
 5.6,2.7,4.2,1.3,versicolor
@@ -13710,7 +13682,7 @@ TreeNode.iris = `sepal_length,sepal_width,petal_length,petal_width,species
 4.9,2.5,4.5,1.7,virginica
 5.1,3.5,1.4,0.2,setosa
 5,3.4,1.5,0.2,setosa`
-TreeNode.getVersion = () => "53.8.0"
+TreeNode.getVersion = () => "74.0.0"
 class AbstractExtendibleTreeNode extends TreeNode {
   _getFromExtended(firstWordPath) {
     const hit = this._getNodeFromExtended(firstWordPath)
@@ -13719,15 +13691,15 @@ class AbstractExtendibleTreeNode extends TreeNode {
   _getFamilyTree() {
     const tree = new TreeNode()
     this.forEach(node => {
-      const path = node._getAncestorsArray().map(node => node._getId())
+      const path = node._getAncestorsArray().map(node => node.id)
       path.reverse()
       tree.touchNode(path.join(" "))
     })
     return tree
   }
   // todo: be more specific with the param
-  _getChildrenByNodeConstructorInExtended(constructor) {
-    return TreeUtils.flatten(this._getAncestorsArray().map(node => node.getChildrenByNodeConstructor(constructor)))
+  _getChildrenByParserInExtended(parser) {
+    return Utils.flatten(this._getAncestorsArray().map(node => node.getChildrenByParser(parser)))
   }
   _getExtendedParent() {
     return this._getAncestorsArray()[1]
@@ -13745,11 +13717,11 @@ class AbstractExtendibleTreeNode extends TreeNode {
       .reverse()
       .join("\n")
   }
-  _doesExtend(nodeTypeId) {
-    return this._getAncestorSet().has(nodeTypeId)
+  _doesExtend(parserId) {
+    return this._getAncestorSet().has(parserId)
   }
   _getAncestorSet() {
-    if (!this._cache_ancestorSet) this._cache_ancestorSet = new Set(this._getAncestorsArray().map(def => def._getId()))
+    if (!this._cache_ancestorSet) this._cache_ancestorSet = new Set(this._getAncestorsArray().map(def => def.id))
     return this._cache_ancestorSet
   }
   // Note: the order is: [this, parent, grandParent, ...]
@@ -13757,7 +13729,7 @@ class AbstractExtendibleTreeNode extends TreeNode {
     this._initAncestorsArrayCache(cannotContainNodes)
     return this._cache_ancestorsArray
   }
-  _getIdThatThisExtends() {
+  get idThatThisExtends() {
     return this.get(TreeNotationConstants.extends)
   }
   _initAncestorsArrayCache(cannotContainNodes) {
@@ -13765,9 +13737,9 @@ class AbstractExtendibleTreeNode extends TreeNode {
     if (cannotContainNodes && cannotContainNodes.includes(this)) throw new Error(`Loop detected: '${this.getLine()}' is the ancestor of one of its ancestors.`)
     cannotContainNodes = cannotContainNodes || [this]
     let ancestors = [this]
-    const extendedId = this._getIdThatThisExtends()
+    const extendedId = this.idThatThisExtends
     if (extendedId) {
-      const parentNode = this._getIdToNodeMap()[extendedId]
+      const parentNode = this.idToNodeMap[extendedId]
       if (!parentNode) throw new Error(`${extendedId} not found`)
       ancestors = ancestors.concat(parentNode._getAncestorsArray(cannotContainNodes))
     }
@@ -13775,17 +13747,17 @@ class AbstractExtendibleTreeNode extends TreeNode {
   }
 }
 class ExtendibleTreeNode extends AbstractExtendibleTreeNode {
-  _getIdToNodeMap() {
-    if (!this.isRoot()) return this.getRootNode()._getIdToNodeMap()
+  get idToNodeMap() {
+    if (!this.isRoot()) return this.root.idToNodeMap
     if (!this._nodeMapCache) {
       this._nodeMapCache = {}
       this.forEach(child => {
-        this._nodeMapCache[child._getId()] = child
+        this._nodeMapCache[child.id] = child
       })
     }
     return this._nodeMapCache
   }
-  _getId() {
+  get id() {
     return this.getWord(0)
   }
 }
@@ -13794,8 +13766,17 @@ window.ExtendibleTreeNode = ExtendibleTreeNode
 window.AbstractExtendibleTreeNode = AbstractExtendibleTreeNode
 window.TreeEvents = TreeEvents
 window.TreeWord = TreeWord
+
+
+// Compiled language parsers will include these files:
+const GlobalNamespaceAdditions = {
+  Utils: "Utils.js",
+  TreeNode: "TreeNode.js",
+  HandGrammarProgram: "GrammarLanguage.js",
+  GrammarBackedNode: "GrammarLanguage.js"
+}
 var GrammarConstantsCompiler
-;(function(GrammarConstantsCompiler) {
+;(function (GrammarConstantsCompiler) {
   GrammarConstantsCompiler["stringTemplate"] = "stringTemplate"
   GrammarConstantsCompiler["indentCharacter"] = "indentCharacter"
   GrammarConstantsCompiler["catchAllCellDelimiter"] = "catchAllCellDelimiter"
@@ -13803,19 +13784,12 @@ var GrammarConstantsCompiler
   GrammarConstantsCompiler["joinChildrenWith"] = "joinChildrenWith"
   GrammarConstantsCompiler["closeChildren"] = "closeChildren"
 })(GrammarConstantsCompiler || (GrammarConstantsCompiler = {}))
-var SQLiteTypes
-;(function(SQLiteTypes) {
-  SQLiteTypes["integer"] = "INTEGER"
-  SQLiteTypes["float"] = "FLOAT"
-  SQLiteTypes["text"] = "TEXT"
-})(SQLiteTypes || (SQLiteTypes = {}))
 var GrammarConstantsMisc
-;(function(GrammarConstantsMisc) {
+;(function (GrammarConstantsMisc) {
   GrammarConstantsMisc["doNotSynthesize"] = "doNotSynthesize"
-  GrammarConstantsMisc["tableName"] = "tableName"
 })(GrammarConstantsMisc || (GrammarConstantsMisc = {}))
 var PreludeCellTypeIds
-;(function(PreludeCellTypeIds) {
+;(function (PreludeCellTypeIds) {
   PreludeCellTypeIds["anyCell"] = "anyCell"
   PreludeCellTypeIds["keywordCell"] = "keywordCell"
   PreludeCellTypeIds["extraWordCell"] = "extraWordCell"
@@ -13826,14 +13800,14 @@ var PreludeCellTypeIds
   PreludeCellTypeIds["intCell"] = "intCell"
 })(PreludeCellTypeIds || (PreludeCellTypeIds = {}))
 var GrammarConstantsConstantTypes
-;(function(GrammarConstantsConstantTypes) {
+;(function (GrammarConstantsConstantTypes) {
   GrammarConstantsConstantTypes["boolean"] = "boolean"
   GrammarConstantsConstantTypes["string"] = "string"
   GrammarConstantsConstantTypes["int"] = "int"
   GrammarConstantsConstantTypes["float"] = "float"
 })(GrammarConstantsConstantTypes || (GrammarConstantsConstantTypes = {}))
 var GrammarBundleFiles
-;(function(GrammarBundleFiles) {
+;(function (GrammarBundleFiles) {
   GrammarBundleFiles["package"] = "package.json"
   GrammarBundleFiles["readme"] = "readme.md"
   GrammarBundleFiles["indexHtml"] = "index.html"
@@ -13841,22 +13815,22 @@ var GrammarBundleFiles
   GrammarBundleFiles["testJs"] = "test.js"
 })(GrammarBundleFiles || (GrammarBundleFiles = {}))
 var GrammarCellParser
-;(function(GrammarCellParser) {
+;(function (GrammarCellParser) {
   GrammarCellParser["prefix"] = "prefix"
   GrammarCellParser["postfix"] = "postfix"
   GrammarCellParser["omnifix"] = "omnifix"
 })(GrammarCellParser || (GrammarCellParser = {}))
 var GrammarConstants
-;(function(GrammarConstants) {
+;(function (GrammarConstants) {
   // node types
   GrammarConstants["extensions"] = "extensions"
-  GrammarConstants["toolingDirective"] = "tooling"
-  GrammarConstants["todoComment"] = "todo"
+  GrammarConstants["comment"] = "//"
   GrammarConstants["version"] = "version"
-  GrammarConstants["nodeType"] = "nodeType"
+  GrammarConstants["parser"] = "parser"
   GrammarConstants["cellType"] = "cellType"
   GrammarConstants["grammarFileExtension"] = "grammar"
-  GrammarConstants["nodeTypeSuffix"] = "Node"
+  GrammarConstants["abstractParserPrefix"] = "abstract"
+  GrammarConstants["parserSuffix"] = "Parser"
   GrammarConstants["cellTypeSuffix"] = "Cell"
   // error check time
   GrammarConstants["regex"] = "regex"
@@ -13866,39 +13840,44 @@ var GrammarConstants
   GrammarConstants["examples"] = "examples"
   GrammarConstants["min"] = "min"
   GrammarConstants["max"] = "max"
-  // baseNodeTypes
-  GrammarConstants["baseNodeType"] = "baseNodeType"
-  GrammarConstants["blobNode"] = "blobNode"
-  GrammarConstants["errorNode"] = "errorNode"
+  // baseParsers
+  GrammarConstants["baseParser"] = "baseParser"
+  GrammarConstants["blobParser"] = "blobParser"
+  GrammarConstants["errorParser"] = "errorParser"
   // parse time
   GrammarConstants["extends"] = "extends"
-  GrammarConstants["abstract"] = "abstract"
   GrammarConstants["root"] = "root"
   GrammarConstants["crux"] = "crux"
   GrammarConstants["cruxFromId"] = "cruxFromId"
   GrammarConstants["pattern"] = "pattern"
   GrammarConstants["inScope"] = "inScope"
   GrammarConstants["cells"] = "cells"
+  GrammarConstants["listDelimiter"] = "listDelimiter"
+  GrammarConstants["contentKey"] = "contentKey"
+  GrammarConstants["childrenKey"] = "childrenKey"
+  GrammarConstants["uniqueFirstWord"] = "uniqueFirstWord"
   GrammarConstants["catchAllCellType"] = "catchAllCellType"
   GrammarConstants["cellParser"] = "cellParser"
-  GrammarConstants["catchAllNodeType"] = "catchAllNodeType"
+  GrammarConstants["catchAllParser"] = "catchAllParser"
   GrammarConstants["constants"] = "constants"
   GrammarConstants["required"] = "required"
   GrammarConstants["single"] = "single"
+  GrammarConstants["uniqueLine"] = "uniqueLine"
   GrammarConstants["tags"] = "tags"
   GrammarConstants["_extendsJsClass"] = "_extendsJsClass"
   GrammarConstants["_rootNodeJsHeader"] = "_rootNodeJsHeader"
-  // default catchAll nodeType
-  GrammarConstants["BlobNode"] = "BlobNode"
-  GrammarConstants["defaultRootNode"] = "defaultRootNode"
+  // default catchAll parser
+  GrammarConstants["BlobParser"] = "BlobParser"
+  GrammarConstants["DefaultRootParser"] = "DefaultRootParser"
   // code
   GrammarConstants["javascript"] = "javascript"
   // compile time
-  GrammarConstants["compilerNodeType"] = "compiler"
+  GrammarConstants["compilerParser"] = "compiler"
   GrammarConstants["compilesTo"] = "compilesTo"
   // develop time
   GrammarConstants["description"] = "description"
   GrammarConstants["example"] = "example"
+  GrammarConstants["sortTemplate"] = "sortTemplate"
   GrammarConstants["frequency"] = "frequency"
   GrammarConstants["highlightScope"] = "highlightScope"
 })(GrammarConstants || (GrammarConstants = {}))
@@ -13916,91 +13895,106 @@ class TypedWord extends TreeWord {
 }
 // todo: can we merge these methods into base TreeNode and ditch this class?
 class GrammarBackedNode extends TreeNode {
-  getDefinition() {
-    const handGrammarProgram = this.getHandGrammarProgram()
-    return this.isRoot() ? handGrammarProgram : handGrammarProgram.getNodeTypeDefinitionByNodeTypeId(this.constructor.name)
+  get definition() {
+    if (this._definition) return this._definition
+    this._definition = this.isRoot() ? this.handGrammarProgram : this.parent.definition.getParserDefinitionByParserId(this.constructor.name)
+    return this._definition
   }
-  toSQLiteInsertStatement(primaryKeyFunction = node => node.getWord(0)) {
-    const def = this.getDefinition()
-    const tableName = def.getTableNameIfAny() || def._getId()
-    const columns = def.getSQLiteTableColumns()
-    const hits = columns.filter(colDef => this.has(colDef.columnName))
-    const values = hits.map(colDef => {
-      const node = this.getNode(colDef.columnName)
-      const content = node.getContent()
-      return colDef.type === SQLiteTypes.text ? `"${content}"` : content
-    })
-    hits.unshift({ columnName: "id", type: SQLiteTypes.text })
-    values.unshift(`"${primaryKeyFunction(this)}"`)
-    return `INSERT INTO ${tableName} (${hits.map(col => col.columnName).join(",")}) VALUES (${values.join(",")});`
+  get rootGrammarTree() {
+    return this.definition.root
   }
   getAutocompleteResults(partialWord, cellIndex) {
     return cellIndex === 0 ? this._getAutocompleteResultsForFirstWord(partialWord) : this._getAutocompleteResultsForCell(partialWord, cellIndex)
   }
-  getChildInstancesOfNodeTypeId(nodeTypeId) {
-    return this.filter(node => node.doesExtend(nodeTypeId))
+  get nodeIndex() {
+    // StringMap<int> {firstWord: index}
+    // When there are multiple tails with the same firstWord, _index stores the last content.
+    // todo: change the above behavior: when a collision occurs, create an array.
+    return this._nodeIndex || this._makeNodeIndex()
   }
-  doesExtend(nodeTypeId) {
-    return this.getDefinition()._doesExtend(nodeTypeId)
+  _clearIndex() {
+    delete this._nodeIndex
+    return super._clearIndex()
   }
-  _getErrorNodeErrors() {
-    return [this.getFirstWord() ? new UnknownNodeTypeError(this) : new BlankLineError(this)]
+  _makeIndex(startAt = 0) {
+    if (this._nodeIndex) this._makeNodeIndex(startAt)
+    return super._makeIndex(startAt)
   }
-  _getBlobNodeCatchAllNodeType() {
-    return BlobNode
+  _makeNodeIndex(startAt = 0) {
+    if (!this._nodeIndex || !startAt) this._nodeIndex = {}
+    const nodes = this._getChildrenArray()
+    const newIndex = this._nodeIndex
+    const length = nodes.length
+    for (let index = startAt; index < length; index++) {
+      const node = nodes[index]
+      const ancestors = Array.from(node.definition._getAncestorSet()).forEach(id => {
+        if (!newIndex[id]) newIndex[id] = []
+        newIndex[id].push(node)
+      })
+    }
+    return newIndex
+  }
+  getChildInstancesOfParserId(parserId) {
+    return this.nodeIndex[parserId] || []
+  }
+  doesExtend(parserId) {
+    return this.definition._doesExtend(parserId)
+  }
+  _getErrorParserErrors() {
+    return [this.firstWord ? new UnknownParserError(this) : new BlankLineError(this)]
+  }
+  _getBlobParserCatchAllParser() {
+    return BlobParser
   }
   _getAutocompleteResultsForFirstWord(partialWord) {
-    const keywordMap = this.getDefinition().getFirstWordMapWithDefinitions()
+    const keywordMap = this.definition.firstWordMapWithDefinitions
     let keywords = Object.keys(keywordMap)
     if (partialWord) keywords = keywords.filter(keyword => keyword.includes(partialWord))
-    return keywords.map(keyword => {
-      const def = keywordMap[keyword]
-      const description = def.getDescription()
-      return {
-        text: keyword,
-        displayText: keyword + (description ? " " + description : "")
-      }
-    })
+    return keywords
+      .map(keyword => {
+        const def = keywordMap[keyword]
+        if (def.suggestInAutocomplete === false) return false
+        const description = def.description
+        return {
+          text: keyword,
+          displayText: keyword + (description ? " " + description : "")
+        }
+      })
+      .filter(i => i)
   }
   _getAutocompleteResultsForCell(partialWord, cellIndex) {
     // todo: root should be [] correct?
-    const cell = this._getParsedCells()[cellIndex]
+    const cell = this.parsedCells[cellIndex]
     return cell ? cell.getAutoCompleteWords(partialWord) : []
   }
   // note: this is overwritten by the root node of a runtime grammar program.
   // some of the magic that makes this all work. but maybe there's a better way.
-  getHandGrammarProgram() {
+  get handGrammarProgram() {
     if (this.isRoot()) throw new Error(`Root node without getHandGrammarProgram defined.`)
-    return this.getRootNode().getHandGrammarProgram()
+    return this.root.handGrammarProgram
   }
   getRunTimeEnumOptions(cell) {
     return undefined
   }
   _sortNodesByInScopeOrder() {
-    const nodeTypeOrder = this.getDefinition()._getMyInScopeNodeTypeIds()
-    if (!nodeTypeOrder.length) return this
+    const parserOrder = this.definition._getMyInScopeParserIds()
+    if (!parserOrder.length) return this
     const orderMap = {}
-    nodeTypeOrder.forEach((word, index) => {
-      orderMap[word] = index
-    })
-    this.sort(
-      TreeUtils.makeSortByFn(runtimeNode => {
-        return orderMap[runtimeNode.getDefinition().getNodeTypeIdFromDefinition()]
-      })
-    )
+    parserOrder.forEach((word, index) => (orderMap[word] = index))
+    this.sort(Utils.makeSortByFn(runtimeNode => orderMap[runtimeNode.definition.parserIdFromDefinition]))
     return this
   }
   get requiredNodeErrors() {
     const errors = []
-    Object.values(this.getDefinition().getFirstWordMapWithDefinitions()).forEach(def => {
-      if (def.isRequired()) if (!this.getChildren().some(node => node.getDefinition() === def)) errors.push(new MissingRequiredNodeTypeError(this, def.getNodeTypeIdFromDefinition()))
+    Object.values(this.definition.firstWordMapWithDefinitions).forEach(def => {
+      if (def.isRequired() && !this.nodeIndex[def.id]) errors.push(new MissingRequiredParserError(this, def.id))
     })
     return errors
   }
-  getProgramAsCells() {
+  get programAsCells() {
     // todo: what is this?
-    return this.getTopDownArray().map(node => {
-      const cells = node._getParsedCells()
+    return this.topDownArray.map(node => {
+      const cells = node.parsedCells
       let indents = node.getIndentLevel() - 1
       while (indents) {
         cells.unshift(undefined)
@@ -14009,55 +14003,49 @@ class GrammarBackedNode extends TreeNode {
       return cells
     })
   }
-  getProgramWidth() {
-    return Math.max(...this.getProgramAsCells().map(line => line.length))
+  get programWidth() {
+    return Math.max(...this.programAsCells.map(line => line.length))
   }
-  getAllTypedWords() {
+  get allTypedWords() {
     const words = []
-    this.getTopDownArray().forEach(node => {
-      node.getWordTypes().forEach((cell, index) => {
-        words.push(new TypedWord(node, index, cell.getCellTypeId()))
-      })
-    })
+    this.topDownArray.forEach(node => node.wordTypes.forEach((cell, index) => words.push(new TypedWord(node, index, cell.cellTypeId))))
     return words
   }
   findAllWordsWithCellType(cellTypeId) {
-    return this.getAllTypedWords().filter(typedWord => typedWord.type === cellTypeId)
+    return this.allTypedWords.filter(typedWord => typedWord.type === cellTypeId)
   }
-  findAllNodesWithNodeType(nodeTypeId) {
-    return this.getTopDownArray().filter(node => node.getDefinition().getNodeTypeIdFromDefinition() === nodeTypeId)
+  findAllNodesWithParser(parserId) {
+    return this.topDownArray.filter(node => node.definition.parserIdFromDefinition === parserId)
   }
   toCellTypeTree() {
-    return this.getTopDownArray()
-      .map(child => child.getIndentation() + child.getLineCellTypes())
-      .join("\n")
+    return this.topDownArray.map(child => child.indentation + child.lineCellTypes).join("\n")
   }
   getParseTable(maxColumnWidth = 40) {
     const tree = new TreeNode(this.toCellTypeTree())
     return new TreeNode(
-      tree.getTopDownArray().map((node, lineNumber) => {
+      tree.topDownArray.map((node, lineNumber) => {
         const sourceNode = this.nodeAtLine(lineNumber)
         const errs = sourceNode.getErrors()
         const errorCount = errs.length
         const obj = {
           lineNumber: lineNumber,
-          source: sourceNode.getIndentation() + sourceNode.getLine(),
-          nodeType: sourceNode.constructor.name,
-          cellTypes: node.getContent(),
+          source: sourceNode.indentation + sourceNode.getLine(),
+          parser: sourceNode.constructor.name,
+          cellTypes: node.content,
           errorCount: errorCount
         }
-        if (errorCount) obj.errorMessages = errs.map(err => err.getMessage()).join(";")
+        if (errorCount) obj.errorMessages = errs.map(err => err.message).join(";")
         return obj
       })
     ).toFormattedTable(maxColumnWidth)
   }
-  // Helper method for selecting potential nodeTypes needed to update grammar file.
-  getInvalidNodeTypes() {
+  // Helper method for selecting potential parsers needed to update grammar file.
+  get invalidParsers() {
     return Array.from(
       new Set(
         this.getAllErrors()
-          .filter(err => err instanceof UnknownNodeTypeError)
-          .map(err => err.getNode().getFirstWord())
+          .filter(err => err instanceof UnknownParserError)
+          .map(err => err.getNode().firstWord)
       )
     )
   }
@@ -14090,7 +14078,7 @@ class GrammarBackedNode extends TreeNode {
         result.suggestions = result.suggestions.map(node => node.text).join(" ")
         return result
       })
-    ).toTable()
+    ).asTable
   }
   getAutocompleteResultsAt(lineIndex, charIndex) {
     const lineNode = this.nodeAtLine(lineIndex) || this
@@ -14107,10 +14095,10 @@ class GrammarBackedNode extends TreeNode {
       matches: nodeInScope.getAutocompleteResults(wordProperties.word, wordIndex)
     }
   }
-  _sortWithParentNodeTypesUpTop() {
-    const familyTree = new HandGrammarProgram(this.toString()).getNodeTypeFamilyTree()
+  _sortWithParentParsersUpTop() {
+    const familyTree = new HandGrammarProgram(this.toString()).parserFamilyTree
     const rank = {}
-    familyTree.getTopDownArray().forEach((node, index) => {
+    familyTree.topDownArray.forEach((node, index) => {
       rank[node.getWord(0)] = index
     })
     const nodeAFirst = -1
@@ -14126,58 +14114,80 @@ class GrammarBackedNode extends TreeNode {
     if (this.isRoot()) {
       this._sortNodesByInScopeOrder()
       try {
-        this._sortWithParentNodeTypesUpTop()
+        this._sortWithParentParsersUpTop()
       } catch (err) {
         console.log(`Warning: ${err}`)
       }
     }
-    this.getTopDownArray().forEach(child => {
+    this.topDownArray.forEach(child => {
       child.format()
     })
     return this
   }
-  getNodeTypeUsage(filepath = "") {
-    // returns a report on what nodeTypes from its language the program uses
+  sortFromSortTemplate() {
+    if (!this.length) return this
+    // Recurse
+    this.forEach(node => node.sortFromSortTemplate())
+    const def = this.isRoot() ? this.definition.rootParserDefinition : this.definition
+    const { sortIndices, sortSections } = def.sortSpec
+    // Sort and insert section breaks
+    if (sortIndices.size) {
+      // Sort keywords
+      this.sort((nodeA, nodeB) => {
+        var _a, _b
+        const aIndex = (_a = sortIndices.get(nodeA.firstWord)) !== null && _a !== void 0 ? _a : sortIndices.get(nodeA.sortKey)
+        const bIndex = (_b = sortIndices.get(nodeB.firstWord)) !== null && _b !== void 0 ? _b : sortIndices.get(nodeB.sortKey)
+        if (aIndex === undefined) console.error(`sortTemplate is missing "${nodeA.firstWord}"`)
+        const a = aIndex !== null && aIndex !== void 0 ? aIndex : 1000
+        const b = bIndex !== null && bIndex !== void 0 ? bIndex : 1000
+        return a > b ? 1 : a < b ? -1 : nodeA.getLine() > nodeB.getLine()
+      })
+      // pad sections
+      let currentSection = 0
+      this.forEach(node => {
+        var _a
+        const nodeSection = (_a = sortSections.get(node.firstWord)) !== null && _a !== void 0 ? _a : sortSections.get(node.sortKey)
+        const sectionHasAdvanced = nodeSection > currentSection
+        if (sectionHasAdvanced) {
+          currentSection = nodeSection
+          node.prependSibling("") // Put a blank line before this section
+        }
+      })
+    }
+    return this
+  }
+  getParserUsage(filepath = "") {
+    // returns a report on what parsers from its language the program uses
     const usage = new TreeNode()
-    const handGrammarProgram = this.getHandGrammarProgram()
-    handGrammarProgram.getValidConcreteAndAbstractNodeTypeDefinitions().forEach(def => {
-      const requiredCellTypeIds = def.getCellParser().getRequiredCellTypeIds()
-      usage.appendLine([def.getNodeTypeIdFromDefinition(), "line-id", "nodeType", requiredCellTypeIds.join(" ")].join(" "))
+    const handGrammarProgram = this.handGrammarProgram
+    handGrammarProgram.validConcreteAndAbstractParserDefinitions.forEach(def => {
+      const requiredCellTypeIds = def.cellParser.getRequiredCellTypeIds()
+      usage.appendLine([def.parserIdFromDefinition, "line-id", "parser", requiredCellTypeIds.join(" ")].join(" "))
     })
-    this.getTopDownArray().forEach((node, lineNumber) => {
-      const stats = usage.getNode(node.getNodeTypeId())
-      stats.appendLine([filepath + "-" + lineNumber, node.getWords().join(" ")].join(" "))
+    this.topDownArray.forEach((node, lineNumber) => {
+      const stats = usage.getNode(node.parserId)
+      stats.appendLine([filepath + "-" + lineNumber, node.words.join(" ")].join(" "))
     })
     return usage
   }
   toHighlightScopeTree() {
-    return this.getTopDownArray()
-      .map(child => child.getIndentation() + child.getLineHighlightScopes())
-      .join("\n")
+    return this.topDownArray.map(child => child.indentation + child.getLineHighlightScopes()).join("\n")
   }
   toDefinitionLineNumberTree() {
-    return this.getTopDownArray()
-      .map(child => child.getDefinition().getLineNumber() + " " + child.getIndentation() + child.getCellDefinitionLineNumbers().join(" "))
-      .join("\n")
+    return this.topDownArray.map(child => child.definition.lineNumber + " " + child.indentation + child.cellDefinitionLineNumbers.join(" ")).join("\n")
   }
-  toCellTypeTreeWithNodeConstructorNames() {
-    return this.getTopDownArray()
-      .map(child => child.constructor.name + this.getWordBreakSymbol() + child.getIndentation() + child.getLineCellTypes())
-      .join("\n")
+  get asCellTypeTreeWithParserIds() {
+    return this.topDownArray.map(child => child.constructor.name + this.wordBreakSymbol + child.indentation + child.lineCellTypes).join("\n")
   }
-  toPreludeCellTypeTreeWithNodeConstructorNames() {
-    return this.getTopDownArray()
-      .map(child => child.constructor.name + this.getWordBreakSymbol() + child.getIndentation() + child.getLineCellPreludeTypes())
-      .join("\n")
+  toPreludeCellTypeTreeWithParserIds() {
+    return this.topDownArray.map(child => child.constructor.name + this.wordBreakSymbol + child.indentation + child.getLineCellPreludeTypes()).join("\n")
   }
-  getTreeWithNodeTypes() {
-    return this.getTopDownArray()
-      .map(child => child.constructor.name + this.getWordBreakSymbol() + child.getIndentation() + child.getLine())
-      .join("\n")
+  get asTreeWithParsers() {
+    return this.topDownArray.map(child => child.constructor.name + this.wordBreakSymbol + child.indentation + child.getLine()).join("\n")
   }
   getCellHighlightScopeAtPosition(lineIndex, wordIndex) {
     this._initCellTypeCache()
-    const typeNode = this._cache_highlightScopeTree.getTopDownArray()[lineIndex - 1]
+    const typeNode = this._cache_highlightScopeTree.topDownArray[lineIndex - 1]
     return typeNode ? typeNode.getWord(wordIndex - 1) : undefined
   }
   _initCellTypeCache() {
@@ -14187,40 +14197,47 @@ class GrammarBackedNode extends TreeNode {
     this._cache_highlightScopeTree = new TreeNode(this.toHighlightScopeTree())
     this._cache_programCellTypeStringMTime = treeMTime
   }
-  createParser() {
-    return this.isRoot()
-      ? new TreeNode.Parser(BlobNode)
-      : new TreeNode.Parser(
-          this.getParent()
-            ._getParser()
-            ._getCatchAllNodeConstructor(this.getParent()),
-          {}
-        )
+  createParserCombinator() {
+    return this.isRoot() ? new TreeNode.ParserCombinator(BlobParser) : new TreeNode.ParserCombinator(this.parent._getParser()._getCatchAllParser(this.parent), {})
   }
-  getNodeTypeId() {
-    return this.getDefinition().getNodeTypeIdFromDefinition()
+  get parserId() {
+    return this.definition.parserIdFromDefinition
   }
-  getWordTypes() {
-    return this._getParsedCells().filter(cell => cell.getWord() !== undefined)
+  get wordTypes() {
+    return this.parsedCells.filter(cell => cell.getWord() !== undefined)
   }
   get cellErrors() {
-    return this._getParsedCells()
-      .map(check => check.getErrorIfAny())
-      .filter(identity => identity)
+    return this.parsedCells.map(check => check.getErrorIfAny()).filter(identity => identity)
   }
-  get singleNodeUsedTwiceErrors() {
+  get singleParserUsedTwiceErrors() {
     const errors = []
-    const parent = this.getParent()
-    const hits = parent.getChildInstancesOfNodeTypeId(this.getDefinition().id)
+    const parent = this.parent
+    const hits = parent.getChildInstancesOfParserId(this.definition.id)
     if (hits.length > 1)
       hits.forEach((node, index) => {
-        if (node === this) errors.push(new NodeTypeUsedMultipleTimesError(node))
+        if (node === this) errors.push(new ParserUsedMultipleTimesError(node))
       })
+    return errors
+  }
+  get uniqueLineAppearsTwiceErrors() {
+    const errors = []
+    const parent = this.parent
+    const hits = parent.getChildInstancesOfParserId(this.definition.id)
+    if (hits.length > 1) {
+      const set = new Set()
+      hits.forEach((node, index) => {
+        const line = node.getLine()
+        if (set.has(line)) errors.push(new ParserUsedMultipleTimesError(node))
+        set.add(line)
+      })
+    }
     return errors
   }
   get scopeErrors() {
     let errors = []
-    if (this.getDefinition().isSingle) errors = errors.concat(this.singleNodeUsedTwiceErrors)
+    const def = this.definition
+    if (def.isSingle) errors = errors.concat(this.singleParserUsedTwiceErrors)
+    if (def.isUniqueLine) errors = errors.concat(this.uniqueLineAppearsTwiceErrors)
     const { requiredNodeErrors } = this
     if (requiredNodeErrors.length) errors = errors.concat(requiredNodeErrors)
     return errors
@@ -14228,60 +14245,122 @@ class GrammarBackedNode extends TreeNode {
   getErrors() {
     return this.cellErrors.concat(this.scopeErrors)
   }
-  _getParsedCells() {
-    return this.getDefinition()
-      .getCellParser()
-      .getCellArray(this)
+  get parsedCells() {
+    return this.definition.cellParser.getCellArray(this)
   }
   // todo: just make a fn that computes proper spacing and then is given a node to print
-  getLineCellTypes() {
-    return this._getParsedCells()
-      .map(slot => slot.getCellTypeId())
-      .join(" ")
+  get lineCellTypes() {
+    return this.parsedCells.map(slot => slot.cellTypeId).join(" ")
   }
   getLineCellPreludeTypes() {
-    return this._getParsedCells()
+    return this.parsedCells
       .map(slot => {
-        const def = slot._getCellTypeDefinition()
+        const def = slot.cellTypeDefinition
         //todo: cleanup
-        return def ? def._getPreludeKindId() : PreludeCellTypeIds.anyCell
+        return def ? def.preludeKindId : PreludeCellTypeIds.anyCell
       })
       .join(" ")
   }
   getLineHighlightScopes(defaultScope = "source") {
-    return this._getParsedCells()
-      .map(slot => slot.getHighlightScope() || defaultScope)
-      .join(" ")
+    return this.parsedCells.map(slot => slot.highlightScope || defaultScope).join(" ")
   }
-  getCellDefinitionLineNumbers() {
-    return this._getParsedCells().map(cell => cell.getDefinitionLineNumber())
+  get cellDefinitionLineNumbers() {
+    return this.parsedCells.map(cell => cell.definitionLineNumber)
   }
   _getCompiledIndentation() {
-    const indentCharacter = this.getDefinition()._getCompilerObject()[GrammarConstantsCompiler.indentCharacter]
-    const indent = this.getIndentation()
+    const indentCharacter = this.definition._getCompilerObject()[GrammarConstantsCompiler.indentCharacter]
+    const indent = this.indentation
     return indentCharacter !== undefined ? indentCharacter.repeat(indent.length) : indent
   }
   _getFields() {
     // fields are like cells
     const fields = {}
     this.forEach(node => {
-      const def = node.getDefinition()
-      if (def.isRequired() || def.isSingle) fields[node.getWord(0)] = node.getContent()
+      const def = node.definition
+      if (def.isRequired() || def.isSingle) fields[node.getWord(0)] = node.content
     })
     return fields
   }
   _getCompiledLine() {
-    const compiler = this.getDefinition()._getCompilerObject()
+    const compiler = this.definition._getCompilerObject()
     const catchAllCellDelimiter = compiler[GrammarConstantsCompiler.catchAllCellDelimiter]
     const str = compiler[GrammarConstantsCompiler.stringTemplate]
-    return str !== undefined ? TreeUtils.formatStr(str, catchAllCellDelimiter, Object.assign(this._getFields(), this.cells)) : this.getLine()
+    return str !== undefined ? Utils.formatStr(str, catchAllCellDelimiter, Object.assign(this._getFields(), this.cells)) : this.getLine()
   }
+  get listDelimiter() {
+    return this.definition._getFromExtended(GrammarConstants.listDelimiter)
+  }
+  get contentKey() {
+    return this.definition._getFromExtended(GrammarConstants.contentKey)
+  }
+  get childrenKey() {
+    return this.definition._getFromExtended(GrammarConstants.childrenKey)
+  }
+  get childrenAreTextBlob() {
+    return this.definition._isBlobParser()
+  }
+  get isArrayElement() {
+    return this.definition._hasFromExtended(GrammarConstants.uniqueFirstWord) ? false : !this.definition.isSingle
+  }
+  get list() {
+    return this.listDelimiter ? this.content.split(this.listDelimiter) : super.list
+  }
+  get typedContent() {
+    // todo: probably a better way to do this, perhaps by defining a cellDelimiter at the node level
+    // todo: this currently parse anything other than string types
+    if (this.listDelimiter) return this.content.split(this.listDelimiter)
+    const cells = this.parsedCells
+    if (cells.length === 2) return cells[1].parsed
+    return this.content
+  }
+  get typedTuple() {
+    const key = this.firstWord
+    if (this.childrenAreTextBlob) return [key, this.childrenToString()]
+    const { typedContent, contentKey, childrenKey } = this
+    if (contentKey || childrenKey) {
+      let obj = {}
+      if (childrenKey) obj[childrenKey] = this.childrenToString()
+      else obj = this.typedMap
+      if (contentKey) {
+        obj[contentKey] = typedContent
+      }
+      return [key, obj]
+    }
+    const hasChildren = this.length > 0
+    const hasChildrenNoContent = typedContent === undefined && hasChildren
+    const shouldReturnValueAsObject = hasChildrenNoContent
+    if (shouldReturnValueAsObject) return [key, this.typedMap]
+    const hasChildrenAndContent = typedContent !== undefined && hasChildren
+    const shouldReturnValueAsContentPlusChildren = hasChildrenAndContent
+    // If the node has a content and a subtree return it as a string, as
+    // Javascript object values can't be both a leaf and a tree.
+    if (shouldReturnValueAsContentPlusChildren) return [key, this.contentWithChildren]
+    return [key, typedContent]
+  }
+  get _shouldSerialize() {
+    const should = this.shouldSerialize
+    return should === undefined ? true : should
+  }
+  get typedMap() {
+    const obj = {}
+    this.forEach(node => {
+      if (!node._shouldSerialize) return true
+      const tuple = node.typedTuple
+      if (!node.isArrayElement) obj[tuple[0]] = tuple[1]
+      else {
+        if (!obj[tuple[0]]) obj[tuple[0]] = []
+        obj[tuple[0]].push(tuple[1])
+      }
+    })
+    return obj
+  }
+  fromTypedMap() {}
   compile() {
     if (this.isRoot()) return super.compile()
-    const def = this.getDefinition()
+    const def = this.definition
     const indent = this._getCompiledIndentation()
     const compiledLine = this._getCompiledLine()
-    if (def.isTerminalNodeType()) return indent + compiledLine
+    if (def.isTerminalParser()) return indent + compiledLine
     const compiler = def._getCompilerObject()
     const openChildrenString = compiler[GrammarConstantsCompiler.openChildren] || ""
     const closeChildrenString = compiler[GrammarConstantsCompiler.closeChildren] || ""
@@ -14294,83 +14373,80 @@ ${indent}${closeChildrenString}`
   // todo: remove
   get cells() {
     const cells = {}
-    this._getParsedCells().forEach(cell => {
-      const cellTypeId = cell.getCellTypeId()
-      if (!cell.isCatchAll()) cells[cellTypeId] = cell.getParsed()
+    this.parsedCells.forEach(cell => {
+      const cellTypeId = cell.cellTypeId
+      if (!cell.isCatchAll()) cells[cellTypeId] = cell.parsed
       else {
         if (!cells[cellTypeId]) cells[cellTypeId] = []
-        cells[cellTypeId].push(cell.getParsed())
+        cells[cellTypeId].push(cell.parsed)
       }
     })
     return cells
   }
 }
-class BlobNode extends GrammarBackedNode {
-  createParser() {
-    return new TreeNode.Parser(BlobNode, {})
+class BlobParser extends GrammarBackedNode {
+  createParserCombinator() {
+    return new TreeNode.ParserCombinator(BlobParser, {})
   }
   getErrors() {
     return []
   }
 }
 // todo: can we remove this? hard to extend.
-class UnknownNodeTypeNode extends GrammarBackedNode {
-  createParser() {
-    return new TreeNode.Parser(UnknownNodeTypeNode, {})
+class UnknownParserNode extends GrammarBackedNode {
+  createParserCombinator() {
+    return new TreeNode.ParserCombinator(UnknownParserNode, {})
   }
   getErrors() {
-    return [new UnknownNodeTypeError(this)]
+    return [new UnknownParserError(this)]
   }
 }
 /*
 A cell contains a word but also the type information for that word.
 */
 class AbstractGrammarBackedCell {
-  constructor(node, index, typeDef, cellTypeId, isCatchAll, nodeTypeDef) {
+  constructor(node, index, typeDef, cellTypeId, isCatchAll, parserDefinitionParser) {
     this._typeDef = typeDef
     this._node = node
     this._isCatchAll = isCatchAll
     this._index = index
     this._cellTypeId = cellTypeId
-    this._nodeTypeDefinition = nodeTypeDef
+    this._parserDefinitionParser = parserDefinitionParser
   }
   getWord() {
     return this._node.getWord(this._index)
   }
-  getDefinitionLineNumber() {
-    return this._typeDef.getLineNumber()
+  get definitionLineNumber() {
+    return this._typeDef.lineNumber
   }
-  getSQLiteType() {
-    return SQLiteTypes.text
-  }
-  getCellTypeId() {
+  get cellTypeId() {
     return this._cellTypeId
   }
   getNode() {
     return this._node
   }
-  getCellIndex() {
+  get cellIndex() {
     return this._index
   }
   isCatchAll() {
     return this._isCatchAll
   }
   get min() {
-    return this._getCellTypeDefinition().get(GrammarConstants.min) || "0"
+    return this.cellTypeDefinition.get(GrammarConstants.min) || "0"
   }
   get max() {
-    return this._getCellTypeDefinition().get(GrammarConstants.max) || "100"
+    return this.cellTypeDefinition.get(GrammarConstants.max) || "100"
   }
   get placeholder() {
-    return this._getCellTypeDefinition().get(GrammarConstants.examples) || ""
+    return this.cellTypeDefinition.get(GrammarConstants.examples) || ""
   }
-  getHighlightScope() {
-    const definition = this._getCellTypeDefinition()
-    if (definition) return definition.getHighlightScope() // todo: why the undefined?
+  get highlightScope() {
+    const definition = this.cellTypeDefinition
+    if (definition) return definition.highlightScope // todo: why the undefined?
   }
   getAutoCompleteWords(partialWord = "") {
-    const cellDef = this._getCellTypeDefinition()
-    let words = cellDef ? cellDef._getAutocompleteWordOptions(this.getNode().getRootNode()) : []
+    const cellDef = this.cellTypeDefinition
+    let words = cellDef ? cellDef._getAutocompleteWordOptions(this.getNode().root) : []
     const runTimeOptions = this.getNode().getRunTimeEnumOptions(this)
     if (runTimeOptions) words = runTimeOptions.concat(words)
     if (partialWord) words = words.filter(word => word.includes(partialWord))
@@ -14383,13 +14459,13 @@ class AbstractGrammarBackedCell {
   }
   synthesizeCell(seed = Date.now()) {
     // todo: cleanup
-    const cellDef = this._getCellTypeDefinition()
+    const cellDef = this.cellTypeDefinition
     const enumOptions = cellDef._getFromExtended(GrammarConstants.enum)
-    if (enumOptions) return TreeUtils.getRandomString(1, enumOptions.split(" "))
+    if (enumOptions) return Utils.getRandomString(1, enumOptions.split(" "))
     return this._synthesizeCell(seed)
   }
   _getStumpEnumInput(crux) {
-    const cellDef = this._getCellTypeDefinition()
+    const cellDef = this.cellTypeDefinition
     const enumOptions = cellDef._getFromExtended(GrammarConstants.enum)
     if (!enumOptions) return undefined
     const options = new TreeNode(
@@ -14411,20 +14487,17 @@ ${options.toString(1)}`
  name ${crux}
  placeholder ${this.placeholder}`
   }
-  _getCellTypeDefinition() {
+  get cellTypeDefinition() {
     return this._typeDef
   }
-  _getFullLine() {
-    return this.getNode().getLine()
-  }
   _getErrorContext() {
-    return this._getFullLine().split(" ")[0] // todo: WordBreakSymbol
+    return this.getNode().getLine().split(" ")[0] // todo: WordBreakSymbol
   }
   isValid() {
     const runTimeOptions = this.getNode().getRunTimeEnumOptions(this)
     const word = this.getWord()
     if (runTimeOptions) return runTimeOptions.includes(word)
-    return this._getCellTypeDefinition().isValid(word, this.getNode().getRootNode()) && this._isValid()
+    return this.cellTypeDefinition.isValid(word, this.getNode().root) && this._isValid()
   }
   getErrorIfAny() {
     const word = this.getWord()
@@ -14440,12 +14513,12 @@ class GrammarBitCell extends AbstractGrammarBackedCell {
     return word === "0" || word === "1"
   }
   _synthesizeCell() {
-    return TreeUtils.getRandomString(1, "01".split(""))
+    return Utils.getRandomString(1, "01".split(""))
   }
-  getRegexString() {
+  get regexString() {
     return "[01]"
   }
-  getParsed() {
+  get parsed() {
     const word = this.getWord()
     return !!parseInt(word)
   }
@@ -14469,15 +14542,12 @@ class GrammarIntCell extends GrammarNumericCell {
     return num.toString() === word
   }
   _synthesizeCell(seed) {
-    return TreeUtils.randomUniformInt(parseInt(this.min), parseInt(this.max), seed).toString()
+    return Utils.randomUniformInt(parseInt(this.min), parseInt(this.max), seed).toString()
   }
-  getRegexString() {
+  get regexString() {
     return "-?[0-9]+"
   }
-  getSQLiteType() {
-    return SQLiteTypes.integer
-  }
-  getParsed() {
+  get parsed() {
     const word = this.getWord()
     return parseInt(word)
   }
@@ -14490,16 +14560,13 @@ class GrammarFloatCell extends GrammarNumericCell {
     const num = parseFloat(word)
     return !isNaN(num) && /^-?\d*(\.\d+)?$/.test(word)
   }
-  getSQLiteType() {
-    return SQLiteTypes.float
-  }
   _synthesizeCell(seed) {
-    return TreeUtils.randomUniformFloat(parseFloat(this.min), parseFloat(this.max), seed).toString()
+    return Utils.randomUniformFloat(parseFloat(this.min), parseFloat(this.max), seed).toString()
   }
-  getRegexString() {
+  get regexString() {
     return "-?d*(.d+)?"
   }
-  getParsed() {
+  get parsed() {
     const word = this.getWord()
     return parseFloat(word)
   }
@@ -14519,15 +14586,15 @@ class GrammarBoolCell extends AbstractGrammarBackedCell {
     return this._trues.has(str) || this._falses.has(str)
   }
   _synthesizeCell() {
-    return TreeUtils.getRandomString(1, ["1", "true", "t", "yes", "0", "false", "f", "no"])
+    return Utils.getRandomString(1, ["1", "true", "t", "yes", "0", "false", "f", "no"])
   }
   _getOptions() {
     return Array.from(this._trues).concat(Array.from(this._falses))
   }
-  getRegexString() {
+  get regexString() {
     return "(?:" + this._getOptions().join("|") + ")"
   }
-  getParsed() {
+  get parsed() {
     const word = this.getWord()
     return this._trues.has(word.toLowerCase())
   }
@@ -14538,20 +14605,20 @@ class GrammarAnyCell extends AbstractGrammarBackedCell {
     return true
   }
   _synthesizeCell() {
-    const examples = this._getCellTypeDefinition()._getFromExtended(GrammarConstants.examples)
-    if (examples) return TreeUtils.getRandomString(1, examples.split(" "))
-    return this._nodeTypeDefinition.getNodeTypeIdFromDefinition() + "-" + this.constructor.name
+    const examples = this.cellTypeDefinition._getFromExtended(GrammarConstants.examples)
+    if (examples) return Utils.getRandomString(1, examples.split(" "))
+    return this._parserDefinitionParser.parserIdFromDefinition + "-" + this.constructor.name
   }
-  getRegexString() {
+  get regexString() {
     return "[^ ]+"
   }
-  getParsed() {
+  get parsed() {
     return this.getWord()
   }
 }
 class GrammarKeywordCell extends GrammarAnyCell {
   _synthesizeCell() {
-    return this._nodeTypeDefinition._getCruxIfAny()
+    return this._parserDefinitionParser.cruxIfAny
   }
 }
 GrammarKeywordCell.defaultHighlightScope = "keyword"
@@ -14566,7 +14633,7 @@ class GrammarExtraWordCellTypeCell extends AbstractGrammarBackedCell {
   _synthesizeCell() {
     return "extraWord" // should never occur?
   }
-  getParsed() {
+  get parsed() {
     return this.getWord()
   }
   getErrorIfAny() {
@@ -14584,7 +14651,7 @@ class GrammarUnknownCellTypeCell extends AbstractGrammarBackedCell {
   _synthesizeCell() {
     return "extraWord" // should never occur?
   }
-  getParsed() {
+  get parsed() {
     return this.getWord()
   }
   getErrorIfAny() {
@@ -14596,16 +14663,16 @@ class AbstractTreeError {
     this._node = node
   }
   getLineIndex() {
-    return this.getLineNumber() - 1
+    return this.lineNumber - 1
   }
-  getLineNumber() {
+  get lineNumber() {
     return this.getNode()._getLineNumber() // todo: handle sourcemaps
   }
   isCursorOnWord(lineIndex, characterIndex) {
     return lineIndex === this.getLineIndex() && this._doesCharacterIndexFallOnWord(characterIndex)
   }
   _doesCharacterIndexFallOnWord(characterIndex) {
-    return this.getCellIndex() === this.getNode().getWordIndexAtCharacterIndex(characterIndex)
+    return this.cellIndex === this.getNode().getWordIndexAtCharacterIndex(characterIndex)
   }
   // convenience method. may be removed.
   isBlankLineError() {
@@ -14616,41 +14683,32 @@ class AbstractTreeError {
     return false
   }
   getIndent() {
-    return this.getNode().getIndentation()
+    return this.getNode().indentation
   }
   getCodeMirrorLineWidgetElement(onApplySuggestionCallBack = () => {}) {
-    const suggestion = this.getSuggestionMessage()
+    const suggestion = this.suggestionMessage
     if (this.isMissingWordError()) return this._getCodeMirrorLineWidgetElementCellTypeHints()
     if (suggestion) return this._getCodeMirrorLineWidgetElementWithSuggestion(onApplySuggestionCallBack, suggestion)
     return this._getCodeMirrorLineWidgetElementWithoutSuggestion()
   }
-  getNodeTypeId() {
-    return this.getNode()
-      .getDefinition()
-      .getNodeTypeIdFromDefinition()
+  get parserId() {
+    return this.getNode().definition.parserIdFromDefinition
   }
   _getCodeMirrorLineWidgetElementCellTypeHints() {
     const el = document.createElement("div")
-    el.appendChild(
-      document.createTextNode(
-        this.getIndent() +
-          this.getNode()
-            .getDefinition()
-            .getLineHints()
-      )
-    )
+    el.appendChild(document.createTextNode(this.getIndent() + this.getNode().definition.lineHints))
     el.className = "LintCellTypeHints"
     return el
   }
   _getCodeMirrorLineWidgetElementWithoutSuggestion() {
     const el = document.createElement("div")
-    el.appendChild(document.createTextNode(this.getIndent() + this.getMessage()))
+    el.appendChild(document.createTextNode(this.getIndent() + this.message))
     el.className = "LintError"
     return el
   }
   _getCodeMirrorLineWidgetElementWithSuggestion(onApplySuggestionCallBack, suggestion) {
     const el = document.createElement("div")
-    el.appendChild(document.createTextNode(this.getIndent() + `${this.getErrorTypeName()}. Suggestion: ${suggestion}`))
+    el.appendChild(document.createTextNode(this.getIndent() + `${this.errorTypeName}. Suggestion: ${suggestion}`))
     el.className = "LintErrorWithSuggestion"
     el.onclick = () => {
       this.applySuggestion()
@@ -14662,41 +14720,39 @@ class AbstractTreeError {
     return this.getNode().getLine()
   }
   getExtension() {
-    return this.getNode()
-      .getHandGrammarProgram()
-      .getExtensionName()
+    return this.getNode().handGrammarProgram.extensionName
   }
   getNode() {
     return this._node
   }
-  getErrorTypeName() {
+  get errorTypeName() {
     return this.constructor.name.replace("Error", "")
   }
-  getCellIndex() {
+  get cellIndex() {
     return 0
   }
   toObject() {
     return {
-      type: this.getErrorTypeName(),
-      line: this.getLineNumber(),
-      cell: this.getCellIndex(),
-      suggestion: this.getSuggestionMessage(),
+      type: this.errorTypeName,
+      line: this.lineNumber,
+      cell: this.cellIndex,
+      suggestion: this.suggestionMessage,
       path: this.getNode().getFirstWordPath(),
-      message: this.getMessage()
+      message: this.message
     }
   }
   hasSuggestion() {
-    return this.getSuggestionMessage() !== ""
+    return this.suggestionMessage !== ""
   }
-  getSuggestionMessage() {
+  get suggestionMessage() {
     return ""
   }
   toString() {
-    return this.getMessage()
+    return this.message
   }
   applySuggestion() {}
-  getMessage() {
-    return `${this.getErrorTypeName()} at line ${this.getLineNumber()} cell ${this.getCellIndex()}.`
+  get message() {
+    return `${this.errorTypeName} at line ${this.lineNumber} cell ${this.cellIndex}.`
   }
 }
 class AbstractCellError extends AbstractTreeError {
@@ -14704,137 +14760,149 @@ class AbstractCellError extends AbstractTreeError {
     super(cell.getNode())
     this._cell = cell
   }
-  getCell() {
+  get cell() {
     return this._cell
   }
-  getCellIndex() {
-    return this._cell.getCellIndex()
+  get cellIndex() {
+    return this._cell.cellIndex
   }
-  _getWordSuggestion() {
-    return TreeUtils.didYouMean(
-      this.getCell().getWord(),
-      this.getCell()
-        .getAutoCompleteWords()
-        .map(option => option.text)
+  get wordSuggestion() {
+    return Utils.didYouMean(
+      this.cell.getWord(),
+      this.cell.getAutoCompleteWords().map(option => option.text)
     )
   }
 }
-class UnknownNodeTypeError extends AbstractTreeError {
-  getMessage() {
+class UnknownParserError extends AbstractTreeError {
+  get message() {
     const node = this.getNode()
-    const parentNode = node.getParent()
+    const parentNode = node.parent
     const options = parentNode._getParser().getFirstWordOptions()
-    return super.getMessage() + ` Invalid nodeType "${node.getFirstWord()}". Valid nodeTypes are: ${TreeUtils._listToEnglishText(options, 7)}.`
+    return super.message + ` Invalid parser "${node.firstWord}". Valid parsers are: ${Utils._listToEnglishText(options, 7)}.`
   }
-  _getWordSuggestion() {
+  get wordSuggestion() {
     const node = this.getNode()
-    const parentNode = node.getParent()
-    return TreeUtils.didYouMean(node.getFirstWord(), parentNode.getAutocompleteResults("", 0).map(option => option.text))
+    const parentNode = node.parent
+    return Utils.didYouMean(
+      node.firstWord,
+      parentNode.getAutocompleteResults("", 0).map(option => option.text)
+    )
   }
-  getSuggestionMessage() {
-    const suggestion = this._getWordSuggestion()
+  get suggestionMessage() {
+    const suggestion = this.wordSuggestion
     const node = this.getNode()
-    if (suggestion) return `Change "${node.getFirstWord()}" to "${suggestion}"`
+    if (suggestion) return `Change "${node.firstWord}" to "${suggestion}"`
     return ""
   }
   applySuggestion() {
-    const suggestion = this._getWordSuggestion()
-    if (suggestion) this.getNode().setWord(this.getCellIndex(), suggestion)
+    const suggestion = this.wordSuggestion
+    if (suggestion) this.getNode().setWord(this.cellIndex, suggestion)
     return this
   }
 }
-class BlankLineError extends UnknownNodeTypeError {
-  getMessage() {
-    return super.getMessage() + ` Line: "${this.getNode().getLine()}". Blank lines are errors.`
+class BlankLineError extends UnknownParserError {
+  get message() {
+    return super.message + ` Line: "${this.getNode().getLine()}". Blank lines are errors.`
   }
   // convenience method
   isBlankLineError() {
     return true
   }
-  getSuggestionMessage() {
-    return `Delete line ${this.getLineNumber()}`
+  get suggestionMessage() {
+    return `Delete line ${this.lineNumber}`
   }
   applySuggestion() {
     this.getNode().destroy()
     return this
   }
 }
-class MissingRequiredNodeTypeError extends AbstractTreeError {
-  constructor(node, missingNodeTypeId) {
+class MissingRequiredParserError extends AbstractTreeError {
+  constructor(node, missingParserId) {
     super(node)
-    this._missingNodeTypeId = missingNodeTypeId
+    this._missingParserId = missingParserId
   }
-  getMessage() {
-    return super.getMessage() + ` A "${this._missingNodeTypeId}" is required.`
+  get message() {
+    return super.message + ` A "${this._missingParserId}" is required.`
   }
 }
-class NodeTypeUsedMultipleTimesError extends AbstractTreeError {
-  getMessage() {
-    return super.getMessage() + ` Multiple "${this.getNode().getFirstWord()}" found.`
+class ParserUsedMultipleTimesError extends AbstractTreeError {
+  get message() {
+    return super.message + ` Multiple "${this.getNode().firstWord}" found.`
   }
-  getSuggestionMessage() {
-    return `Delete line ${this.getLineNumber()}`
+  get suggestionMessage() {
+    return `Delete line ${this.lineNumber}`
+  }
+  applySuggestion() {
+    return this.getNode().destroy()
+  }
+}
+class LineAppearsMultipleTimesError extends AbstractTreeError {
+  get message() {
+    return super.message + ` "${this.getNode().getLine()}" appears multiple times.`
+  }
+  get suggestionMessage() {
+    return `Delete line ${this.lineNumber}`
   }
   applySuggestion() {
     return this.getNode().destroy()
   }
 }
 class UnknownCellTypeError extends AbstractCellError {
-  getMessage() {
-    return super.getMessage() + ` No cellType "${this.getCell().getCellTypeId()}" found. Language grammar for "${this.getExtension()}" may need to be fixed.`
+  get message() {
+    return super.message + ` No cellType "${this.cell.cellTypeId}" found. Language grammar for "${this.getExtension()}" may need to be fixed.`
   }
 }
 class InvalidWordError extends AbstractCellError {
-  getMessage() {
-    return super.getMessage() + ` "${this.getCell().getWord()}" does not fit in cellType "${this.getCell().getCellTypeId()}".`
+  get message() {
+    return super.message + ` "${this.cell.getWord()}" does not fit in cellType "${this.cell.cellTypeId}".`
   }
-  getSuggestionMessage() {
-    const suggestion = this._getWordSuggestion()
-    if (suggestion) return `Change "${this.getCell().getWord()}" to "${suggestion}"`
+  get suggestionMessage() {
+    const suggestion = this.wordSuggestion
+    if (suggestion) return `Change "${this.cell.getWord()}" to "${suggestion}"`
     return ""
   }
   applySuggestion() {
-    const suggestion = this._getWordSuggestion()
-    if (suggestion) this.getNode().setWord(this.getCellIndex(), suggestion)
+    const suggestion = this.wordSuggestion
+    if (suggestion) this.getNode().setWord(this.cellIndex, suggestion)
     return this
   }
 }
 class ExtraWordError extends AbstractCellError {
-  getMessage() {
-    return super.getMessage() + ` Extra word "${this.getCell().getWord()}" in ${this.getNodeTypeId()}.`
+  get message() {
+    return super.message + ` Extra word "${this.cell.getWord()}" in ${this.parserId}.`
   }
-  getSuggestionMessage() {
-    return `Delete word "${this.getCell().getWord()}" at cell ${this.getCellIndex()}`
+  get suggestionMessage() {
+    return `Delete word "${this.cell.getWord()}" at cell ${this.cellIndex}`
   }
   applySuggestion() {
-    return this.getNode().deleteWordAt(this.getCellIndex())
+    return this.getNode().deleteWordAt(this.cellIndex)
   }
 }
 class MissingWordError extends AbstractCellError {
   // todo: autocomplete suggestion
-  getMessage() {
-    return super.getMessage() + ` Missing word for cell "${this.getCell().getCellTypeId()}".`
+  get message() {
+    return super.message + ` Missing word for cell "${this.cell.cellTypeId}".`
   }
   isMissingWordError() {
     return true
   }
 }
 // todo: add standard types, enum types, from disk types
-class AbstractGrammarWordTestNode extends TreeNode {}
-class GrammarRegexTestNode extends AbstractGrammarWordTestNode {
+class AbstractGrammarWordTestParser extends TreeNode {}
+class GrammarRegexTestParser extends AbstractGrammarWordTestParser {
   isValid(str) {
-    if (!this._regex) this._regex = new RegExp("^" + this.getContent() + "$")
+    if (!this._regex) this._regex = new RegExp("^" + this.content + "$")
     return !!str.match(this._regex)
   }
 }
-class GrammarReservedWordsTestNode extends AbstractGrammarWordTestNode {
+class GrammarReservedWordsTestParser extends AbstractGrammarWordTestParser {
   isValid(str) {
-    if (!this._set) this._set = new Set(this.getContent().split(" "))
+    if (!this._set) this._set = new Set(this.content.split(" "))
     return !this._set.has(str)
   }
 }
 // todo: remove in favor of custom word type constructors
-class EnumFromCellTypesTestNode extends AbstractGrammarWordTestNode {
+class EnumFromCellTypesTestParser extends AbstractGrammarWordTestParser {
   _getEnumFromCellTypes(programRootNode) {
     const cellTypeIds = this.getWordsFrom(1)
     const enumGroup = cellTypeIds.join(" ")
@@ -14845,8 +14913,7 @@ class EnumFromCellTypesTestNode extends AbstractGrammarWordTestNode {
     const map = {}
     const cellTypeMap = {}
     cellTypeIds.forEach(typeId => (cellTypeMap[typeId] = true))
-    programRootNode
-      .getAllTypedWords()
+    programRootNode.allTypedWords
       .filter(typedWord => cellTypeMap[typedWord.type])
       .forEach(typedWord => {
         map[typedWord.word] = true
@@ -14859,71 +14926,71 @@ class EnumFromCellTypesTestNode extends AbstractGrammarWordTestNode {
     return this._getEnumFromCellTypes(programRootNode)[str] === true
   }
 }
-class GrammarEnumTestNode extends AbstractGrammarWordTestNode {
+class GrammarEnumTestNode extends AbstractGrammarWordTestParser {
   isValid(str) {
     // enum c c++ java
     return !!this.getOptions()[str]
   }
   getOptions() {
-    if (!this._map) this._map = TreeUtils.arrayToMap(this.getWordsFrom(1))
+    if (!this._map) this._map = Utils.arrayToMap(this.getWordsFrom(1))
     return this._map
   }
 }
-class cellTypeDefinitionNode extends AbstractExtendibleTreeNode {
-  createParser() {
+class cellTypeDefinitionParser extends AbstractExtendibleTreeNode {
+  createParserCombinator() {
     const types = {}
-    types[GrammarConstants.regex] = GrammarRegexTestNode
-    types[GrammarConstants.reservedWords] = GrammarReservedWordsTestNode
-    types[GrammarConstants.enumFromCellTypes] = EnumFromCellTypesTestNode
+    types[GrammarConstants.regex] = GrammarRegexTestParser
+    types[GrammarConstants.reservedWords] = GrammarReservedWordsTestParser
+    types[GrammarConstants.enumFromCellTypes] = EnumFromCellTypesTestParser
     types[GrammarConstants.enum] = GrammarEnumTestNode
     types[GrammarConstants.highlightScope] = TreeNode
-    types[GrammarConstants.todoComment] = TreeNode
+    types[GrammarConstants.comment] = TreeNode
     types[GrammarConstants.examples] = TreeNode
     types[GrammarConstants.min] = TreeNode
     types[GrammarConstants.max] = TreeNode
     types[GrammarConstants.description] = TreeNode
     types[GrammarConstants.extends] = TreeNode
-    return new TreeNode.Parser(undefined, types)
+    return new TreeNode.ParserCombinator(undefined, types)
   }
-  _getId() {
+  get id() {
     return this.getWord(0)
   }
-  _getIdToNodeMap() {
-    return this.getParent().getCellTypeDefinitions()
+  get idToNodeMap() {
+    return this.parent.cellTypeDefinitions
   }
   getGetter(wordIndex) {
     const wordToNativeJavascriptTypeParser = this.getCellConstructor().parserFunctionName
-    return `get ${this.getCellTypeId()}() {
+    return `get ${this.cellTypeId}() {
       return ${wordToNativeJavascriptTypeParser ? wordToNativeJavascriptTypeParser + `(this.getWord(${wordIndex}))` : `this.getWord(${wordIndex})`}
     }`
   }
   getCatchAllGetter(wordIndex) {
     const wordToNativeJavascriptTypeParser = this.getCellConstructor().parserFunctionName
-    return `get ${this.getCellTypeId()}() {
+    return `get ${this.cellTypeId}() {
       return ${wordToNativeJavascriptTypeParser ? `this.getWordsFrom(${wordIndex}).map(val => ${wordToNativeJavascriptTypeParser}(val))` : `this.getWordsFrom(${wordIndex})`}
     }`
   }
   // `this.getWordsFrom(${requireds.length + 1})`
   // todo: cleanup typings. todo: remove this hidden logic. have a "baseType" property?
   getCellConstructor() {
-    return this._getPreludeKind() || GrammarAnyCell
+    return this.preludeKind || GrammarAnyCell
   }
-  _getPreludeKind() {
+  get preludeKind() {
     return PreludeKinds[this.getWord(0)] || PreludeKinds[this._getExtendedCellTypeId()]
   }
-  _getPreludeKindId() {
+  get preludeKindId() {
     if (PreludeKinds[this.getWord(0)]) return this.getWord(0)
     else if (PreludeKinds[this._getExtendedCellTypeId()]) return this._getExtendedCellTypeId()
     return PreludeCellTypeIds.anyCell
   }
   _getExtendedCellTypeId() {
     const arr = this._getAncestorsArray()
-    return arr[arr.length - 1]._getId()
+    return arr[arr.length - 1].id
   }
-  getHighlightScope() {
+  get highlightScope() {
     const hs = this._getFromExtended(GrammarConstants.highlightScope)
     if (hs) return hs
-    const preludeKind = this._getPreludeKind()
+    const preludeKind = this.preludeKind
     if (preludeKind) return preludeKind.defaultHighlightScope
   }
   _getEnumOptions() {
@@ -14941,15 +15008,18 @@ class cellTypeDefinitionNode extends AbstractExtendibleTreeNode {
   _getAutocompleteWordOptions(program) {
     return this._getEnumOptions() || this._getEnumFromCellTypeOptions(program) || []
   }
-  getRegexString() {
+  get regexString() {
     // todo: enum
     const enumOptions = this._getEnumOptions()
     return this._getFromExtended(GrammarConstants.regex) || (enumOptions ? "(?:" + enumOptions.join("|") + ")" : "[^ ]*")
   }
-  isValid(str, programRootNode) {
-    return this._getChildrenByNodeConstructorInExtended(AbstractGrammarWordTestNode).every(node => node.isValid(str, programRootNode))
+  _getAllTests() {
+    return this._getChildrenByParserInExtended(AbstractGrammarWordTestParser)
   }
-  getCellTypeId() {
+  isValid(str, programRootNode) {
+    return this._getAllTests().every(node => node.isValid(str, programRootNode))
+  }
+  get cellTypeId() {
     return this.getWord(0)
   }
 }
@@ -14957,18 +15027,21 @@ class AbstractCellParser {
   constructor(definition) {
     this._definition = definition
   }
-  getCatchAllCellTypeId() {
+  get catchAllCellTypeId() {
     return this._definition._getFromExtended(GrammarConstants.catchAllCellType)
   }
   // todo: improve layout (use bold?)
-  getLineHints() {
-    const catchAllCellTypeId = this.getCatchAllCellTypeId()
-    const nodeTypeId = this._definition._getCruxIfAny() || this._definition._getId() // todo: cleanup
-    return `${nodeTypeId}: ${this.getRequiredCellTypeIds().join(" ")}${catchAllCellTypeId ? ` ${catchAllCellTypeId}...` : ""}`
+  get lineHints() {
+    const catchAllCellTypeId = this.catchAllCellTypeId
+    const parserId = this._definition.cruxIfAny || this._definition.id // todo: cleanup
+    return `${parserId}: ${this.getRequiredCellTypeIds().join(" ")}${catchAllCellTypeId ? ` ${catchAllCellTypeId}...` : ""}`
   }
   getRequiredCellTypeIds() {
-    const parameters = this._definition._getFromExtended(GrammarConstants.cells)
-    return parameters ? parameters.split(" ") : []
+    if (!this._requiredCellTypeIds) {
+      const parameters = this._definition._getFromExtended(GrammarConstants.cells)
+      this._requiredCellTypeIds = parameters ? parameters.split(" ") : []
+    }
+    return this._requiredCellTypeIds
   }
   _getCellTypeId(cellIndex, requiredCellTypeIds, totalWordCount) {
     return requiredCellTypeIds[cellIndex]
@@ -14977,9 +15050,9 @@ class AbstractCellParser {
     return cellIndex >= numberOfRequiredCells
   }
   getCellArray(node = undefined) {
-    const wordCount = node ? node.getWords().length : 0
+    const wordCount = node ? node.words.length : 0
     const def = this._definition
-    const grammarProgram = def.getLanguageDefinitionProgram()
+    const grammarProgram = def.languageDefinitionProgram
     const requiredCellTypeIds = this.getRequiredCellTypeIds()
     const numberOfRequiredCells = requiredCellTypeIds.length
     const actualWordCountOrRequiredCellCount = Math.max(wordCount, numberOfRequiredCells)
@@ -14987,7 +15060,7 @@ class AbstractCellParser {
     // A for loop instead of map because "numberOfCellsToFill" can be longer than words.length
     for (let cellIndex = 0; cellIndex < actualWordCountOrRequiredCellCount; cellIndex++) {
       const isCatchAll = this._isCatchAllCell(cellIndex, numberOfRequiredCells, wordCount)
-      let cellTypeId = isCatchAll ? this.getCatchAllCellTypeId() : this._getCellTypeId(cellIndex, requiredCellTypeIds, wordCount)
+      let cellTypeId = isCatchAll ? this.catchAllCellTypeId : this._getCellTypeId(cellIndex, requiredCellTypeIds, wordCount)
       let cellTypeDefinition = grammarProgram.getCellTypeDefinitionById(cellTypeId)
       let cellConstructor
       if (cellTypeDefinition) cellConstructor = cellTypeDefinition.getCellConstructor()
@@ -14997,7 +15070,8 @@ class AbstractCellParser {
         cellTypeId = PreludeCellTypeIds.extraWordCell
         cellTypeDefinition = grammarProgram.getCellTypeDefinitionById(cellTypeId)
       }
-      cells[cellIndex] = new cellConstructor(node, cellIndex, cellTypeDefinition, cellTypeId, isCatchAll, def)
+      const anyCellConstructor = cellConstructor
+      cells[cellIndex] = new anyCellConstructor(node, cellIndex, cellTypeDefinition, cellTypeId, isCatchAll, def)
     }
     return cells
   }
@@ -15016,11 +15090,11 @@ class OmnifixCellParser extends AbstractCellParser {
   getCellArray(node = undefined) {
     const cells = []
     const def = this._definition
-    const program = node ? node.getRootNode() : undefined
-    const grammarProgram = def.getLanguageDefinitionProgram()
-    const words = node ? node.getWords() : []
+    const program = node ? node.root : undefined
+    const grammarProgram = def.languageDefinitionProgram
+    const words = node ? node.words : []
     const requiredCellTypeDefs = this.getRequiredCellTypeIds().map(cellTypeId => grammarProgram.getCellTypeDefinitionById(cellTypeId))
-    const catchAllCellTypeId = this.getCatchAllCellTypeId()
+    const catchAllCellTypeId = this.catchAllCellTypeId
     const catchAllCellTypeDef = catchAllCellTypeId && grammarProgram.getCellTypeDefinitionById(catchAllCellTypeId)
     words.forEach((word, wordIndex) => {
       let cellConstructor
@@ -15029,7 +15103,7 @@ class OmnifixCellParser extends AbstractCellParser {
         if (cellTypeDefinition.isValid(word, program)) {
           // todo: cleanup cellIndex/wordIndex stuff
           cellConstructor = cellTypeDefinition.getCellConstructor()
-          cells.push(new cellConstructor(node, wordIndex, cellTypeDefinition, cellTypeDefinition._getId(), false, def))
+          cells.push(new cellConstructor(node, wordIndex, cellTypeDefinition, cellTypeDefinition.id, false, def))
           requiredCellTypeDefs.splice(index, 1)
           return true
         }
@@ -15044,14 +15118,14 @@ class OmnifixCellParser extends AbstractCellParser {
     const wordCount = words.length
     requiredCellTypeDefs.forEach((cellTypeDef, index) => {
       let cellConstructor = cellTypeDef.getCellConstructor()
-      cells.push(new cellConstructor(node, wordCount + index, cellTypeDef, cellTypeDef._getId(), false, def))
+      cells.push(new cellConstructor(node, wordCount + index, cellTypeDef, cellTypeDef.id, false, def))
     })
     return cells
   }
 }
-class GrammarExampleNode extends TreeNode {}
-class GrammarCompilerNode extends TreeNode {
-  createParser() {
+class GrammarExampleParser extends TreeNode {}
+class GrammarCompilerParser extends TreeNode {
+  createParserCombinator() {
     const types = [
       GrammarConstantsCompiler.stringTemplate,
       GrammarConstantsCompiler.indentCharacter,
@@ -15064,37 +15138,41 @@ class GrammarCompilerNode extends TreeNode {
     types.forEach(type => {
       map[type] = TreeNode
     })
-    return new TreeNode.Parser(undefined, map)
+    return new TreeNode.ParserCombinator(undefined, map)
   }
 }
-class GrammarNodeTypeConstant extends TreeNode {
-  getGetter() {
-    return `get ${this.getIdentifier()}() { return ${this.getConstantValueAsJsText()} }`
+class AbstractParserConstantParser extends TreeNode {
+  constructor(children, line, parent) {
+    super(children, line, parent)
+    parent[this.identifier] = this.constantValue
   }
-  getIdentifier() {
+  getGetter() {
+    return `get ${this.identifier}() { return ${this.constantValueAsJsText} }`
+  }
+  get identifier() {
     return this.getWord(1)
   }
-  getConstantValueAsJsText() {
+  get constantValueAsJsText() {
     const words = this.getWordsFrom(2)
     return words.length > 1 ? `[${words.join(",")}]` : words[0]
   }
-  getConstantValue() {
-    return JSON.parse(this.getConstantValueAsJsText())
+  get constantValue() {
+    return JSON.parse(this.constantValueAsJsText)
   }
 }
-class GrammarNodeTypeConstantInt extends GrammarNodeTypeConstant {}
-class GrammarNodeTypeConstantString extends GrammarNodeTypeConstant {
-  getConstantValueAsJsText() {
-    return "`" + TreeUtils.escapeBackTicks(this.getConstantValue()) + "`"
+class GrammarParserConstantInt extends AbstractParserConstantParser {}
+class GrammarParserConstantString extends AbstractParserConstantParser {
+  get constantValueAsJsText() {
+    return "`" + Utils.escapeBackTicks(this.constantValue) + "`"
   }
-  getConstantValue() {
+  get constantValue() {
     return this.length ? this.childrenToString() : this.getWordsFrom(2).join(" ")
   }
 }
-class GrammarNodeTypeConstantFloat extends GrammarNodeTypeConstant {}
-class GrammarNodeTypeConstantBoolean extends GrammarNodeTypeConstant {}
-class AbstractGrammarDefinitionNode extends AbstractExtendibleTreeNode {
-  createParser() {
+class GrammarParserConstantFloat extends AbstractParserConstantParser {}
+class GrammarParserConstantBoolean extends AbstractParserConstantParser {}
+class AbstractParserDefinitionParser extends AbstractExtendibleTreeNode {
+  createParserCombinator() {
     // todo: some of these should just be on nonRootNodes
     const types = [
       GrammarConstants.frequency,
@@ -15102,59 +15180,73 @@ class AbstractGrammarDefinitionNode extends AbstractExtendibleTreeNode {
       GrammarConstants.cells,
       GrammarConstants.extends,
       GrammarConstants.description,
-      GrammarConstants.catchAllNodeType,
+      GrammarConstants.catchAllParser,
       GrammarConstants.catchAllCellType,
       GrammarConstants.cellParser,
       GrammarConstants.extensions,
       GrammarConstants.version,
+      GrammarConstants.sortTemplate,
       GrammarConstants.tags,
       GrammarConstants.crux,
       GrammarConstants.cruxFromId,
+      GrammarConstants.listDelimiter,
+      GrammarConstants.contentKey,
+      GrammarConstants.childrenKey,
+      GrammarConstants.uniqueFirstWord,
+      GrammarConstants.uniqueLine,
       GrammarConstants.pattern,
-      GrammarConstants.baseNodeType,
+      GrammarConstants.baseParser,
       GrammarConstants.required,
       GrammarConstants.root,
       GrammarConstants._extendsJsClass,
       GrammarConstants._rootNodeJsHeader,
       GrammarConstants.javascript,
       GrammarConstants.compilesTo,
-      GrammarConstants.abstract,
       GrammarConstants.javascript,
       GrammarConstants.single,
-      GrammarConstants.todoComment
+      GrammarConstants.comment
     ]
     const map = {}
     types.forEach(type => {
       map[type] = TreeNode
     })
-    map[GrammarConstantsConstantTypes.boolean] = GrammarNodeTypeConstantBoolean
-    map[GrammarConstantsConstantTypes.int] = GrammarNodeTypeConstantInt
-    map[GrammarConstantsConstantTypes.string] = GrammarNodeTypeConstantString
-    map[GrammarConstantsConstantTypes.float] = GrammarNodeTypeConstantFloat
-    map[GrammarConstants.compilerNodeType] = GrammarCompilerNode
-    map[GrammarConstants.example] = GrammarExampleNode
-    return new TreeNode.Parser(undefined, map)
+    map[GrammarConstantsConstantTypes.boolean] = GrammarParserConstantBoolean
+    map[GrammarConstantsConstantTypes.int] = GrammarParserConstantInt
+    map[GrammarConstantsConstantTypes.string] = GrammarParserConstantString
+    map[GrammarConstantsConstantTypes.float] = GrammarParserConstantFloat
+    map[GrammarConstants.compilerParser] = GrammarCompilerParser
+    map[GrammarConstants.example] = GrammarExampleParser
+    return new TreeNode.ParserCombinator(undefined, map, [{ regex: HandGrammarProgram.parserFullRegex, parser: parserDefinitionParser }])
+  }
+  get sortSpec() {
+    const sortSections = new Map()
+    const sortIndices = new Map()
+    const sortTemplate = this.get(GrammarConstants.sortTemplate)
+    if (!sortTemplate) return { sortSections, sortIndices }
+    sortTemplate.split("  ").forEach((section, sectionIndex) => section.split(" ").forEach(word => sortSections.set(word, sectionIndex)))
+    sortTemplate.split(" ").forEach((word, index) => sortIndices.set(word, index))
+    return { sortSections, sortIndices }
   }
   toTypeScriptInterface(used = new Set()) {
     let childrenInterfaces = []
     let properties = []
-    const inScope = this.getFirstWordMapWithDefinitions()
-    const thisId = this._getId()
+    const inScope = this.firstWordMapWithDefinitions
+    const thisId = this.id
     used.add(thisId)
     Object.keys(inScope).forEach(key => {
       const def = inScope[key]
-      const map = def.getFirstWordMapWithDefinitions()
-      const id = def._getId()
+      const map = def.firstWordMapWithDefinitions
+      const id = def.id
       const optionalTag = def.isRequired() ? "" : "?"
       const escapedKey = key.match(/\?/) ? `"${key}"` : key
-      const description = def.getDescription()
+      const description = def.description
       if (Object.keys(map).length && !used.has(id)) {
         childrenInterfaces.push(def.toTypeScriptInterface(used))
         properties.push(` ${escapedKey}${optionalTag}: ${id}`)
       } else properties.push(` ${escapedKey}${optionalTag}: any${description ? " // " + description : ""}`)
     })
     properties.sort()
-    const description = this.getDescription()
+    const description = this.description
     const myInterface = ""
     return `${childrenInterfaces.join("\n")}
 ${description ? "// " + description : ""}
@@ -15162,103 +15254,69 @@ interface ${thisId} {
 ${properties.join("\n")}
 }`.trim()
   }
-  getTableNameIfAny() {
-    return this.getFrom(`${GrammarConstantsConstantTypes.string} ${GrammarConstantsMisc.tableName}`)
-  }
-  getSQLiteTableColumns() {
-    return this._getConcreteNonErrorInScopeNodeDefinitions(this._getInScopeNodeTypeIds()).map(node => {
-      const firstNonKeywordCellType = node.getCellParser().getCellArray()[1]
-      const type = firstNonKeywordCellType ? firstNonKeywordCellType.getSQLiteType() : SQLiteTypes.text
-      return {
-        columnName: node._getIdWithoutSuffix(),
-        type
-      }
-    })
-  }
-  toSQLiteTableSchema() {
-    const columns = this.getSQLiteTableColumns().map(columnDef => `${columnDef.columnName} ${columnDef.type}`)
-    return `create table ${this.getTableNameIfAny() || this._getId()} (
- id TEXT NOT NULL PRIMARY KEY,
- ${columns.join(",\n ")}
-);`
-  }
-  _getId() {
+  get id() {
     return this.getWord(0)
   }
-  get id() {
-    return this._getId()
+  get idWithoutSuffix() {
+    return this.id.replace(HandGrammarProgram.parserSuffixRegex, "")
   }
-  _getIdWithoutSuffix() {
-    return this._getId().replace(HandGrammarProgram.nodeTypeSuffixRegex, "")
-  }
-  getConstantsObject() {
+  get constantsObject() {
     const obj = this._getUniqueConstantNodes()
-    Object.keys(obj).forEach(key => {
-      obj[key] = obj[key].getConstantValue()
-    })
+    Object.keys(obj).forEach(key => (obj[key] = obj[key].constantValue))
     return obj
   }
   _getUniqueConstantNodes(extended = true) {
     const obj = {}
-    const items = extended ? this._getChildrenByNodeConstructorInExtended(GrammarNodeTypeConstant) : this.getChildrenByNodeConstructor(GrammarNodeTypeConstant)
+    const items = extended ? this._getChildrenByParserInExtended(AbstractParserConstantParser) : this.getChildrenByParser(AbstractParserConstantParser)
     items.reverse() // Last definition wins.
-    items.forEach(node => {
-      obj[node.getIdentifier()] = node
-    })
+    items.forEach(node => (obj[node.identifier] = node))
     return obj
   }
-  getExamples() {
-    return this._getChildrenByNodeConstructorInExtended(GrammarExampleNode)
+  get examples() {
+    return this._getChildrenByParserInExtended(GrammarExampleParser)
   }
-  getNodeTypeIdFromDefinition() {
+  get parserIdFromDefinition() {
     return this.getWord(0)
   }
-  // todo: remove? just reused nodeTypeId
-  _getGeneratedClassName() {
-    return this.getNodeTypeIdFromDefinition()
+  // todo: remove? just reused parserId
+  get generatedClassName() {
+    return this.parserIdFromDefinition
   }
-  _hasValidNodeTypeId() {
-    return !!this._getGeneratedClassName()
+  _hasValidParserId() {
+    return !!this.generatedClassName
   }
   _isAbstract() {
-    return this.has(GrammarConstants.abstract)
+    return this.id.startsWith(GrammarConstants.abstractParserPrefix)
   }
-  _getConcreteDescendantDefinitions() {
-    const defs = this._getProgramNodeTypeDefinitionCache()
-    const id = this._getId()
-    return Object.values(defs).filter(def => {
-      return def._doesExtend(id) && !def._isAbstract()
-    })
+  get cruxIfAny() {
+    return this.get(GrammarConstants.crux) || (this._hasFromExtended(GrammarConstants.cruxFromId) ? this.idWithoutSuffix : undefined)
   }
-  _getCruxIfAny() {
-    return this.get(GrammarConstants.crux) || (this._hasFromExtended(GrammarConstants.cruxFromId) ? this._getIdWithoutSuffix() : undefined)
-  }
-  _getRegexMatch() {
+  get regexMatch() {
     return this.get(GrammarConstants.pattern)
   }
-  _getFirstCellEnumOptions() {
+  get firstCellEnumOptions() {
     const firstCellDef = this._getMyCellTypeDefs()[0]
     return firstCellDef ? firstCellDef._getEnumOptions() : undefined
   }
-  getLanguageDefinitionProgram() {
-    return this.getParent()
+  get languageDefinitionProgram() {
+    return this.root
   }
-  _getCustomJavascriptMethods() {
+  get customJavascriptMethods() {
     const hasJsCode = this.has(GrammarConstants.javascript)
     return hasJsCode ? this.getNode(GrammarConstants.javascript).childrenToString() : ""
   }
-  getFirstWordMapWithDefinitions() {
-    if (!this._cache_firstWordToNodeDefMap) this._cache_firstWordToNodeDefMap = this._createParserInfo(this._getInScopeNodeTypeIds()).firstWordMap
+  get firstWordMapWithDefinitions() {
+    if (!this._cache_firstWordToNodeDefMap) this._cache_firstWordToNodeDefMap = this._createParserInfo(this._getInScopeParserIds()).firstWordMap
     return this._cache_firstWordToNodeDefMap
   }
   // todo: remove
-  getRunTimeFirstWordsInScope() {
+  get runTimeFirstWordsInScope() {
     return this._getParser().getFirstWordOptions()
   }
   _getMyCellTypeDefs() {
     const requiredCells = this.get(GrammarConstants.cells)
     if (!requiredCells) return []
-    const grammarProgram = this.getLanguageDefinitionProgram()
+    const grammarProgram = this.languageDefinitionProgram
     return requiredCells.split(" ").map(cellTypeId => {
       const cellTypeDef = grammarProgram.getCellTypeDefinitionById(cellTypeId)
       if (!cellTypeDef) throw new Error(`No cellType "${cellTypeId}" found`)
@@ -15266,156 +15324,153 @@ ${properties.join("\n")}
     })
   }
   // todo: what happens when you have a cell getter and constant with same name?
-  _getCellGettersAndNodeTypeConstants() {
+  get cellGettersAndParserConstants() {
     // todo: add cellType parsings
-    const grammarProgram = this.getLanguageDefinitionProgram()
+    const grammarProgram = this.languageDefinitionProgram
     const getters = this._getMyCellTypeDefs().map((cellTypeDef, index) => cellTypeDef.getGetter(index))
     const catchAllCellTypeId = this.get(GrammarConstants.catchAllCellType)
     if (catchAllCellTypeId) getters.push(grammarProgram.getCellTypeDefinitionById(catchAllCellTypeId).getCatchAllGetter(getters.length))
     // Constants
-    Object.values(this._getUniqueConstantNodes(false)).forEach(node => {
-      getters.push(node.getGetter())
-    })
+    Object.values(this._getUniqueConstantNodes(false)).forEach(node => getters.push(node.getGetter()))
     return getters.join("\n")
   }
-  _createParserInfo(nodeTypeIdsInScope) {
+  _createParserInfo(parserIdsInScope) {
     const result = {
       firstWordMap: {},
       regexTests: []
     }
-    if (!nodeTypeIdsInScope.length) return result
-    const allProgramNodeTypeDefinitionsMap = this._getProgramNodeTypeDefinitionCache()
-    Object.keys(allProgramNodeTypeDefinitionsMap)
-      .filter(nodeTypeId => allProgramNodeTypeDefinitionsMap[nodeTypeId].isOrExtendsANodeTypeInScope(nodeTypeIdsInScope))
-      .filter(nodeTypeId => !allProgramNodeTypeDefinitionsMap[nodeTypeId]._isAbstract())
-      .forEach(nodeTypeId => {
-        const def = allProgramNodeTypeDefinitionsMap[nodeTypeId]
-        const regex = def._getRegexMatch()
-        const crux = def._getCruxIfAny()
-        const enumOptions = def._getFirstCellEnumOptions()
-        if (regex) result.regexTests.push({ regex: regex, nodeConstructor: def.getNodeTypeIdFromDefinition() })
+    if (!parserIdsInScope.length) return result
+    const allProgramParserDefinitionsMap = this.programParserDefinitionCache
+    Object.keys(allProgramParserDefinitionsMap)
+      .filter(parserId => {
+        const def = allProgramParserDefinitionsMap[parserId]
+        return def.isOrExtendsAParserInScope(parserIdsInScope) && !def._isAbstract()
+      })
+      .forEach(parserId => {
+        const def = allProgramParserDefinitionsMap[parserId]
+        const regex = def.regexMatch
+        const crux = def.cruxIfAny
+        const enumOptions = def.firstCellEnumOptions
+        if (regex) result.regexTests.push({ regex: regex, parser: def.parserIdFromDefinition })
         else if (crux) result.firstWordMap[crux] = def
         else if (enumOptions) {
-          enumOptions.forEach(option => {
-            result.firstWordMap[option] = def
-          })
+          enumOptions.forEach(option => (result.firstWordMap[option] = def))
         }
       })
     return result
   }
-  getTopNodeTypeDefinitions() {
-    const arr = Object.values(this.getFirstWordMapWithDefinitions())
-    arr.sort(TreeUtils.makeSortByFn(definition => definition.getFrequency()))
+  get topParserDefinitions() {
+    const arr = Object.values(this.firstWordMapWithDefinitions)
+    arr.sort(Utils.makeSortByFn(definition => definition.frequency))
     arr.reverse()
     return arr
   }
-  _getMyInScopeNodeTypeIds() {
-    const nodeTypesNode = this.getNode(GrammarConstants.inScope)
-    return nodeTypesNode ? nodeTypesNode.getWordsFrom(1) : []
+  _getMyInScopeParserIds(target = this) {
+    const parsersNode = target.getNode(GrammarConstants.inScope)
+    const scopedDefinitionIds = target.myScopedParserDefinitions.map(def => def.id)
+    return parsersNode ? parsersNode.getWordsFrom(1).concat(scopedDefinitionIds) : scopedDefinitionIds
   }
-  _getInScopeNodeTypeIds() {
+  _getInScopeParserIds() {
     // todo: allow multiple of these if we allow mixins?
-    const ids = this._getMyInScopeNodeTypeIds()
+    const ids = this._getMyInScopeParserIds()
     const parentDef = this._getExtendedParent()
-    return parentDef ? ids.concat(parentDef._getInScopeNodeTypeIds()) : ids
+    return parentDef ? ids.concat(parentDef._getInScopeParserIds()) : ids
   }
-  // Should only one of these node types be present in the parent node?
   get isSingle() {
-    return this._hasFromExtended(GrammarConstants.single)
+    const hit = this._getNodeFromExtended(GrammarConstants.single)
+    return hit && hit.get(GrammarConstants.single) !== "false"
+  }
+  get isUniqueLine() {
+    const hit = this._getNodeFromExtended(GrammarConstants.uniqueLine)
+    return hit && hit.get(GrammarConstants.uniqueLine) !== "false"
   }
   isRequired() {
     return this._hasFromExtended(GrammarConstants.required)
   }
-  getNodeTypeDefinitionByNodeTypeId(nodeTypeId) {
+  getParserDefinitionByParserId(parserId) {
     // todo: return catch all?
-    const def = this._getProgramNodeTypeDefinitionCache()[nodeTypeId]
+    const def = this.programParserDefinitionCache[parserId]
     if (def) return def
-    // todo: cleanup
-    this.getLanguageDefinitionProgram()._addDefaultCatchAllBlobNode()
-    return this._getProgramNodeTypeDefinitionCache()[nodeTypeId]
+    this.languageDefinitionProgram._addDefaultCatchAllBlobParser() // todo: cleanup. Why did I do this? Needs to be removed or documented.
+    const nodeDef = this.languageDefinitionProgram.programParserDefinitionCache[parserId]
+    if (!nodeDef) throw new Error(`No definition found for parser id "${parserId}". Node: \n---\n${this.asString}\n---`)
+    return nodeDef
   }
-  isDefined(nodeTypeId) {
-    return !!this._getProgramNodeTypeDefinitionCache()[nodeTypeId]
+  isDefined(parserId) {
+    return !!this.programParserDefinitionCache[parserId]
   }
-  _getIdToNodeMap() {
-    return this._getProgramNodeTypeDefinitionCache()
+  get idToNodeMap() {
+    return this.programParserDefinitionCache
   }
   _amIRoot() {
-    if (this._cache_isRoot === undefined) this._cache_isRoot = this._getLanguageRootNode() === this
+    if (this._cache_isRoot === undefined) this._cache_isRoot = this._languageRootNode === this
     return this._cache_isRoot
   }
-  _getLanguageRootNode() {
-    return this.getParent().getRootNodeTypeDefinitionNode()
+  get _languageRootNode() {
+    return this.root.rootParserDefinition
   }
-  _isErrorNodeType() {
-    return this.get(GrammarConstants.baseNodeType) === GrammarConstants.errorNode
+  _isErrorParser() {
+    return this.get(GrammarConstants.baseParser) === GrammarConstants.errorParser
   }
-  _isBlobNodeType() {
+  _isBlobParser() {
     // Do not check extended classes. Only do once.
-    return this.get(GrammarConstants.baseNodeType) === GrammarConstants.blobNode
+    return this._getFromExtended(GrammarConstants.baseParser) === GrammarConstants.blobParser
   }
-  _getErrorMethodToJavascript() {
-    if (this._isBlobNodeType()) return "getErrors() { return [] }" // Skips parsing child nodes for perf gains.
-    if (this._isErrorNodeType()) return "getErrors() { return this._getErrorNodeErrors() }"
+  get errorMethodToJavascript() {
+    if (this._isBlobParser()) return "getErrors() { return [] }" // Skips parsing child nodes for perf gains.
+    if (this._isErrorParser()) return "getErrors() { return this._getErrorParserErrors() }"
     return ""
   }
-  _getParserToJavascript() {
-    if (this._isBlobNodeType())
+  get parserAsJavascript() {
+    if (this._isBlobParser())
       // todo: do we need this?
-      return "createParser() { return new jtree.TreeNode.Parser(this._getBlobNodeCatchAllNodeType())}"
-    const parserInfo = this._createParserInfo(this._getMyInScopeNodeTypeIds())
+      return "createParserCombinator() { return new TreeNode.ParserCombinator(this._getBlobParserCatchAllParser())}"
+    const parserInfo = this._createParserInfo(this._getMyInScopeParserIds())
     const myFirstWordMap = parserInfo.firstWordMap
     const regexRules = parserInfo.regexTests
     // todo: use constants in first word maps?
     // todo: cache the super extending?
     const firstWords = Object.keys(myFirstWordMap)
     const hasFirstWords = firstWords.length
-    const catchAllConstructor = this._getCatchAllNodeConstructorToJavascript()
-    if (!hasFirstWords && !catchAllConstructor && !regexRules.length) return ""
+    const catchAllParser = this.catchAllParserToJavascript
+    if (!hasFirstWords && !catchAllParser && !regexRules.length) return ""
     const firstWordsStr = hasFirstWords
-      ? `Object.assign(Object.assign({}, super.createParser()._getFirstWordMapAsObject()), {` + firstWords.map(firstWord => `"${firstWord}" : ${myFirstWordMap[firstWord].getNodeTypeIdFromDefinition()}`).join(",\n") + "})"
+      ? `Object.assign(Object.assign({}, super.createParserCombinator()._getFirstWordMapAsObject()), {` + firstWords.map(firstWord => `"${firstWord}" : ${myFirstWordMap[firstWord].parserIdFromDefinition}`).join(",\n") + "})"
       : "undefined"
     const regexStr = regexRules.length
       ? `[${regexRules
           .map(rule => {
-            return `{regex: /${rule.regex}/, nodeConstructor: ${rule.nodeConstructor}}`
+            return `{regex: /${rule.regex}/, parser: ${rule.parser}}`
           })
           .join(",")}]`
       : "undefined"
-    const catchAllStr = catchAllConstructor ? catchAllConstructor : this._amIRoot() ? `this._getBlobNodeCatchAllNodeType()` : "undefined"
-    return `createParser() {
-  return new jtree.TreeNode.Parser(${catchAllStr}, ${firstWordsStr}, ${regexStr})
+    const catchAllStr = catchAllParser ? catchAllParser : this._amIRoot() ? `this._getBlobParserCatchAllParser()` : "undefined"
+    const scopedParserJavascript = this.myScopedParserDefinitions.map(def => def.asJavascriptClass).join("\n\n")
+    return `createParserCombinator() {${scopedParserJavascript}
+  return new TreeNode.ParserCombinator(${catchAllStr}, ${firstWordsStr}, ${regexStr})
   }`
   }
-  _getCatchAllNodeConstructorToJavascript() {
-    if (this._isBlobNodeType()) return "this._getBlobNodeCatchAllNodeType()"
-    const nodeTypeId = this.get(GrammarConstants.catchAllNodeType)
-    if (!nodeTypeId) return ""
-    const nodeDef = this.getNodeTypeDefinitionByNodeTypeId(nodeTypeId)
-    if (!nodeDef) throw new Error(`No definition found for nodeType id "${nodeTypeId}"`)
-    return nodeDef._getGeneratedClassName()
+  get myScopedParserDefinitions() {
+    return this.getChildrenByParser(parserDefinitionParser)
   }
-  _nodeDefToJavascriptClass() {
-    const components = [this._getParserToJavascript(), this._getErrorMethodToJavascript(), this._getCellGettersAndNodeTypeConstants(), this._getCustomJavascriptMethods()].filter(identity => identity)
+  get catchAllParserToJavascript() {
+    if (this._isBlobParser()) return "this._getBlobParserCatchAllParser()"
+    const parserId = this.get(GrammarConstants.catchAllParser)
+    if (!parserId) return ""
+    const nodeDef = this.getParserDefinitionByParserId(parserId)
+    return nodeDef.generatedClassName
+  }
+  get asJavascriptClass() {
+    const components = [this.parserAsJavascript, this.errorMethodToJavascript, this.cellGettersAndParserConstants, this.customJavascriptMethods].filter(identity => identity)
+    const thisClassName = this.generatedClassName
     if (this._amIRoot()) {
-      components.push(`static cachedHandGrammarProgramRoot = new jtree.HandGrammarProgram(\`${TreeUtils.escapeBackTicks(
-        this.getParent()
-          .toString()
-          .replace(/\\/g, "\\\\")
-      )}\`)
-        getHandGrammarProgram() {
+      components.push(`static cachedHandGrammarProgramRoot = new HandGrammarProgram(\`${Utils.escapeBackTicks(this.parent.toString().replace(/\\/g, "\\\\"))}\`)
+        get handGrammarProgram() {
           return this.constructor.cachedHandGrammarProgramRoot
       }`)
-      const nodeTypeMap = this.getLanguageDefinitionProgram()
-        .getValidConcreteAndAbstractNodeTypeDefinitions()
-        .map(def => {
-          const id = def.getNodeTypeIdFromDefinition()
-          return `"${id}": ${id}`
-        })
-        .join(",\n")
-      components.push(`static getNodeTypeMap() { return {${nodeTypeMap} }}`)
+      components.push(`static rootParser = ${thisClassName}`)
     }
-    return `class ${this._getGeneratedClassName()} extends ${this._getExtendsClassName()} {
+    return `class ${thisClassName} extends ${this._getExtendsClassName()} {
       ${components.join("\n")}
     }`
   }
@@ -15424,11 +15479,11 @@ ${properties.join("\n")}
     const hardCodedExtend = this.get(GrammarConstants._extendsJsClass)
     if (hardCodedExtend) return hardCodedExtend
     const extendedDef = this._getExtendedParent()
-    return extendedDef ? extendedDef._getGeneratedClassName() : "jtree.GrammarBackedNode"
+    return extendedDef ? extendedDef.generatedClassName : "GrammarBackedNode"
   }
   _getCompilerObject() {
     let obj = {}
-    const items = this._getChildrenByNodeConstructorInExtended(GrammarCompilerNode)
+    const items = this._getChildrenByParserInExtended(GrammarCompilerParser)
     items.reverse() // Last definition wins.
     items.forEach(node => {
       obj = Object.assign(obj, node.toObject()) // todo: what about multiline strings?
@@ -15436,35 +15491,35 @@ ${properties.join("\n")}
     return obj
   }
   // todo: improve layout (use bold?)
-  getLineHints() {
-    return this.getCellParser().getLineHints()
+  get lineHints() {
+    return this.cellParser.lineHints
   }
-  isOrExtendsANodeTypeInScope(firstWordsInScope) {
-    const chain = this._getNodeTypeInheritanceSet()
+  isOrExtendsAParserInScope(firstWordsInScope) {
+    const chain = this._getParserInheritanceSet()
     return firstWordsInScope.some(firstWord => chain.has(firstWord))
   }
-  isTerminalNodeType() {
-    return !this._getFromExtended(GrammarConstants.inScope) && !this._getFromExtended(GrammarConstants.catchAllNodeType)
+  isTerminalParser() {
+    return !this._getFromExtended(GrammarConstants.inScope) && !this._getFromExtended(GrammarConstants.catchAllParser)
   }
-  _getSublimeMatchLine() {
-    const regexMatch = this._getRegexMatch()
+  get sublimeMatchLine() {
+    const regexMatch = this.regexMatch
     if (regexMatch) return `'${regexMatch}'`
-    const cruxMatch = this._getCruxIfAny()
-    if (cruxMatch) return `'^ *${TreeUtils.escapeRegExp(cruxMatch)}(?: |$)'`
-    const enumOptions = this._getFirstCellEnumOptions()
-    if (enumOptions) return `'^ *(${TreeUtils.escapeRegExp(enumOptions.join("|"))})(?: |$)'`
+    const cruxMatch = this.cruxIfAny
+    if (cruxMatch) return `'^ *${Utils.escapeRegExp(cruxMatch)}(?: |$)'`
+    const enumOptions = this.firstCellEnumOptions
+    if (enumOptions) return `'^ *(${Utils.escapeRegExp(enumOptions.join("|"))})(?: |$)'`
   }
   // todo: refactor. move some parts to cellParser?
   _toSublimeMatchBlock() {
     const defaultHighlightScope = "source"
-    const program = this.getLanguageDefinitionProgram()
-    const cellParser = this.getCellParser()
+    const program = this.languageDefinitionProgram
+    const cellParser = this.cellParser
     const requiredCellTypeIds = cellParser.getRequiredCellTypeIds()
-    const catchAllCellTypeId = cellParser.getCatchAllCellTypeId()
+    const catchAllCellTypeId = cellParser.catchAllCellTypeId
     const firstCellTypeDef = program.getCellTypeDefinitionById(requiredCellTypeIds[0])
-    const firstWordHighlightScope = (firstCellTypeDef ? firstCellTypeDef.getHighlightScope() : defaultHighlightScope) + "." + this.getNodeTypeIdFromDefinition()
-    const topHalf = ` '${this.getNodeTypeIdFromDefinition()}':
-  - match: ${this._getSublimeMatchLine()}
+    const firstWordHighlightScope = (firstCellTypeDef ? firstCellTypeDef.highlightScope : defaultHighlightScope) + "." + this.parserIdFromDefinition
+    const topHalf = ` '${this.parserIdFromDefinition}':
+  - match: ${this.sublimeMatchLine}
     scope: ${firstWordHighlightScope}`
     if (catchAllCellTypeId) requiredCellTypeIds.push(catchAllCellTypeId)
     if (!requiredCellTypeIds.length) return topHalf
@@ -15472,7 +15527,7 @@ ${properties.join("\n")}
       .map((cellTypeId, index) => {
         const cellTypeDefinition = program.getCellTypeDefinitionById(cellTypeId) // todo: cleanup
         if (!cellTypeDefinition) throw new Error(`No ${GrammarConstants.cellType} ${cellTypeId} found`) // todo: standardize error/capture error at grammar time
-        return `        ${index + 1}: ${(cellTypeDefinition.getHighlightScope() || defaultHighlightScope) + "." + cellTypeDefinition.getCellTypeId()}`
+        return `        ${index + 1}: ${(cellTypeDefinition.highlightScope || defaultHighlightScope) + "." + cellTypeDefinition.cellTypeId}`
       })
       .join("\n")
     const cellTypesToRegex = cellTypeIds => cellTypeIds.map(cellTypeId => `({{${cellTypeId}}})?`).join(" ?")
@@ -15484,36 +15539,44 @@ ${captures}
      - match: $
        pop: true`
   }
-  _getNodeTypeInheritanceSet() {
-    if (!this._cache_nodeTypeInheritanceSet) this._cache_nodeTypeInheritanceSet = new Set(this.getAncestorNodeTypeIdsArray())
-    return this._cache_nodeTypeInheritanceSet
+  _getParserInheritanceSet() {
+    if (!this._cache_parserInheritanceSet) this._cache_parserInheritanceSet = new Set(this.ancestorParserIdsArray)
+    return this._cache_parserInheritanceSet
   }
-  getAncestorNodeTypeIdsArray() {
-    if (!this._cache_ancestorNodeTypeIdsArray) {
-      this._cache_ancestorNodeTypeIdsArray = this._getAncestorsArray().map(def => def.getNodeTypeIdFromDefinition())
-      this._cache_ancestorNodeTypeIdsArray.reverse()
+  get ancestorParserIdsArray() {
+    if (!this._cache_ancestorParserIdsArray) {
+      this._cache_ancestorParserIdsArray = this._getAncestorsArray().map(def => def.parserIdFromDefinition)
+      this._cache_ancestorParserIdsArray.reverse()
     }
-    return this._cache_ancestorNodeTypeIdsArray
+    return this._cache_ancestorParserIdsArray
   }
-  _getProgramNodeTypeDefinitionCache() {
-    return this.getLanguageDefinitionProgram()._getProgramNodeTypeDefinitionCache()
+  get programParserDefinitionCache() {
+    if (!this._cache_parserDefinitionParsers) this._cache_parserDefinitionParsers = this.isRoot || this.hasParserDefinitions ? this.makeProgramParserDefinitionCache() : this.parent.programParserDefinitionCache
+    return this._cache_parserDefinitionParsers
   }
-  getDescription() {
+  get hasParserDefinitions() {
+    return !!this.getChildrenByParser(parserDefinitionParser).length
+  }
+  makeProgramParserDefinitionCache() {
+    const scopedParsers = this.getChildrenByParser(parserDefinitionParser)
+    const cache = Object.assign({}, this.parent.programParserDefinitionCache) // todo. We don't really need this. we should just lookup the parent if no local hits.
+    scopedParsers.forEach(parserDefinitionParser => (cache[parserDefinitionParser.parserIdFromDefinition] = parserDefinitionParser))
+    return cache
+  }
+  get description() {
     return this._getFromExtended(GrammarConstants.description) || ""
   }
-  getFrequency() {
+  get frequency() {
     const val = this._getFromExtended(GrammarConstants.frequency)
     return val ? parseFloat(val) : 0
   }
-  _getExtendedNodeTypeId() {
-    const ancestorIds = this.getAncestorNodeTypeIdsArray()
+  _getExtendedParserId() {
+    const ancestorIds = this.ancestorParserIdsArray
     if (ancestorIds.length > 1) return ancestorIds[ancestorIds.length - 2]
   }
   _toStumpString() {
-    const crux = this._getCruxIfAny()
-    const cellArray = this.getCellParser()
-      .getCellArray()
-      .filter((item, index) => index) // for now this only works for keyword langs
+    const crux = this.cruxIfAny
+    const cellArray = this.cellParser.getCellArray().filter((item, index) => index) // for now this only works for keyword langs
     if (!cellArray.length)
       // todo: remove this! just doing it for now until we refactor getCellArray to handle catchAlls better.
       return ""
@@ -15524,64 +15587,88 @@ ${cells.toString(1)}`
   }
   toStumpString() {
     const nodeBreakSymbol = "\n"
-    return this._getConcreteNonErrorInScopeNodeDefinitions(this._getInScopeNodeTypeIds())
+    return this._getConcreteNonErrorInScopeNodeDefinitions(this._getInScopeParserIds())
       .map(def => def._toStumpString())
       .filter(identity => identity)
       .join(nodeBreakSymbol)
   }
   _generateSimulatedLine(seed) {
     // todo: generate simulated data from catch all
-    const crux = this._getCruxIfAny()
-    return this.getCellParser()
+    const crux = this.cruxIfAny
+    return this.cellParser
       .getCellArray()
       .map((cell, index) => (!index && crux ? crux : cell.synthesizeCell(seed)))
       .join(" ")
   }
-  _shouldSynthesize(def, nodeTypeChain) {
-    if (def._isErrorNodeType() || def._isAbstract()) return false
-    if (nodeTypeChain.includes(def._getId())) return false
+  _shouldSynthesize(def, parserChain) {
+    if (def._isErrorParser() || def._isAbstract()) return false
+    if (parserChain.includes(def.id)) return false
     const tags = def.get(GrammarConstants.tags)
     if (tags && tags.includes(GrammarConstantsMisc.doNotSynthesize)) return false
     return true
   }
-  _getConcreteNonErrorInScopeNodeDefinitions(nodeTypeIds) {
-    const results = []
-    nodeTypeIds.forEach(nodeTypeId => {
-      const def = this.getNodeTypeDefinitionByNodeTypeId(nodeTypeId)
-      if (def._isErrorNodeType()) return true
-      else if (def._isAbstract()) {
-        def._getConcreteDescendantDefinitions().forEach(def => results.push(def))
-      } else {
-        results.push(def)
-      }
+  // Get all definitions in this current scope down, even ones that are scoped inside other definitions.
+  get inScopeAndDescendantDefinitions() {
+    return this.languageDefinitionProgram._collectAllDefinitions(Object.values(this.programParserDefinitionCache), [])
+  }
+  _collectAllDefinitions(defs, collection = []) {
+    defs.forEach(def => {
+      collection.push(def)
+      def._collectAllDefinitions(def.getChildrenByParser(parserDefinitionParser), collection)
     })
-    return results
+    return collection
+  }
+  get cruxPath() {
+    const parentPath = this.parent.cruxPath
+    return (parentPath ? parentPath + " " : "") + this.cruxIfAny
+  }
+  get cruxPathAsColumnName() {
+    return this.cruxPath.replace(/ /g, "_")
+  }
+  // Get every definition that extends from this one, even ones that are scoped inside other definitions.
+  get concreteDescendantDefinitions() {
+    const { inScopeAndDescendantDefinitions, id } = this
+    return Object.values(inScopeAndDescendantDefinitions).filter(def => def._doesExtend(id) && !def._isAbstract())
+  }
+  get concreteInScopeDescendantDefinitions() {
+    // Note: non-recursive.
+    const defs = this.programParserDefinitionCache
+    const id = this.id
+    return Object.values(defs).filter(def => def._doesExtend(id) && !def._isAbstract())
+  }
+  _getConcreteNonErrorInScopeNodeDefinitions(parserIds) {
+    const defs = []
+    parserIds.forEach(parserId => {
+      const def = this.getParserDefinitionByParserId(parserId)
+      if (def._isErrorParser()) return
+      else if (def._isAbstract()) def.concreteInScopeDescendantDefinitions.forEach(def => defs.push(def))
+      else defs.push(def)
+    })
+    return defs
   }
   // todo: refactor
-  synthesizeNode(nodeCount = 1, indentCount = -1, nodeTypesAlreadySynthesized = [], seed = Date.now()) {
-    let inScopeNodeTypeIds = this._getInScopeNodeTypeIds()
-    const catchAllNodeTypeId = this._getFromExtended(GrammarConstants.catchAllNodeType)
-    if (catchAllNodeTypeId) inScopeNodeTypeIds.push(catchAllNodeTypeId)
-    const thisId = this._getId()
-    if (!nodeTypesAlreadySynthesized.includes(thisId)) nodeTypesAlreadySynthesized.push(thisId)
+  synthesizeNode(nodeCount = 1, indentCount = -1, parsersAlreadySynthesized = [], seed = Date.now()) {
+    let inScopeParserIds = this._getInScopeParserIds()
+    const catchAllParserId = this._getFromExtended(GrammarConstants.catchAllParser)
+    if (catchAllParserId) inScopeParserIds.push(catchAllParserId)
+    const thisId = this.id
+    if (!parsersAlreadySynthesized.includes(thisId)) parsersAlreadySynthesized.push(thisId)
     const lines = []
     while (nodeCount) {
       const line = this._generateSimulatedLine(seed)
       if (line) lines.push(" ".repeat(indentCount >= 0 ? indentCount : 0) + line)
-      this._getConcreteNonErrorInScopeNodeDefinitions(inScopeNodeTypeIds.filter(nodeTypeId => !nodeTypesAlreadySynthesized.includes(nodeTypeId)))
-        .filter(def => this._shouldSynthesize(def, nodeTypesAlreadySynthesized))
+      this._getConcreteNonErrorInScopeNodeDefinitions(inScopeParserIds.filter(parserId => !parsersAlreadySynthesized.includes(parserId)))
+        .filter(def => this._shouldSynthesize(def, parsersAlreadySynthesized))
         .forEach(def => {
-          const chain = nodeTypesAlreadySynthesized // .slice(0)
-          chain.push(def._getId())
-          def.synthesizeNode(1, indentCount + 1, chain, seed).forEach(line => {
-            lines.push(line)
-          })
+          const chain = parsersAlreadySynthesized // .slice(0)
+          chain.push(def.id)
+          def.synthesizeNode(1, indentCount + 1, chain, seed).forEach(line => lines.push(line))
         })
       nodeCount--
     }
     return lines
   }
-  getCellParser() {
+  get cellParser() {
     if (!this._cellParser) {
       const cellParsingStrategy = this._getFromExtended(GrammarConstants.cellParser)
       if (cellParsingStrategy === GrammarCellParser.postfix) this._cellParser = new PostfixCellParser(this)
@@ -15592,54 +15679,64 @@ ${cells.toString(1)}`
   }
 }
 // todo: remove?
-class nodeTypeDefinitionNode extends AbstractGrammarDefinitionNode {}
+class parserDefinitionParser extends AbstractParserDefinitionParser {}
 // HandGrammarProgram is a constructor that takes a grammar file, and builds a new
 // constructor for new language that takes files in that language to execute, compile, etc.
-class HandGrammarProgram extends AbstractGrammarDefinitionNode {
-  createParser() {
+class HandGrammarProgram extends AbstractParserDefinitionParser {
+  createParserCombinator() {
     const map = {}
-    map[GrammarConstants.toolingDirective] = TreeNode
-    map[GrammarConstants.todoComment] = TreeNode
-    return new TreeNode.Parser(UnknownNodeTypeNode, map, [{ regex: HandGrammarProgram.nodeTypeFullRegex, nodeConstructor: nodeTypeDefinitionNode }, { regex: HandGrammarProgram.cellTypeFullRegex, nodeConstructor: cellTypeDefinitionNode }])
+    map[GrammarConstants.comment] = TreeNode
+    return new TreeNode.ParserCombinator(UnknownParserNode, map, [
+      { regex: HandGrammarProgram.blankLineRegex, parser: TreeNode },
+      { regex: HandGrammarProgram.parserFullRegex, parser: parserDefinitionParser },
+      { regex: HandGrammarProgram.cellTypeFullRegex, parser: cellTypeDefinitionParser }
+    ])
   }
+  // rootParser
   // Note: this is some so far unavoidable tricky code. We need to eval the transpiled JS, in a NodeJS or browser environment.
-  _compileAndEvalGrammar() {
-    if (!this.isNodeJs()) this._cache_compiledLoadedNodeTypes = TreeUtils.appendCodeAndReturnValueOnWindow(this.toBrowserJavascript(), this.getRootNodeTypeId()).getNodeTypeMap()
-    else {
-      const path = require("path")
-      const code = this.toNodeJsJavascript(path.join(__dirname, "..", "index.js"))
-      try {
-        const rootNode = this._requireInVmNodeJsRootNodeTypeConstructor(code)
-        this._cache_compiledLoadedNodeTypes = rootNode.getNodeTypeMap()
-        if (!this._cache_compiledLoadedNodeTypes) throw new Error(`Failed to getNodeTypeMap`)
-      } catch (err) {
-        // todo: figure out best error pattern here for debugging
-        console.log(err)
-        // console.log(`Error in code: `)
-        // console.log(new TreeNode(code).toStringWithLineNumbers())
-      }
+  _compileAndReturnRootParser() {
+    if (this._cache_rootParser) return this._cache_rootParser
+    if (!this.isNodeJs()) {
+      this._cache_rootParser = Utils.appendCodeAndReturnValueOnWindow(this.toBrowserJavascript(), this.rootParserId).rootParser
+      return this._cache_rootParser
     }
+    const path = require("path")
+    const code = this.toNodeJsJavascript(__dirname)
+    try {
+      const rootNode = this._requireInVmNodeJsRootParser(code)
+      this._cache_rootParser = rootNode.rootParser
+      if (!this._cache_rootParser) throw new Error(`Failed to rootParser`)
+    } catch (err) {
+      // todo: figure out best error pattern here for debugging
+      console.log(err)
+      // console.log(`Error in code: `)
+      // console.log(new TreeNode(code).toStringWithLineNumbers())
+    }
+    return this._cache_rootParser
   }
-  trainModel(programs, programConstructor = this.compileAndReturnRootConstructor()) {
-    const nodeDefs = this.getValidConcreteAndAbstractNodeTypeDefinitions()
+  get cruxPath() {
+    return ""
+  }
+  trainModel(programs, rootParser = this.compileAndReturnRootParser()) {
+    const nodeDefs = this.validConcreteAndAbstractParserDefinitions
     const nodeDefCountIncludingRoot = nodeDefs.length + 1
-    const matrix = TreeUtils.makeMatrix(nodeDefCountIncludingRoot, nodeDefCountIncludingRoot, 0)
+    const matrix = Utils.makeMatrix(nodeDefCountIncludingRoot, nodeDefCountIncludingRoot, 0)
     const idToIndex = {}
     const indexToId = {}
     nodeDefs.forEach((def, index) => {
-      const id = def._getId()
+      const id = def.id
       idToIndex[id] = index + 1
       indexToId[index + 1] = id
     })
     programs.forEach(code => {
-      const exampleProgram = new programConstructor(code)
-      exampleProgram.getTopDownArray().forEach(node => {
-        const nodeIndex = idToIndex[node.getDefinition()._getId()]
-        const parentNode = node.getParent()
+      const exampleProgram = new rootParser(code)
+      exampleProgram.topDownArray.forEach(node => {
+        const nodeIndex = idToIndex[node.definition.id]
+        const parentNode = node.parent
         if (!nodeIndex) return undefined
         if (parentNode.isRoot()) matrix[0][nodeIndex]++
         else {
-          const parentIndex = idToIndex[parentNode.getDefinition()._getId()]
+          const parentIndex = idToIndex[parentNode.definition.id]
           if (!parentIndex) return undefined
           matrix[parentIndex][nodeIndex]++
         }
@@ -15652,17 +15749,17 @@ class HandGrammarProgram extends AbstractGrammarDefinitionNode {
     }
   }
   _mapPredictions(predictionsVector, model) {
-    const total = TreeUtils.sum(predictionsVector)
+    const total = Utils.sum(predictionsVector)
     const predictions = predictionsVector.slice(1).map((count, index) => {
       const id = model.indexToId[index + 1]
       return {
-        id: id,
-        def: this.getNodeTypeDefinitionByNodeTypeId(id),
+        id,
+        def: this.getParserDefinitionByParserId(id),
         count,
         prob: count / total
       }
     })
-    predictions.sort(TreeUtils.makeSortByFn(prediction => prediction.count)).reverse()
+    predictions.sort(Utils.makeSortByFn(prediction => prediction.count)).reverse()
     return predictions
   }
   predictChildren(model, node) {
@@ -15672,48 +15769,44 @@ class HandGrammarProgram extends AbstractGrammarDefinitionNode {
     return this._mapPredictions(this._predictParents(model, node), model)
   }
   _predictChildren(model, node) {
-    return model.matrix[node.isRoot() ? 0 : model.idToIndex[node.getDefinition()._getId()]]
+    return model.matrix[node.isRoot() ? 0 : model.idToIndex[node.definition.id]]
   }
   _predictParents(model, node) {
     if (node.isRoot()) return []
-    const nodeIndex = model.idToIndex[node.getDefinition()._getId()]
+    const nodeIndex = model.idToIndex[node.definition.id]
     return model.matrix.map(row => row[nodeIndex])
-  }
-  _compileAndReturnNodeTypeMap() {
-    if (!this._cache_compiledLoadedNodeTypes) this._compileAndEvalGrammar()
-    return this._cache_compiledLoadedNodeTypes
   }
   _setDirName(name) {
     this._dirName = name
     return this
   }
-  _requireInVmNodeJsRootNodeTypeConstructor(code) {
+  _requireInVmNodeJsRootParser(code) {
     const vm = require("vm")
     const path = require("path")
-    const jtreePath = path.join(__dirname, "..", "index.js")
     // todo: cleanup up
     try {
-      global.jtree = require(jtreePath)
+      Object.keys(GlobalNamespaceAdditions).forEach(key => {
+        global[key] = require("./" + GlobalNamespaceAdditions[key])
+      })
       global.require = require
       global.__dirname = this._dirName
       global.module = {}
       return vm.runInThisContext(code)
     } catch (err) {
       // todo: figure out best error pattern here for debugging
-      console.log(`Error in compiled grammar code for language "${this.getGrammarName()}"`)
+      console.log(`Error in compiled grammar code for language "${this.grammarName}"`)
       // console.log(new TreeNode(code).toStringWithLineNumbers())
-      console.log(`jtreePath: "${jtreePath}"`)
       console.log(err)
       throw err
     }
   }
-  examplesToTestBlocks(programConstructor = this.compileAndReturnRootConstructor(), expectedErrorMessage = "") {
+  examplesToTestBlocks(rootParser = this.compileAndReturnRootParser(), expectedErrorMessage = "") {
     const testBlocks = {}
-    this.getValidConcreteAndAbstractNodeTypeDefinitions().forEach(def =>
-      def.getExamples().forEach(example => {
-        const id = def._getId() + example.getContent()
+    this.validConcreteAndAbstractParserDefinitions.forEach(def =>
+      def.examples.forEach(example => {
+        const id = def.id + example.content
         testBlocks[id] = equal => {
-          const exampleProgram = new programConstructor(example.childrenToString())
+          const exampleProgram = new rootParser(example.childrenToString())
           const errors = exampleProgram.getAllErrors(example._getLineNumber() + 1)
           equal(errors.join("\n"), expectedErrorMessage, `Expected no errors in ${id}`)
         }
@@ -15722,14 +15815,14 @@ class HandGrammarProgram extends AbstractGrammarDefinitionNode {
     return testBlocks
   }
   toReadMe() {
-    const languageName = this.getExtensionName()
-    const rootNodeDef = this.getRootNodeTypeDefinitionNode()
-    const cellTypes = this.getCellTypeDefinitions()
-    const nodeTypeFamilyTree = this.getNodeTypeFamilyTree()
-    const exampleNode = rootNodeDef.getExamples()[0]
+    const languageName = this.extensionName
+    const rootNodeDef = this.rootParserDefinition
+    const cellTypes = this.cellTypeDefinitions
+    const parserFamilyTree = this.parserFamilyTree
+    const exampleNode = rootNodeDef.examples[0]
     return `title ${languageName} Readme
 
-paragraph ${rootNodeDef.getDescription()}
+paragraph ${rootNodeDef.description}
 
 subtitle Quick Example
 
@@ -15739,9 +15832,9 @@ ${exampleNode ? exampleNode.childrenToString(1) : ""}
 subtitle Quick facts about ${languageName}
 
 list
- - ${languageName} has ${nodeTypeFamilyTree.getTopDownArray().length} node types.
+ - ${languageName} has ${parserFamilyTree.topDownArray.length} node types.
  - ${languageName} has ${Object.keys(cellTypes).length} cell types
- - The source code for ${languageName} is ${this.getTopDownArray().length} lines long.
+ - The source code for ${languageName} is ${this.topDownArray.length} lines long.
 
 subtitle Installing
 
@@ -15756,7 +15849,7 @@ code
 subtitle Node Types
 
 code
-${nodeTypeFamilyTree.toString(1)}
+${parserFamilyTree.toString(1)}
 
 subtitle Cell Types
 
@@ -15768,7 +15861,7 @@ subtitle Road Map
 paragraph Here are the "todos" present in the source code for ${languageName}:
 
 list
-${this.getTopDownArray()
+${this.topDownArray
   .filter(node => node.getWord(0) === "todo")
   .map(node => ` - ${node.getLine()}`)
   .join("\n")}
@@ -15778,9 +15871,9 @@ paragraph This readme was auto-generated using the
   }
   toBundle() {
     const files = {}
-    const rootNodeDef = this.getRootNodeTypeDefinitionNode()
-    const languageName = this.getExtensionName()
-    const example = rootNodeDef.getExamples()[0]
+    const rootNodeDef = this.rootParserDefinition
+    const languageName = this.extensionName
+    const example = rootNodeDef.examples[0]
     const sampleCode = example ? example.childrenToString() : ""
     files[GrammarBundleFiles.package] = JSON.stringify(
       {
@@ -15798,175 +15891,160 @@ paragraph This readme was auto-generated using the
 const errors = program.getAllErrors()
 console.log("Sample program compiled with " + errors.length + " errors.")
 if (errors.length)
- console.log(errors.map(error => error.getMessage()))`
+ console.log(errors.map(error => error.message))`
     const nodePath = `${languageName}.node.js`
     files[nodePath] = this.toNodeJsJavascript()
     files[GrammarBundleFiles.indexJs] = `module.exports = require("./${nodePath}")`
     const browserPath = `${languageName}.browser.js`
     files[browserPath] = this.toBrowserJavascript()
-    files[GrammarBundleFiles.indexHtml] = `<script src="node_modules/jtree/products/jtree.browser.js"></script>
+    files[GrammarBundleFiles.indexHtml] = `<script src="node_modules/jtree/products/Utils.browser.js"></script>
+<script src="node_modules/jtree/products/TreeNode.browser.js"></script>
+<script src="node_modules/jtree/products/GrammarLanguage.browser.js"></script>
 <script src="${browserPath}"></script>
 <script>
 const sampleCode = \`${sampleCode.toString()}\`
 ${testCode}
 </script>`
-    const samplePath = "sample." + this.getExtensionName()
+    const samplePath = "sample." + this.extensionName
     files[samplePath] = sampleCode.toString()
     files[GrammarBundleFiles.testJs] = `const ${languageName} = require("./index.js")
 /*keep-line*/ const sampleCode = require("fs").readFileSync("${samplePath}", "utf8")
 ${testCode}`
     return files
   }
-  getTargetExtension() {
-    return this.getRootNodeTypeDefinitionNode().get(GrammarConstants.compilesTo)
+  get targetExtension() {
+    return this.rootParserDefinition.get(GrammarConstants.compilesTo)
   }
-  getCellTypeDefinitions() {
-    if (!this._cache_cellTypes) this._cache_cellTypes = this._getCellTypeDefinitions()
-    return this._cache_cellTypes
+  get cellTypeDefinitions() {
+    if (this._cache_cellTypes) return this._cache_cellTypes
+    const types = {}
+    // todo: add built in word types?
+    this.getChildrenByParser(cellTypeDefinitionParser).forEach(type => (types[type.cellTypeId] = type))
+    this._cache_cellTypes = types
+    return types
   }
   getCellTypeDefinitionById(cellTypeId) {
     // todo: return unknownCellTypeDefinition? or is that handled somewhere else?
-    return this.getCellTypeDefinitions()[cellTypeId]
+    return this.cellTypeDefinitions[cellTypeId]
   }
-  getNodeTypeFamilyTree() {
+  get parserFamilyTree() {
     const tree = new TreeNode()
-    Object.values(this.getValidConcreteAndAbstractNodeTypeDefinitions()).forEach(node => {
-      const path = node.getAncestorNodeTypeIdsArray().join(" ")
-      tree.touchNode(path)
-    })
+    Object.values(this.validConcreteAndAbstractParserDefinitions).forEach(node => tree.touchNode(node.ancestorParserIdsArray.join(" ")))
     return tree
   }
-  _getCellTypeDefinitions() {
-    const types = {}
-    // todo: add built in word types?
-    this.getChildrenByNodeConstructor(cellTypeDefinitionNode).forEach(type => (types[type.getCellTypeId()] = type))
-    return types
-  }
-  getLanguageDefinitionProgram() {
+  get languageDefinitionProgram() {
     return this
   }
-  getValidConcreteAndAbstractNodeTypeDefinitions() {
-    return this.getChildrenByNodeConstructor(nodeTypeDefinitionNode).filter(node => node._hasValidNodeTypeId())
+  get validConcreteAndAbstractParserDefinitions() {
+    return this.getChildrenByParser(parserDefinitionParser).filter(node => node._hasValidParserId())
   }
-  _getLastRootNodeTypeDefinitionNode() {
-    return this.findLast(def => def instanceof AbstractGrammarDefinitionNode && def.has(GrammarConstants.root) && def._hasValidNodeTypeId())
+  get lastRootParserDefinitionNode() {
+    return this.findLast(def => def instanceof AbstractParserDefinitionParser && def.has(GrammarConstants.root) && def._hasValidParserId())
   }
-  _initRootNodeTypeDefinitionNode() {
-    if (this._cache_rootNodeTypeNode) return
-    if (!this._cache_rootNodeTypeNode) this._cache_rootNodeTypeNode = this._getLastRootNodeTypeDefinitionNode()
+  _initRootParserDefinitionNode() {
+    if (this._cache_rootParserNode) return
+    if (!this._cache_rootParserNode) this._cache_rootParserNode = this.lastRootParserDefinitionNode
     // By default, have a very permissive basic root node.
     // todo: whats the best design pattern to use for this sort of thing?
-    if (!this._cache_rootNodeTypeNode) {
-      this._cache_rootNodeTypeNode = this.concat(`${GrammarConstants.defaultRootNode}
+    if (!this._cache_rootParserNode) {
+      this._cache_rootParserNode = this.concat(`${GrammarConstants.DefaultRootParser}
  ${GrammarConstants.root}
- ${GrammarConstants.catchAllNodeType} ${GrammarConstants.BlobNode}`)[0]
-      this._addDefaultCatchAllBlobNode()
+ ${GrammarConstants.catchAllParser} ${GrammarConstants.BlobParser}`)[0]
+      this._addDefaultCatchAllBlobParser()
     }
   }
-  getRootNodeTypeDefinitionNode() {
-    this._initRootNodeTypeDefinitionNode()
-    return this._cache_rootNodeTypeNode
+  get rootParserDefinition() {
+    this._initRootParserDefinitionNode()
+    return this._cache_rootParserNode
   }
-  // todo: whats the best design pattern to use for this sort of thing?
-  _addDefaultCatchAllBlobNode() {
-    delete this._cache_nodeTypeDefinitions
-    this.concat(`${GrammarConstants.BlobNode}
- ${GrammarConstants.baseNodeType} ${GrammarConstants.blobNode}`)
+  _addDefaultCatchAllBlobParser() {
+    if (this._addedCatchAll) return
+    this._addedCatchAll = true
+    delete this._cache_parserDefinitionParsers
+    this.concat(`${GrammarConstants.BlobParser}
+ ${GrammarConstants.baseParser} ${GrammarConstants.blobParser}`)
   }
-  getExtensionName() {
-    return this.getGrammarName()
+  get extensionName() {
+    return this.grammarName
   }
-  _getId() {
-    return this.getRootNodeTypeId()
+  get id() {
+    return this.rootParserId
   }
-  getRootNodeTypeId() {
-    return this.getRootNodeTypeDefinitionNode().getNodeTypeIdFromDefinition()
+  get rootParserId() {
+    return this.rootParserDefinition.parserIdFromDefinition
   }
-  getGrammarName() {
-    return this.getRootNodeTypeId().replace(HandGrammarProgram.nodeTypeSuffixRegex, "")
+  get grammarName() {
+    return this.rootParserId.replace(HandGrammarProgram.parserSuffixRegex, "")
   }
-  _getMyInScopeNodeTypeIds() {
-    const nodeTypesNode = this.getRootNodeTypeDefinitionNode().getNode(GrammarConstants.inScope)
-    return nodeTypesNode ? nodeTypesNode.getWordsFrom(1) : []
+  _getMyInScopeParserIds() {
+    return super._getMyInScopeParserIds(this.rootParserDefinition)
   }
-  _getInScopeNodeTypeIds() {
-    const nodeTypesNode = this.getRootNodeTypeDefinitionNode().getNode(GrammarConstants.inScope)
-    return nodeTypesNode ? nodeTypesNode.getWordsFrom(1) : []
+  _getInScopeParserIds() {
+    const parsersNode = this.rootParserDefinition.getNode(GrammarConstants.inScope)
+    return parsersNode ? parsersNode.getWordsFrom(1) : []
   }
-  _initProgramNodeTypeDefinitionCache() {
-    if (this._cache_nodeTypeDefinitions) return undefined
-    this._cache_nodeTypeDefinitions = {}
-    this.getChildrenByNodeConstructor(nodeTypeDefinitionNode).forEach(nodeTypeDefinitionNode => {
-      this._cache_nodeTypeDefinitions[nodeTypeDefinitionNode.getNodeTypeIdFromDefinition()] = nodeTypeDefinitionNode
-    })
+  makeProgramParserDefinitionCache() {
+    const cache = {}
+    this.getChildrenByParser(parserDefinitionParser).forEach(parserDefinitionParser => (cache[parserDefinitionParser.parserIdFromDefinition] = parserDefinitionParser))
+    return cache
   }
-  _getProgramNodeTypeDefinitionCache() {
-    this._initProgramNodeTypeDefinitionCache()
-    return this._cache_nodeTypeDefinitions
-  }
-  compileAndReturnRootConstructor() {
-    if (!this._cache_rootConstructorClass) {
-      const def = this.getRootNodeTypeDefinitionNode()
-      const rootNodeTypeId = def.getNodeTypeIdFromDefinition()
-      this._cache_rootConstructorClass = def.getLanguageDefinitionProgram()._compileAndReturnNodeTypeMap()[rootNodeTypeId]
+  compileAndReturnRootParser() {
+    if (!this._cached_rootParser) {
+      const rootDef = this.rootParserDefinition
+      this._cached_rootParser = rootDef.languageDefinitionProgram._compileAndReturnRootParser()
     }
-    return this._cache_rootConstructorClass
+    return this._cached_rootParser
   }
-  _getFileExtensions() {
-    return this.getRootNodeTypeDefinitionNode().get(GrammarConstants.extensions)
-      ? this.getRootNodeTypeDefinitionNode()
-          .get(GrammarConstants.extensions)
-          .split(" ")
-          .join(",")
-      : this.getExtensionName()
+  get fileExtensions() {
+    return this.rootParserDefinition.get(GrammarConstants.extensions) ? this.rootParserDefinition.get(GrammarConstants.extensions).split(" ").join(",") : this.extensionName
   }
-  toNodeJsJavascript(normalizedJtreePath = "jtree") {
-    return this._rootNodeDefToJavascriptClass(normalizedJtreePath, true).trim()
+  toNodeJsJavascript(jtreeProductsPath = "jtree/products") {
+    return this._rootNodeDefToJavascriptClass(jtreeProductsPath, true).trim()
   }
   toBrowserJavascript() {
     return this._rootNodeDefToJavascriptClass("", false).trim()
   }
-  _getProperName() {
-    return TreeUtils.ucfirst(this.getExtensionName())
-  }
-  _rootNodeDefToJavascriptClass(normalizedJtreePath, forNodeJs = true) {
-    const defs = this.getValidConcreteAndAbstractNodeTypeDefinitions()
+  _rootNodeDefToJavascriptClass(jtreeProductsPath, forNodeJs = true) {
+    const defs = this.validConcreteAndAbstractParserDefinitions
     // todo: throw if there is no root node defined
-    const nodeTypeClasses = defs.map(def => def._nodeDefToJavascriptClass()).join("\n\n")
-    const rootDef = this.getRootNodeTypeDefinitionNode()
+    const parserClasses = defs.map(def => def.asJavascriptClass).join("\n\n")
+    const rootDef = this.rootParserDefinition
     const rootNodeJsHeader = forNodeJs && rootDef._getConcatBlockStringFromExtended(GrammarConstants._rootNodeJsHeader)
-    const rootName = rootDef._getGeneratedClassName()
+    const rootName = rootDef.generatedClassName
     if (!rootName) throw new Error(`Root Node Type Has No Name`)
     let exportScript = ""
-    if (forNodeJs) {
+    if (forNodeJs)
       exportScript = `module.exports = ${rootName};
 ${rootName}`
-    } else {
-      exportScript = `window.${rootName} = ${rootName}`
-    }
+    else exportScript = `window.${rootName} = ${rootName}`
+    let nodeJsImports = ``
+    if (forNodeJs)
+      nodeJsImports = Object.keys(GlobalNamespaceAdditions)
+        .map(key => `const { ${key} } = require("${jtreeProductsPath}/${GlobalNamespaceAdditions[key]}")`)
+        .join("\n")
     // todo: we can expose the previous "constants" export, if needed, via the grammar, which we preserve.
     return `{
-${forNodeJs ? `const {jtree} = require("${normalizedJtreePath.replace(/\\/g, "\\\\")}")` : ""}
+${nodeJsImports}
 ${rootNodeJsHeader ? rootNodeJsHeader : ""}
-${nodeTypeClasses}
+${parserClasses}
 
 ${exportScript}
 }
 `
   }
   toSublimeSyntaxFile() {
-    const cellTypeDefs = this.getCellTypeDefinitions()
+    const cellTypeDefs = this.cellTypeDefinitions
     const variables = Object.keys(cellTypeDefs)
-      .map(name => ` ${name}: '${cellTypeDefs[name].getRegexString()}'`)
+      .map(name => ` ${name}: '${cellTypeDefs[name].regexString}'`)
       .join("\n")
-    const defs = this.getValidConcreteAndAbstractNodeTypeDefinitions().filter(kw => !kw._isAbstract())
-    const nodeTypeContexts = defs.map(def => def._toSublimeMatchBlock()).join("\n\n")
-    const includes = defs.map(nodeTypeDef => `  - include: '${nodeTypeDef.getNodeTypeIdFromDefinition()}'`).join("\n")
+    const defs = this.validConcreteAndAbstractParserDefinitions.filter(kw => !kw._isAbstract())
+    const parserContexts = defs.map(def => def._toSublimeMatchBlock()).join("\n\n")
+    const includes = defs.map(parserDef => `  - include: '${parserDef.parserIdFromDefinition}'`).join("\n")
     return `%YAML 1.2
 ---
-name: ${this.getExtensionName()}
-file_extensions: [${this._getFileExtensions()}]
-scope: source.${this.getExtensionName()}
+name: ${this.extensionName}
+file_extensions: [${this.fileExtensions}]
+scope: source.${this.extensionName}
 
 variables:
 ${variables}
@@ -15975,17 +16053,18 @@ contexts:
  main:
 ${includes}
 
-${nodeTypeContexts}`
+${parserContexts}`
   }
 }
-HandGrammarProgram.makeNodeTypeId = str => TreeUtils._replaceNonAlphaNumericCharactersWithCharCodes(str).replace(HandGrammarProgram.nodeTypeSuffixRegex, "") + GrammarConstants.nodeTypeSuffix
-HandGrammarProgram.makeCellTypeId = str => TreeUtils._replaceNonAlphaNumericCharactersWithCharCodes(str).replace(HandGrammarProgram.cellTypeSuffixRegex, "") + GrammarConstants.cellTypeSuffix
-HandGrammarProgram.nodeTypeSuffixRegex = new RegExp(GrammarConstants.nodeTypeSuffix + "$")
-HandGrammarProgram.nodeTypeFullRegex = new RegExp("^[a-zA-Z0-9_]+" + GrammarConstants.nodeTypeSuffix + "$")
+HandGrammarProgram.makeParserId = str => Utils._replaceNonAlphaNumericCharactersWithCharCodes(str).replace(HandGrammarProgram.parserSuffixRegex, "") + GrammarConstants.parserSuffix
+HandGrammarProgram.makeCellTypeId = str => Utils._replaceNonAlphaNumericCharactersWithCharCodes(str).replace(HandGrammarProgram.cellTypeSuffixRegex, "") + GrammarConstants.cellTypeSuffix
+HandGrammarProgram.parserSuffixRegex = new RegExp(GrammarConstants.parserSuffix + "$")
+HandGrammarProgram.parserFullRegex = new RegExp("^[a-zA-Z0-9_]+" + GrammarConstants.parserSuffix + "$")
+HandGrammarProgram.blankLineRegex = new RegExp("^$")
 HandGrammarProgram.cellTypeSuffixRegex = new RegExp(GrammarConstants.cellTypeSuffix + "$")
 HandGrammarProgram.cellTypeFullRegex = new RegExp("^[a-zA-Z0-9_]+" + GrammarConstants.cellTypeSuffix + "$")
 HandGrammarProgram._languages = {}
-HandGrammarProgram._nodeTypes = {}
+HandGrammarProgram._parsers = {}
 const PreludeKinds = {}
 PreludeKinds[PreludeCellTypeIds.anyCell] = GrammarAnyCell
 PreludeKinds[PreludeCellTypeIds.keywordCell] = GrammarKeywordCell
@@ -15994,55 +16073,15 @@ PreludeKinds[PreludeCellTypeIds.numberCell] = GrammarFloatCell
 PreludeKinds[PreludeCellTypeIds.bitCell] = GrammarBitCell
 PreludeKinds[PreludeCellTypeIds.boolCell] = GrammarBoolCell
 PreludeKinds[PreludeCellTypeIds.intCell] = GrammarIntCell
-window.GrammarConstants = GrammarConstants
-window.PreludeCellTypeIds = PreludeCellTypeIds
-window.HandGrammarProgram = HandGrammarProgram
-window.GrammarBackedNode = GrammarBackedNode
-window.UnknownNodeTypeError = UnknownNodeTypeError
-class Upgrader extends TreeNode {
-  upgradeManyInPlace(globPatterns, fromVersion, toVersion) {
-    this._upgradeMany(globPatterns, fromVersion, toVersion).forEach(file => file.tree.toDisk(file.path))
-    return this
-  }
-  upgradeManyPreview(globPatterns, fromVersion, toVersion) {
-    return this._upgradeMany(globPatterns, fromVersion, toVersion)
-  }
-  _upgradeMany(globPatterns, fromVersion, toVersion) {
-    const glob = this.require("glob")
-    const files = TreeUtils.flatten(globPatterns.map(pattern => glob.sync(pattern)))
-    console.log(`${files.length} files to upgrade`)
-    return files.map(path => {
-      console.log("Upgrading " + path)
-      return {
-        tree: this.upgrade(TreeNode.fromDisk(path), fromVersion, toVersion),
-        path: path
-      }
-    })
-  }
-  upgrade(code, fromVersion, toVersion) {
-    const updateFromMap = this.getUpgradeFromMap()
-    const semver = this.require("semver")
-    let fromMap
-    while ((fromMap = updateFromMap[fromVersion])) {
-      const toNextVersion = Object.keys(fromMap)[0] // todo: currently we just assume 1 step at a time
-      if (semver.lt(toVersion, toNextVersion)) break
-      const fn = Object.values(fromMap)[0]
-      code = fn(code)
-      fromVersion = toNextVersion
-    }
-    return code
-  }
-}
-window.Upgrader = Upgrader
 class UnknownGrammarProgram extends TreeNode {
   _inferRootNodeForAPrefixLanguage(grammarName) {
-    grammarName = HandGrammarProgram.makeNodeTypeId(grammarName)
+    grammarName = HandGrammarProgram.makeParserId(grammarName)
     const rootNode = new TreeNode(`${grammarName}
  ${GrammarConstants.root}`)
-    // note: right now we assume 1 global cellTypeMap and nodeTypeMap per grammar. But we may have scopes in the future?
+    // note: right now we assume 1 global cellTypeMap and parserMap per grammar. But we may have scopes in the future?
     const rootNodeNames = this.getFirstWords()
       .filter(identity => identity)
-      .map(word => HandGrammarProgram.makeNodeTypeId(word))
+      .map(word => HandGrammarProgram.makeParserId(word))
     rootNode
       .nodeAt(0)
       .touchNode(GrammarConstants.inScope)
@@ -16052,33 +16091,31 @@ class UnknownGrammarProgram extends TreeNode {
   _renameIntegerKeywords(clone) {
     // todo: why are we doing this?
     for (let node of clone.getTopDownArrayIterator()) {
-      const firstWordIsAnInteger = !!node.getFirstWord().match(/^\d+$/)
-      const parentFirstWord = node.getParent().getFirstWord()
-      if (firstWordIsAnInteger && parentFirstWord) node.setFirstWord(HandGrammarProgram.makeNodeTypeId(parentFirstWord + UnknownGrammarProgram._childSuffix))
+      const firstWordIsAnInteger = !!node.firstWord.match(/^\d+$/)
+      const parentFirstWord = node.parent.firstWord
+      if (firstWordIsAnInteger && parentFirstWord) node.setFirstWord(HandGrammarProgram.makeParserId(parentFirstWord + UnknownGrammarProgram._childSuffix))
     }
   }
   _getKeywordMaps(clone) {
     const keywordsToChildKeywords = {}
     const keywordsToNodeInstances = {}
     for (let node of clone.getTopDownArrayIterator()) {
-      const firstWord = node.getFirstWord()
+      const firstWord = node.firstWord
       if (!keywordsToChildKeywords[firstWord]) keywordsToChildKeywords[firstWord] = {}
       if (!keywordsToNodeInstances[firstWord]) keywordsToNodeInstances[firstWord] = []
       keywordsToNodeInstances[firstWord].push(node)
-      node.forEach(child => {
-        keywordsToChildKeywords[firstWord][child.getFirstWord()] = true
-      })
+      node.forEach(child => (keywordsToChildKeywords[firstWord][child.firstWord] = true))
     }
     return { keywordsToChildKeywords: keywordsToChildKeywords, keywordsToNodeInstances: keywordsToNodeInstances }
   }
-  _inferNodeTypeDef(firstWord, globalCellTypeMap, childFirstWords, instances) {
-    const edgeSymbol = this.getEdgeSymbol()
-    const nodeTypeId = HandGrammarProgram.makeNodeTypeId(firstWord)
-    const nodeDefNode = new TreeNode(nodeTypeId).nodeAt(0)
-    const childNodeTypeIds = childFirstWords.map(word => HandGrammarProgram.makeNodeTypeId(word))
-    if (childNodeTypeIds.length) nodeDefNode.touchNode(GrammarConstants.inScope).setWordsFrom(1, childNodeTypeIds)
+  _inferParserDef(firstWord, globalCellTypeMap, childFirstWords, instances) {
+    const edgeSymbol = this.edgeSymbol
+    const parserId = HandGrammarProgram.makeParserId(firstWord)
+    const nodeDefNode = new TreeNode(parserId).nodeAt(0)
+    const childParserIds = childFirstWords.map(word => HandGrammarProgram.makeParserId(word))
+    if (childParserIds.length) nodeDefNode.touchNode(GrammarConstants.inScope).setWordsFrom(1, childParserIds)
     const cellsForAllInstances = instances
-      .map(line => line.getContent())
+      .map(line => line.content)
       .filter(identity => identity)
       .map(line => line.split(edgeSymbol))
     const instanceCellCounts = new Set(cellsForAllInstances.map(cells => cells.length))
@@ -16087,7 +16124,12 @@ class UnknownGrammarProgram extends TreeNode {
     let catchAllCellType
     let cellTypeIds = []
     for (let cellIndex = 0; cellIndex < maxCellsOnLine; cellIndex++) {
-      const cellType = this._getBestCellType(firstWord, instances.length, maxCellsOnLine, cellsForAllInstances.map(cells => cells[cellIndex]))
+      const cellType = this._getBestCellType(
+        firstWord,
+        instances.length,
+        maxCellsOnLine,
+        cellsForAllInstances.map(cells => cells[cellIndex])
+      )
       if (!globalCellTypeMap.has(cellType.cellTypeId)) globalCellTypeMap.set(cellType.cellTypeId, cellType.cellTypeDefinition)
       cellTypeIds.push(cellType.cellTypeId)
     }
@@ -16098,7 +16140,7 @@ class UnknownGrammarProgram extends TreeNode {
         cellTypeIds.pop()
       }
     }
-    const needsCruxProperty = !firstWord.endsWith(UnknownGrammarProgram._childSuffix + "Node") // todo: cleanup
+    const needsCruxProperty = !firstWord.endsWith(UnknownGrammarProgram._childSuffix + GrammarConstants.parserSuffix) // todo: cleanup
     if (needsCruxProperty) nodeDefNode.set(GrammarConstants.crux, firstWord)
     if (catchAllCellType) nodeDefNode.set(GrammarConstants.catchAllCellType, catchAllCellType)
     const cellLine = cellTypeIds.slice()
@@ -16106,14 +16148,14 @@ class UnknownGrammarProgram extends TreeNode {
     if (cellLine.length > 0) nodeDefNode.set(GrammarConstants.cells, cellLine.join(edgeSymbol))
     //if (!catchAllCellType && cellTypeIds.length === 1) nodeDefNode.set(GrammarConstants.cells, cellTypeIds[0])
     // Todo: add conditional frequencies
-    return nodeDefNode.getParent().toString()
+    return nodeDefNode.parent.toString()
   }
   //  inferGrammarFileForAnSSVLanguage(grammarName: string): string {
-  //     grammarName = HandGrammarProgram.makeNodeTypeId(grammarName)
+  //     grammarName = HandGrammarProgram.makeParserId(grammarName)
   //    const rootNode = new TreeNode(`${grammarName}
   // ${GrammarConstants.root}`)
-  //    // note: right now we assume 1 global cellTypeMap and nodeTypeMap per grammar. But we may have scopes in the future?
-  //    const rootNodeNames = this.getFirstWords().map(word => HandGrammarProgram.makeNodeTypeId(word))
+  //    // note: right now we assume 1 global cellTypeMap and parserMap per grammar. But we may have scopes in the future?
+  //    const rootNodeNames = this.getFirstWords().map(word => HandGrammarProgram.makeParserId(word))
   //    rootNode
   //      .nodeAt(0)
   //      .touchNode(GrammarConstants.inScope)
@@ -16126,25 +16168,25 @@ class UnknownGrammarProgram extends TreeNode {
     const { keywordsToChildKeywords, keywordsToNodeInstances } = this._getKeywordMaps(clone)
     const globalCellTypeMap = new Map()
     globalCellTypeMap.set(PreludeCellTypeIds.keywordCell, undefined)
-    const nodeTypeDefs = Object.keys(keywordsToChildKeywords)
+    const parserDefs = Object.keys(keywordsToChildKeywords)
       .filter(identity => identity)
-      .map(firstWord => this._inferNodeTypeDef(firstWord, globalCellTypeMap, Object.keys(keywordsToChildKeywords[firstWord]), keywordsToNodeInstances[firstWord]))
+      .map(firstWord => this._inferParserDef(firstWord, globalCellTypeMap, Object.keys(keywordsToChildKeywords[firstWord]), keywordsToNodeInstances[firstWord]))
     const cellTypeDefs = []
     globalCellTypeMap.forEach((def, id) => cellTypeDefs.push(def ? def : id))
-    const nodeBreakSymbol = this.getNodeBreakSymbol()
-    return this._formatCode([this._inferRootNodeForAPrefixLanguage(grammarName).toString(), cellTypeDefs.join(nodeBreakSymbol), nodeTypeDefs.join(nodeBreakSymbol)].filter(identity => identity).join("\n"))
+    const nodeBreakSymbol = this.nodeBreakSymbol
+    return this._formatCode([this._inferRootNodeForAPrefixLanguage(grammarName).toString(), cellTypeDefs.join(nodeBreakSymbol), parserDefs.join(nodeBreakSymbol)].filter(identity => identity).join("\n"))
   }
   _formatCode(code) {
     // todo: make this run in browser too
     if (!this.isNodeJs()) return code
     const grammarProgram = new HandGrammarProgram(TreeNode.fromDisk(__dirname + "/../langs/grammar/grammar.grammar"))
-    const programConstructor = grammarProgram.compileAndReturnRootConstructor()
-    const program = new programConstructor(code)
+    const rootParser = grammarProgram.compileAndReturnRootParser()
+    const program = new rootParser(code)
     return program.format().toString()
   }
   _getBestCellType(firstWord, instanceCount, maxCellsOnLine, allValues) {
     const asSet = new Set(allValues)
-    const edgeSymbol = this.getEdgeSymbol()
+    const edgeSymbol = this.edgeSymbol
     const values = Array.from(asSet).filter(identity => identity)
     const every = fn => {
       for (let index = 0; index < values.length; index++) {
@@ -16177,10 +16219,18 @@ class UnknownGrammarProgram extends TreeNode {
   }
 }
 UnknownGrammarProgram._childSuffix = "Child"
+window.GrammarConstants = GrammarConstants
+window.PreludeCellTypeIds = PreludeCellTypeIds
+window.HandGrammarProgram = HandGrammarProgram
+window.GrammarBackedNode = GrammarBackedNode
+window.UnknownParserError = UnknownParserError
 window.UnknownGrammarProgram = UnknownGrammarProgram
+
+
+"use strict"
 // Adapted from https://github.com/NeekSandhu/codemirror-textmate/blob/master/src/tmToCm.ts
 var CmToken
-;(function(CmToken) {
+;(function (CmToken) {
   CmToken["Atom"] = "atom"
   CmToken["Attribute"] = "attribute"
   CmToken["Bracket"] = "bracket"
@@ -16358,10 +16408,10 @@ const textMateScopeToCodeMirrorStyle = (scopeSegments, styleTree = tmToCm) => {
   const matchingBranch = styleTree[scopeSegments.shift()]
   return matchingBranch ? textMateScopeToCodeMirrorStyle(scopeSegments, matchingBranch) || matchingBranch.$ || null : null
 }
-class TreeNotationCodeMirrorMode {
-  constructor(name, getProgramConstructorFn, getProgramCodeFn, codeMirrorLib = undefined) {
+class GrammarCodeMirrorMode {
+  constructor(name, getRootParserFn, getProgramCodeFn, codeMirrorLib = undefined) {
     this._name = name
-    this._getProgramConstructorFn = getProgramConstructorFn
+    this._getRootParserFn = getRootParserFn
     this._getProgramCodeFn = getProgramCodeFn || (instance => (instance ? instance.getValue() : this._originalValue))
     this._codeMirrorLib = codeMirrorLib
   }
@@ -16369,48 +16419,48 @@ class TreeNotationCodeMirrorMode {
     const source = this._getProgramCodeFn(this._cmInstance) || ""
     if (!this._cachedProgram || this._cachedSource !== source) {
       this._cachedSource = source
-      this._cachedProgram = new (this._getProgramConstructorFn())(source)
+      this._cachedProgram = new (this._getRootParserFn())(source)
     }
     return this._cachedProgram
   }
   _getExcludedIntelliSenseTriggerKeys() {
     return {
-      "8": "backspace",
-      "9": "tab",
-      "13": "enter",
-      "16": "shift",
-      "17": "ctrl",
-      "18": "alt",
-      "19": "pause",
-      "20": "capslock",
-      "27": "escape",
-      "33": "pageup",
-      "34": "pagedown",
-      "35": "end",
-      "36": "home",
-      "37": "left",
-      "38": "up",
-      "39": "right",
-      "40": "down",
-      "45": "insert",
-      "46": "delete",
-      "91": "left window key",
-      "92": "right window key",
-      "93": "select",
-      "112": "f1",
-      "113": "f2",
-      "114": "f3",
-      "115": "f4",
-      "116": "f5",
-      "117": "f6",
-      "118": "f7",
-      "119": "f8",
-      "120": "f9",
-      "121": "f10",
-      "122": "f11",
-      "123": "f12",
-      "144": "numlock",
-      "145": "scrolllock"
+      8: "backspace",
+      9: "tab",
+      13: "enter",
+      16: "shift",
+      17: "ctrl",
+      18: "alt",
+      19: "pause",
+      20: "capslock",
+      27: "escape",
+      33: "pageup",
+      34: "pagedown",
+      35: "end",
+      36: "home",
+      37: "left",
+      38: "up",
+      39: "right",
+      40: "down",
+      45: "insert",
+      46: "delete",
+      91: "left window key",
+      92: "right window key",
+      93: "select",
+      112: "f1",
+      113: "f2",
+      114: "f3",
+      115: "f4",
+      116: "f5",
+      117: "f6",
+      118: "f7",
+      119: "f8",
+      120: "f9",
+      121: "f10",
+      122: "f11",
+      123: "f12",
+      144: "numlock",
+      145: "scrolllock"
     }
   }
   token(stream, state) {
@@ -16513,150 +16563,139 @@ class TreeNotationCodeMirrorMode {
     state.cellIndex = 0
   }
 }
-window.TreeNotationCodeMirrorMode = TreeNotationCodeMirrorMode
-class jtree {}
-jtree.GrammarBackedNode = GrammarBackedNode
-jtree.GrammarConstants = GrammarConstants
-jtree.Utils = TreeUtils
-jtree.UnknownNodeTypeError = UnknownNodeTypeError
-jtree.TestRacer = TestRacer
-jtree.TreeEvents = TreeEvents
-jtree.TreeNode = TreeNode
-jtree.ExtendibleTreeNode = ExtendibleTreeNode
-jtree.HandGrammarProgram = HandGrammarProgram
-jtree.UnknownGrammarProgram = UnknownGrammarProgram
-jtree.TreeNotationCodeMirrorMode = TreeNotationCodeMirrorMode
-jtree.getVersion = () => TreeNode.getVersion()
-window.jtree = jtree
+window.GrammarCodeMirrorMode = GrammarCodeMirrorMode
 
 
 {
-  class stumpNode extends jtree.GrammarBackedNode {
-    createParser() {
-      return new jtree.TreeNode.Parser(
-        errorNode,
-        Object.assign(Object.assign({}, super.createParser()._getFirstWordMapAsObject()), {
-          blockquote: htmlTagNode,
-          colgroup: htmlTagNode,
-          datalist: htmlTagNode,
-          fieldset: htmlTagNode,
-          menuitem: htmlTagNode,
-          noscript: htmlTagNode,
-          optgroup: htmlTagNode,
-          progress: htmlTagNode,
-          styleTag: htmlTagNode,
-          template: htmlTagNode,
-          textarea: htmlTagNode,
-          titleTag: htmlTagNode,
-          address: htmlTagNode,
-          article: htmlTagNode,
-          caption: htmlTagNode,
-          details: htmlTagNode,
-          section: htmlTagNode,
-          summary: htmlTagNode,
-          button: htmlTagNode,
-          canvas: htmlTagNode,
-          dialog: htmlTagNode,
-          figure: htmlTagNode,
-          footer: htmlTagNode,
-          header: htmlTagNode,
-          hgroup: htmlTagNode,
-          iframe: htmlTagNode,
-          keygen: htmlTagNode,
-          legend: htmlTagNode,
-          object: htmlTagNode,
-          option: htmlTagNode,
-          output: htmlTagNode,
-          script: htmlTagNode,
-          select: htmlTagNode,
-          source: htmlTagNode,
-          strong: htmlTagNode,
-          aside: htmlTagNode,
-          embed: htmlTagNode,
-          input: htmlTagNode,
-          label: htmlTagNode,
-          meter: htmlTagNode,
-          param: htmlTagNode,
-          small: htmlTagNode,
-          table: htmlTagNode,
-          tbody: htmlTagNode,
-          tfoot: htmlTagNode,
-          thead: htmlTagNode,
-          track: htmlTagNode,
-          video: htmlTagNode,
-          abbr: htmlTagNode,
-          area: htmlTagNode,
-          base: htmlTagNode,
-          body: htmlTagNode,
-          code: htmlTagNode,
-          form: htmlTagNode,
-          head: htmlTagNode,
-          html: htmlTagNode,
-          link: htmlTagNode,
-          main: htmlTagNode,
-          mark: htmlTagNode,
-          menu: htmlTagNode,
-          meta: htmlTagNode,
-          ruby: htmlTagNode,
-          samp: htmlTagNode,
-          span: htmlTagNode,
-          time: htmlTagNode,
-          bdi: htmlTagNode,
-          bdo: htmlTagNode,
-          col: htmlTagNode,
-          del: htmlTagNode,
-          dfn: htmlTagNode,
-          div: htmlTagNode,
-          img: htmlTagNode,
-          ins: htmlTagNode,
-          kbd: htmlTagNode,
-          map: htmlTagNode,
-          nav: htmlTagNode,
-          pre: htmlTagNode,
-          rtc: htmlTagNode,
-          sub: htmlTagNode,
-          sup: htmlTagNode,
-          var: htmlTagNode,
-          wbr: htmlTagNode,
-          br: htmlTagNode,
-          dd: htmlTagNode,
-          dl: htmlTagNode,
-          dt: htmlTagNode,
-          em: htmlTagNode,
-          h1: htmlTagNode,
-          h2: htmlTagNode,
-          h3: htmlTagNode,
-          h4: htmlTagNode,
-          h5: htmlTagNode,
-          h6: htmlTagNode,
-          hr: htmlTagNode,
-          li: htmlTagNode,
-          ol: htmlTagNode,
-          rb: htmlTagNode,
-          rp: htmlTagNode,
-          rt: htmlTagNode,
-          td: htmlTagNode,
-          th: htmlTagNode,
-          tr: htmlTagNode,
-          ul: htmlTagNode,
-          a: htmlTagNode,
-          b: htmlTagNode,
-          i: htmlTagNode,
-          p: htmlTagNode,
-          q: htmlTagNode,
-          s: htmlTagNode,
-          u: htmlTagNode
+  class stumpParser extends GrammarBackedNode {
+    createParserCombinator() {
+      return new TreeNode.ParserCombinator(
+        errorParser,
+        Object.assign(Object.assign({}, super.createParserCombinator()._getFirstWordMapAsObject()), {
+          blockquote: htmlTagParser,
+          colgroup: htmlTagParser,
+          datalist: htmlTagParser,
+          fieldset: htmlTagParser,
+          menuitem: htmlTagParser,
+          noscript: htmlTagParser,
+          optgroup: htmlTagParser,
+          progress: htmlTagParser,
+          styleTag: htmlTagParser,
+          template: htmlTagParser,
+          textarea: htmlTagParser,
+          titleTag: htmlTagParser,
+          address: htmlTagParser,
+          article: htmlTagParser,
+          caption: htmlTagParser,
+          details: htmlTagParser,
+          section: htmlTagParser,
+          summary: htmlTagParser,
+          button: htmlTagParser,
+          canvas: htmlTagParser,
+          dialog: htmlTagParser,
+          figure: htmlTagParser,
+          footer: htmlTagParser,
+          header: htmlTagParser,
+          hgroup: htmlTagParser,
+          iframe: htmlTagParser,
+          keygen: htmlTagParser,
+          legend: htmlTagParser,
+          object: htmlTagParser,
+          option: htmlTagParser,
+          output: htmlTagParser,
+          script: htmlTagParser,
+          select: htmlTagParser,
+          source: htmlTagParser,
+          strong: htmlTagParser,
+          aside: htmlTagParser,
+          embed: htmlTagParser,
+          input: htmlTagParser,
+          label: htmlTagParser,
+          meter: htmlTagParser,
+          param: htmlTagParser,
+          small: htmlTagParser,
+          table: htmlTagParser,
+          tbody: htmlTagParser,
+          tfoot: htmlTagParser,
+          thead: htmlTagParser,
+          track: htmlTagParser,
+          video: htmlTagParser,
+          abbr: htmlTagParser,
+          area: htmlTagParser,
+          base: htmlTagParser,
+          body: htmlTagParser,
+          code: htmlTagParser,
+          form: htmlTagParser,
+          head: htmlTagParser,
+          html: htmlTagParser,
+          link: htmlTagParser,
+          main: htmlTagParser,
+          mark: htmlTagParser,
+          menu: htmlTagParser,
+          meta: htmlTagParser,
+          ruby: htmlTagParser,
+          samp: htmlTagParser,
+          span: htmlTagParser,
+          time: htmlTagParser,
+          bdi: htmlTagParser,
+          bdo: htmlTagParser,
+          col: htmlTagParser,
+          del: htmlTagParser,
+          dfn: htmlTagParser,
+          div: htmlTagParser,
+          img: htmlTagParser,
+          ins: htmlTagParser,
+          kbd: htmlTagParser,
+          map: htmlTagParser,
+          nav: htmlTagParser,
+          pre: htmlTagParser,
+          rtc: htmlTagParser,
+          sub: htmlTagParser,
+          sup: htmlTagParser,
+          var: htmlTagParser,
+          wbr: htmlTagParser,
+          br: htmlTagParser,
+          dd: htmlTagParser,
+          dl: htmlTagParser,
+          dt: htmlTagParser,
+          em: htmlTagParser,
+          h1: htmlTagParser,
+          h2: htmlTagParser,
+          h3: htmlTagParser,
+          h4: htmlTagParser,
+          h5: htmlTagParser,
+          h6: htmlTagParser,
+          hr: htmlTagParser,
+          li: htmlTagParser,
+          ol: htmlTagParser,
+          rb: htmlTagParser,
+          rp: htmlTagParser,
+          rt: htmlTagParser,
+          td: htmlTagParser,
+          th: htmlTagParser,
+          tr: htmlTagParser,
+          ul: htmlTagParser,
+          a: htmlTagParser,
+          b: htmlTagParser,
+          i: htmlTagParser,
+          p: htmlTagParser,
+          q: htmlTagParser,
+          s: htmlTagParser,
+          u: htmlTagParser,
         }),
-        [{ regex: /^$/, nodeConstructor: blankLineNode }, { regex: /^[a-zA-Z0-9_]+Component/, nodeConstructor: componentDefinitionNode }]
+        [
+          { regex: /^$/, parser: blankLineParser },
+          { regex: /^[a-zA-Z0-9_]+Component/, parser: componentDefinitionParser },
+        ]
       )
     }
     compile() {
-      return this.toHtml()
+      return this.asHtml
     }
     _getHtmlJoinByCharacter() {
       return ""
     }
-    static cachedHandGrammarProgramRoot = new jtree.HandGrammarProgram(`tooling onsave jtree build produceLang stump
+    static cachedHandGrammarProgramRoot = new HandGrammarProgram(`// Cell parsers
 anyCell
 keywordCell
 emptyCell
@@ -16680,23 +16719,25 @@ htmlAttributeNameCell
 bernKeywordCell
  enum bern
  extends keywordCell
-stumpNode
+
+// Line parsers
+stumpParser
  root
  description A prefix Tree Language that compiles to HTML.
- catchAllNodeType errorNode
- inScope htmlTagNode blankLineNode
+ catchAllParser errorParser
+ inScope htmlTagParser blankLineParser
  example
   div
    h1 hello world
  compilesTo html
  javascript
   compile() {
-   return this.toHtml()
+   return this.asHtml
   }
   _getHtmlJoinByCharacter() {
     return ""
   }
-blankLineNode
+blankLineParser
  pattern ^$
  tags doNotSynthesize
  cells emptyCell
@@ -16705,15 +16746,15 @@ blankLineNode
    return ""
   }
   getTextContent() {return ""}
-htmlTagNode
- inScope bernNode htmlTagNode htmlAttributeNode blankLineNode
+htmlTagParser
+ inScope bernParser htmlTagParser htmlAttributeParser blankLineParser
  catchAllCellType anyHtmlContentCell
  cells htmlTagNameCell
  javascript
-  isHtmlTagNode = true
+  isHtmlTagParser = true
   getTag() {
    // we need to remove the "Tag" bit to handle the style and title attribute/tag conflict.
-   const firstWord = this.getFirstWord()
+   const firstWord = this.firstWord
    const map = {
     titleTag: "title",
     styleTag: "style"
@@ -16723,7 +16764,7 @@ htmlTagNode
   _getHtmlJoinByCharacter() {
    return ""
   }
-  toHtmlWithSuids() {
+  asHtmlWithSuids() {
    return this._toHtml(undefined, true)
   }
   _getOneLiner() {
@@ -16739,25 +16780,25 @@ htmlTagNode
   get domElement() {
     var elem = document.createElement(this.getTag())
     elem.setAttribute("stumpUid", this._getUid())
-    this.filter(node => node.isAttributeNode)
-      .forEach(child => elem.setAttribute(child.getFirstWord(), child.getContent()))
+    this.filter(node => node.isAttributeParser)
+      .forEach(child => elem.setAttribute(child.firstWord, child.content))
     elem.innerHTML = this.has("bern") ? this.getNode("bern").childrenToString() : this._getOneLiner()
-    this.filter(node => node.isHtmlTagNode)
+    this.filter(node => node.isHtmlTagParser)
       .forEach(child => elem.appendChild(child.domElement))
     return elem
   }
   _toHtml(indentCount, withSuid) {
    const tag = this.getTag()
    const children = this.map(child => child._toHtml(indentCount + 1, withSuid)).join("")
-   const attributesStr = this.filter(node => node.isAttributeNode)
+   const attributesStr = this.filter(node => node.isAttributeParser)
     .map(child => child.getAttribute())
     .join("")
    const indent = " ".repeat(indentCount)
    const collapse = this.shouldCollapse()
-   const indentForChildNodes = !collapse && this.getChildInstancesOfNodeTypeId("htmlTagNode").length > 0
+   const indentForChildParsers = !collapse && this.getChildInstancesOfParserId("htmlTagParser").length > 0
    const suid = withSuid ? \` stumpUid="\${this._getUid()}"\` : ""
    const oneLiner = this._getOneLiner()
-   return \`\${!collapse ? indent : ""}<\${tag}\${attributesStr}\${suid}>\${oneLiner}\${indentForChildNodes ? "\\n" : ""}\${children}</\${tag}>\${collapse ? "" : "\\n"}\`
+   return \`\${!collapse ? indent : ""}<\${tag}\${attributesStr}\${suid}>\${oneLiner}\${indentForChildParsers ? "\\n" : ""}\${children}</\${tag}>\${collapse ? "" : "\\n"}\`
   }
   removeCssStumpNode() {
    return this.removeStumpNode()
@@ -16767,31 +16808,31 @@ htmlTagNode
    return this.destroy()
   }
   getNodeByGuid(guid) {
-   return this.getTopDownArray().find(node => node._getUid() === guid)
+   return this.topDownArray.find(node => node._getUid() === guid)
   }
   addClassToStumpNode(className) {
-   const classNode = this.touchNode("class")
-   const words = classNode.getWordsFrom(1)
+   const classParser = this.touchNode("class")
+   const words = classParser.getWordsFrom(1)
    // note: we call add on shadow regardless, because at the moment stump may have gotten out of
    // sync with shadow, if things modified the dom. todo: cleanup.
    this.getShadow().addClassToShadow(className)
    if (words.includes(className)) return this
    words.push(className)
-   classNode.setContent(words.join(this.getWordBreakSymbol()))
+   classParser.setContent(words.join(this.wordBreakSymbol))
    return this
   }
   removeClassFromStumpNode(className) {
-   const classNode = this.getNode("class")
-   if (!classNode) return this
-   const newClasses = classNode.getWords().filter(word => word !== className)
-   if (!newClasses.length) classNode.destroy()
-   else classNode.setContent(newClasses.join(" "))
+   const classParser = this.getNode("class")
+   if (!classParser) return this
+   const newClasses = classParser.words.filter(word => word !== className)
+   if (!newClasses.length) classParser.destroy()
+   else classParser.setContent(newClasses.join(" "))
    this.getShadow().removeClassFromShadow(className)
    return this
   }
   stumpNodeHasClass(className) {
-   const classNode = this.getNode("class")
-   return classNode && classNode.getWords().includes(className) ? true : false
+   const classParser = this.getNode("class")
+   return classParser && classParser.words.includes(className) ? true : false
   }
   isStumpNodeCheckbox() {
    return this.get("type") === "checkbox"
@@ -16807,10 +16848,10 @@ htmlTagNode
    return this.insertChildNode(text, index)
   }
   insertChildNode(text, index) {
-   const singleNode = new jtree.TreeNode(text).getChildren()[0]
+   const singleNode = new TreeNode(text).getChildren()[0]
    const newNode = this.insertLineAndChildren(singleNode.getLine(), singleNode.childrenToString(), index)
-   const stumpNodeIndex = this.filter(node => node.isHtmlTagNode).indexOf(newNode)
-   this.getShadow().insertHtmlNode(newNode, stumpNodeIndex)
+   const stumpParserIndex = this.filter(node => node.isHtmlTagParser).indexOf(newNode)
+   this.getShadow().insertHtmlNode(newNode, stumpParserIndex)
    return newNode
   }
   isInputType() {
@@ -16820,7 +16861,7 @@ htmlTagNode
    return this.findStumpNodesByChild(line)[0]
   }
   findStumpNodeByChildString(line) {
-   return this.getTopDownArray().find(node =>
+   return this.topDownArray.find(node =>
     node
      .map(child => child.getLine())
      .join("\\n")
@@ -16831,31 +16872,31 @@ htmlTagNode
    return this._findStumpNodesByBase(firstWord)[0]
   }
   _findStumpNodesByBase(firstWord) {
-   return this.getTopDownArray().filter(node => node.doesExtend("htmlTagNode") && node.getFirstWord() === firstWord)
+   return this.topDownArray.filter(node => node.doesExtend("htmlTagParser") && node.firstWord === firstWord)
   }
   hasLine(line) {
    return this.getChildren().some(node => node.getLine() === line)
   }
   findStumpNodesByChild(line) {
-   return this.getTopDownArray().filter(node => node.doesExtend("htmlTagNode") && node.hasLine(line))
+   return this.topDownArray.filter(node => node.doesExtend("htmlTagParser") && node.hasLine(line))
   }
   findStumpNodesWithClass(className) {
-   return this.getTopDownArray().filter(
+   return this.topDownArray.filter(
     node =>
-     node.doesExtend("htmlTagNode") &&
+     node.doesExtend("htmlTagParser") &&
      node.has("class") &&
      node
       .getNode("class")
-      .getWords()
+      .words
       .includes(className)
    )
   }
   getShadowClass() {
-   return this.getParent().getShadowClass()
+   return this.parent.getShadowClass()
   }
   // todo: should not be here
   getStumpNodeTreeComponent() {
-   return this._treeComponent || this.getParent().getStumpNodeTreeComponent()
+   return this._treeComponent || this.parent.getStumpNodeTreeComponent()
   }
   // todo: should not be here
   setStumpNodeTreeComponent(treeComponent) {
@@ -16872,76 +16913,64 @@ htmlTagNode
    // todo
    return this
   }
-  toHtml() {
+  get asHtml() {
    return this._toHtml()
   }
-errorNode
- baseNodeType errorNode
-componentDefinitionNode
- extends htmlTagNode
+errorParser
+ baseParser errorParser
+componentDefinitionParser
+ extends htmlTagParser
  pattern ^[a-zA-Z0-9_]+Component
  cells componentTagNameCell
  javascript
   getTag() {
    return "div"
   }
-htmlAttributeNode
+htmlAttributeParser
  javascript
   _toHtml() {
    return ""
   }
   getTextContent() {return ""}
   getAttribute() {
-   return \` \${this.getFirstWord()}="\${this.getContent()}"\`
+   return \` \${this.firstWord}="\${this.content}"\`
   }
- boolean isAttributeNode true
+ boolean isAttributeParser true
  boolean isTileAttribute true
- catchAllNodeType errorNode
+ catchAllParser errorParser
  catchAllCellType attributeValueCell
  cells htmlAttributeNameCell
 stumpExtendedAttributeNameCell
  extends htmlAttributeNameCell
  enum collapse blurCommand changeCommand clickCommand contextMenuCommand doubleClickCommand keyUpCommand lineClickCommand lineShiftClickCommand shiftClickCommand
-stumpExtendedAttributeNode
- description Node types not present in HTML but included in stump.
- extends htmlAttributeNode
+stumpExtendedAttributeParser
+ description Parser types not present in HTML but included in stump.
+ extends htmlAttributeParser
  cells stumpExtendedAttributeNameCell
-lineOfHtmlContentNode
+lineOfHtmlContentParser
  boolean isTileAttribute true
- catchAllNodeType lineOfHtmlContentNode
+ catchAllParser lineOfHtmlContentParser
  catchAllCellType anyHtmlContentCell
  javascript
   getTextContent() {return this.getLine()}
-bernNode
+bernParser
  boolean isTileAttribute true
- todo Rename this node type
+ // todo Rename this node type
  description This is a node where you can put any HTML content. It is called "bern" until someone comes up with a better name.
- catchAllNodeType lineOfHtmlContentNode
+ catchAllParser lineOfHtmlContentParser
  javascript
   _toHtml() {
    return this.childrenToString()
   }
   getTextContent() {return ""}
  cells bernKeywordCell`)
-    getHandGrammarProgram() {
+    get handGrammarProgram() {
       return this.constructor.cachedHandGrammarProgramRoot
     }
-    static getNodeTypeMap() {
-      return {
-        stumpNode: stumpNode,
-        blankLineNode: blankLineNode,
-        htmlTagNode: htmlTagNode,
-        errorNode: errorNode,
-        componentDefinitionNode: componentDefinitionNode,
-        htmlAttributeNode: htmlAttributeNode,
-        stumpExtendedAttributeNode: stumpExtendedAttributeNode,
-        lineOfHtmlContentNode: lineOfHtmlContentNode,
-        bernNode: bernNode
-      }
-    }
+    static rootParser = stumpParser
   }
 
-  class blankLineNode extends jtree.GrammarBackedNode {
+  class blankLineParser extends GrammarBackedNode {
     get emptyCell() {
       return this.getWord(0)
     }
@@ -16953,297 +16982,300 @@ bernNode
     }
   }
 
-  class htmlTagNode extends jtree.GrammarBackedNode {
-    createParser() {
-      return new jtree.TreeNode.Parser(
+  class htmlTagParser extends GrammarBackedNode {
+    createParserCombinator() {
+      return new TreeNode.ParserCombinator(
         undefined,
-        Object.assign(Object.assign({}, super.createParser()._getFirstWordMapAsObject()), {
-          blockquote: htmlTagNode,
-          colgroup: htmlTagNode,
-          datalist: htmlTagNode,
-          fieldset: htmlTagNode,
-          menuitem: htmlTagNode,
-          noscript: htmlTagNode,
-          optgroup: htmlTagNode,
-          progress: htmlTagNode,
-          styleTag: htmlTagNode,
-          template: htmlTagNode,
-          textarea: htmlTagNode,
-          titleTag: htmlTagNode,
-          address: htmlTagNode,
-          article: htmlTagNode,
-          caption: htmlTagNode,
-          details: htmlTagNode,
-          section: htmlTagNode,
-          summary: htmlTagNode,
-          button: htmlTagNode,
-          canvas: htmlTagNode,
-          dialog: htmlTagNode,
-          figure: htmlTagNode,
-          footer: htmlTagNode,
-          header: htmlTagNode,
-          hgroup: htmlTagNode,
-          iframe: htmlTagNode,
-          keygen: htmlTagNode,
-          legend: htmlTagNode,
-          object: htmlTagNode,
-          option: htmlTagNode,
-          output: htmlTagNode,
-          script: htmlTagNode,
-          select: htmlTagNode,
-          source: htmlTagNode,
-          strong: htmlTagNode,
-          aside: htmlTagNode,
-          embed: htmlTagNode,
-          input: htmlTagNode,
-          label: htmlTagNode,
-          meter: htmlTagNode,
-          param: htmlTagNode,
-          small: htmlTagNode,
-          table: htmlTagNode,
-          tbody: htmlTagNode,
-          tfoot: htmlTagNode,
-          thead: htmlTagNode,
-          track: htmlTagNode,
-          video: htmlTagNode,
-          abbr: htmlTagNode,
-          area: htmlTagNode,
-          base: htmlTagNode,
-          body: htmlTagNode,
-          code: htmlTagNode,
-          form: htmlTagNode,
-          head: htmlTagNode,
-          html: htmlTagNode,
-          link: htmlTagNode,
-          main: htmlTagNode,
-          mark: htmlTagNode,
-          menu: htmlTagNode,
-          meta: htmlTagNode,
-          ruby: htmlTagNode,
-          samp: htmlTagNode,
-          span: htmlTagNode,
-          time: htmlTagNode,
-          bdi: htmlTagNode,
-          bdo: htmlTagNode,
-          col: htmlTagNode,
-          del: htmlTagNode,
-          dfn: htmlTagNode,
-          div: htmlTagNode,
-          img: htmlTagNode,
-          ins: htmlTagNode,
-          kbd: htmlTagNode,
-          map: htmlTagNode,
-          nav: htmlTagNode,
-          pre: htmlTagNode,
-          rtc: htmlTagNode,
-          sub: htmlTagNode,
-          sup: htmlTagNode,
-          var: htmlTagNode,
-          wbr: htmlTagNode,
-          br: htmlTagNode,
-          dd: htmlTagNode,
-          dl: htmlTagNode,
-          dt: htmlTagNode,
-          em: htmlTagNode,
-          h1: htmlTagNode,
-          h2: htmlTagNode,
-          h3: htmlTagNode,
-          h4: htmlTagNode,
-          h5: htmlTagNode,
-          h6: htmlTagNode,
-          hr: htmlTagNode,
-          li: htmlTagNode,
-          ol: htmlTagNode,
-          rb: htmlTagNode,
-          rp: htmlTagNode,
-          rt: htmlTagNode,
-          td: htmlTagNode,
-          th: htmlTagNode,
-          tr: htmlTagNode,
-          ul: htmlTagNode,
-          a: htmlTagNode,
-          b: htmlTagNode,
-          i: htmlTagNode,
-          p: htmlTagNode,
-          q: htmlTagNode,
-          s: htmlTagNode,
-          u: htmlTagNode,
-          oncanplaythrough: htmlAttributeNode,
-          ondurationchange: htmlAttributeNode,
-          onloadedmetadata: htmlAttributeNode,
-          contenteditable: htmlAttributeNode,
-          "accept-charset": htmlAttributeNode,
-          onbeforeunload: htmlAttributeNode,
-          onvolumechange: htmlAttributeNode,
-          onbeforeprint: htmlAttributeNode,
-          oncontextmenu: htmlAttributeNode,
-          autocomplete: htmlAttributeNode,
-          onafterprint: htmlAttributeNode,
-          onhashchange: htmlAttributeNode,
-          onloadeddata: htmlAttributeNode,
-          onmousewheel: htmlAttributeNode,
-          onratechange: htmlAttributeNode,
-          ontimeupdate: htmlAttributeNode,
-          oncuechange: htmlAttributeNode,
-          ondragenter: htmlAttributeNode,
-          ondragleave: htmlAttributeNode,
-          ondragstart: htmlAttributeNode,
-          onloadstart: htmlAttributeNode,
-          onmousedown: htmlAttributeNode,
-          onmousemove: htmlAttributeNode,
-          onmouseover: htmlAttributeNode,
-          placeholder: htmlAttributeNode,
-          formaction: htmlAttributeNode,
-          "http-equiv": htmlAttributeNode,
-          novalidate: htmlAttributeNode,
-          ondblclick: htmlAttributeNode,
-          ondragover: htmlAttributeNode,
-          onkeypress: htmlAttributeNode,
-          onmouseout: htmlAttributeNode,
-          onpagehide: htmlAttributeNode,
-          onpageshow: htmlAttributeNode,
-          onpopstate: htmlAttributeNode,
-          onprogress: htmlAttributeNode,
-          spellcheck: htmlAttributeNode,
-          accesskey: htmlAttributeNode,
-          autofocus: htmlAttributeNode,
-          draggable: htmlAttributeNode,
-          maxlength: htmlAttributeNode,
-          oncanplay: htmlAttributeNode,
-          ondragend: htmlAttributeNode,
-          onemptied: htmlAttributeNode,
-          oninvalid: htmlAttributeNode,
-          onkeydown: htmlAttributeNode,
-          onmouseup: htmlAttributeNode,
-          onoffline: htmlAttributeNode,
-          onplaying: htmlAttributeNode,
-          onseeking: htmlAttributeNode,
-          onstalled: htmlAttributeNode,
-          onstorage: htmlAttributeNode,
-          onsuspend: htmlAttributeNode,
-          onwaiting: htmlAttributeNode,
-          translate: htmlAttributeNode,
-          autoplay: htmlAttributeNode,
-          controls: htmlAttributeNode,
-          datetime: htmlAttributeNode,
-          disabled: htmlAttributeNode,
-          download: htmlAttributeNode,
-          dropzone: htmlAttributeNode,
-          hreflang: htmlAttributeNode,
-          multiple: htmlAttributeNode,
-          onchange: htmlAttributeNode,
-          ononline: htmlAttributeNode,
-          onresize: htmlAttributeNode,
-          onscroll: htmlAttributeNode,
-          onsearch: htmlAttributeNode,
-          onseeked: htmlAttributeNode,
-          onselect: htmlAttributeNode,
-          onsubmit: htmlAttributeNode,
-          ontoggle: htmlAttributeNode,
-          onunload: htmlAttributeNode,
-          property: htmlAttributeNode,
-          readonly: htmlAttributeNode,
-          required: htmlAttributeNode,
-          reversed: htmlAttributeNode,
-          selected: htmlAttributeNode,
-          tabindex: htmlAttributeNode,
-          bgcolor: htmlAttributeNode,
-          charset: htmlAttributeNode,
-          checked: htmlAttributeNode,
-          colspan: htmlAttributeNode,
-          content: htmlAttributeNode,
-          default: htmlAttributeNode,
-          dirname: htmlAttributeNode,
-          enctype: htmlAttributeNode,
-          headers: htmlAttributeNode,
-          onabort: htmlAttributeNode,
-          onclick: htmlAttributeNode,
-          onended: htmlAttributeNode,
-          onerror: htmlAttributeNode,
-          onfocus: htmlAttributeNode,
-          oninput: htmlAttributeNode,
-          onkeyup: htmlAttributeNode,
-          onpaste: htmlAttributeNode,
-          onpause: htmlAttributeNode,
-          onreset: htmlAttributeNode,
-          onwheel: htmlAttributeNode,
-          optimum: htmlAttributeNode,
-          pattern: htmlAttributeNode,
-          preload: htmlAttributeNode,
-          rowspan: htmlAttributeNode,
-          sandbox: htmlAttributeNode,
-          srclang: htmlAttributeNode,
-          accept: htmlAttributeNode,
-          action: htmlAttributeNode,
-          border: htmlAttributeNode,
-          coords: htmlAttributeNode,
-          height: htmlAttributeNode,
-          hidden: htmlAttributeNode,
-          method: htmlAttributeNode,
-          onblur: htmlAttributeNode,
-          oncopy: htmlAttributeNode,
-          ondrag: htmlAttributeNode,
-          ondrop: htmlAttributeNode,
-          onload: htmlAttributeNode,
-          onplay: htmlAttributeNode,
-          poster: htmlAttributeNode,
-          srcdoc: htmlAttributeNode,
-          srcset: htmlAttributeNode,
-          target: htmlAttributeNode,
-          usemap: htmlAttributeNode,
-          align: htmlAttributeNode,
-          async: htmlAttributeNode,
-          class: htmlAttributeNode,
-          color: htmlAttributeNode,
-          defer: htmlAttributeNode,
-          ismap: htmlAttributeNode,
-          media: htmlAttributeNode,
-          muted: htmlAttributeNode,
-          oncut: htmlAttributeNode,
-          scope: htmlAttributeNode,
-          shape: htmlAttributeNode,
-          sizes: htmlAttributeNode,
-          start: htmlAttributeNode,
-          style: htmlAttributeNode,
-          title: htmlAttributeNode,
-          value: htmlAttributeNode,
-          width: htmlAttributeNode,
-          cols: htmlAttributeNode,
-          high: htmlAttributeNode,
-          href: htmlAttributeNode,
-          kind: htmlAttributeNode,
-          lang: htmlAttributeNode,
-          list: htmlAttributeNode,
-          loop: htmlAttributeNode,
-          name: htmlAttributeNode,
-          open: htmlAttributeNode,
-          rows: htmlAttributeNode,
-          size: htmlAttributeNode,
-          step: htmlAttributeNode,
-          type: htmlAttributeNode,
-          wrap: htmlAttributeNode,
-          alt: htmlAttributeNode,
-          dir: htmlAttributeNode,
-          for: htmlAttributeNode,
-          low: htmlAttributeNode,
-          max: htmlAttributeNode,
-          min: htmlAttributeNode,
-          rel: htmlAttributeNode,
-          src: htmlAttributeNode,
-          id: htmlAttributeNode,
-          lineShiftClickCommand: stumpExtendedAttributeNode,
-          contextMenuCommand: stumpExtendedAttributeNode,
-          doubleClickCommand: stumpExtendedAttributeNode,
-          shiftClickCommand: stumpExtendedAttributeNode,
-          lineClickCommand: stumpExtendedAttributeNode,
-          changeCommand: stumpExtendedAttributeNode,
-          clickCommand: stumpExtendedAttributeNode,
-          keyUpCommand: stumpExtendedAttributeNode,
-          blurCommand: stumpExtendedAttributeNode,
-          collapse: stumpExtendedAttributeNode,
-          bern: bernNode
+        Object.assign(Object.assign({}, super.createParserCombinator()._getFirstWordMapAsObject()), {
+          blockquote: htmlTagParser,
+          colgroup: htmlTagParser,
+          datalist: htmlTagParser,
+          fieldset: htmlTagParser,
+          menuitem: htmlTagParser,
+          noscript: htmlTagParser,
+          optgroup: htmlTagParser,
+          progress: htmlTagParser,
+          styleTag: htmlTagParser,
+          template: htmlTagParser,
+          textarea: htmlTagParser,
+          titleTag: htmlTagParser,
+          address: htmlTagParser,
+          article: htmlTagParser,
+          caption: htmlTagParser,
+          details: htmlTagParser,
+          section: htmlTagParser,
+          summary: htmlTagParser,
+          button: htmlTagParser,
+          canvas: htmlTagParser,
+          dialog: htmlTagParser,
+          figure: htmlTagParser,
+          footer: htmlTagParser,
+          header: htmlTagParser,
+          hgroup: htmlTagParser,
+          iframe: htmlTagParser,
+          keygen: htmlTagParser,
+          legend: htmlTagParser,
+          object: htmlTagParser,
+          option: htmlTagParser,
+          output: htmlTagParser,
+          script: htmlTagParser,
+          select: htmlTagParser,
+          source: htmlTagParser,
+          strong: htmlTagParser,
+          aside: htmlTagParser,
+          embed: htmlTagParser,
+          input: htmlTagParser,
+          label: htmlTagParser,
+          meter: htmlTagParser,
+          param: htmlTagParser,
+          small: htmlTagParser,
+          table: htmlTagParser,
+          tbody: htmlTagParser,
+          tfoot: htmlTagParser,
+          thead: htmlTagParser,
+          track: htmlTagParser,
+          video: htmlTagParser,
+          abbr: htmlTagParser,
+          area: htmlTagParser,
+          base: htmlTagParser,
+          body: htmlTagParser,
+          code: htmlTagParser,
+          form: htmlTagParser,
+          head: htmlTagParser,
+          html: htmlTagParser,
+          link: htmlTagParser,
+          main: htmlTagParser,
+          mark: htmlTagParser,
+          menu: htmlTagParser,
+          meta: htmlTagParser,
+          ruby: htmlTagParser,
+          samp: htmlTagParser,
+          span: htmlTagParser,
+          time: htmlTagParser,
+          bdi: htmlTagParser,
+          bdo: htmlTagParser,
+          col: htmlTagParser,
+          del: htmlTagParser,
+          dfn: htmlTagParser,
+          div: htmlTagParser,
+          img: htmlTagParser,
+          ins: htmlTagParser,
+          kbd: htmlTagParser,
+          map: htmlTagParser,
+          nav: htmlTagParser,
+          pre: htmlTagParser,
+          rtc: htmlTagParser,
+          sub: htmlTagParser,
+          sup: htmlTagParser,
+          var: htmlTagParser,
+          wbr: htmlTagParser,
+          br: htmlTagParser,
+          dd: htmlTagParser,
+          dl: htmlTagParser,
+          dt: htmlTagParser,
+          em: htmlTagParser,
+          h1: htmlTagParser,
+          h2: htmlTagParser,
+          h3: htmlTagParser,
+          h4: htmlTagParser,
+          h5: htmlTagParser,
+          h6: htmlTagParser,
+          hr: htmlTagParser,
+          li: htmlTagParser,
+          ol: htmlTagParser,
+          rb: htmlTagParser,
+          rp: htmlTagParser,
+          rt: htmlTagParser,
+          td: htmlTagParser,
+          th: htmlTagParser,
+          tr: htmlTagParser,
+          ul: htmlTagParser,
+          a: htmlTagParser,
+          b: htmlTagParser,
+          i: htmlTagParser,
+          p: htmlTagParser,
+          q: htmlTagParser,
+          s: htmlTagParser,
+          u: htmlTagParser,
+          oncanplaythrough: htmlAttributeParser,
+          ondurationchange: htmlAttributeParser,
+          onloadedmetadata: htmlAttributeParser,
+          contenteditable: htmlAttributeParser,
+          "accept-charset": htmlAttributeParser,
+          onbeforeunload: htmlAttributeParser,
+          onvolumechange: htmlAttributeParser,
+          onbeforeprint: htmlAttributeParser,
+          oncontextmenu: htmlAttributeParser,
+          autocomplete: htmlAttributeParser,
+          onafterprint: htmlAttributeParser,
+          onhashchange: htmlAttributeParser,
+          onloadeddata: htmlAttributeParser,
+          onmousewheel: htmlAttributeParser,
+          onratechange: htmlAttributeParser,
+          ontimeupdate: htmlAttributeParser,
+          oncuechange: htmlAttributeParser,
+          ondragenter: htmlAttributeParser,
+          ondragleave: htmlAttributeParser,
+          ondragstart: htmlAttributeParser,
+          onloadstart: htmlAttributeParser,
+          onmousedown: htmlAttributeParser,
+          onmousemove: htmlAttributeParser,
+          onmouseover: htmlAttributeParser,
+          placeholder: htmlAttributeParser,
+          formaction: htmlAttributeParser,
+          "http-equiv": htmlAttributeParser,
+          novalidate: htmlAttributeParser,
+          ondblclick: htmlAttributeParser,
+          ondragover: htmlAttributeParser,
+          onkeypress: htmlAttributeParser,
+          onmouseout: htmlAttributeParser,
+          onpagehide: htmlAttributeParser,
+          onpageshow: htmlAttributeParser,
+          onpopstate: htmlAttributeParser,
+          onprogress: htmlAttributeParser,
+          spellcheck: htmlAttributeParser,
+          accesskey: htmlAttributeParser,
+          autofocus: htmlAttributeParser,
+          draggable: htmlAttributeParser,
+          maxlength: htmlAttributeParser,
+          oncanplay: htmlAttributeParser,
+          ondragend: htmlAttributeParser,
+          onemptied: htmlAttributeParser,
+          oninvalid: htmlAttributeParser,
+          onkeydown: htmlAttributeParser,
+          onmouseup: htmlAttributeParser,
+          onoffline: htmlAttributeParser,
+          onplaying: htmlAttributeParser,
+          onseeking: htmlAttributeParser,
+          onstalled: htmlAttributeParser,
+          onstorage: htmlAttributeParser,
+          onsuspend: htmlAttributeParser,
+          onwaiting: htmlAttributeParser,
+          translate: htmlAttributeParser,
+          autoplay: htmlAttributeParser,
+          controls: htmlAttributeParser,
+          datetime: htmlAttributeParser,
+          disabled: htmlAttributeParser,
+          download: htmlAttributeParser,
+          dropzone: htmlAttributeParser,
+          hreflang: htmlAttributeParser,
+          multiple: htmlAttributeParser,
+          onchange: htmlAttributeParser,
+          ononline: htmlAttributeParser,
+          onresize: htmlAttributeParser,
+          onscroll: htmlAttributeParser,
+          onsearch: htmlAttributeParser,
+          onseeked: htmlAttributeParser,
+          onselect: htmlAttributeParser,
+          onsubmit: htmlAttributeParser,
+          ontoggle: htmlAttributeParser,
+          onunload: htmlAttributeParser,
+          property: htmlAttributeParser,
+          readonly: htmlAttributeParser,
+          required: htmlAttributeParser,
+          reversed: htmlAttributeParser,
+          selected: htmlAttributeParser,
+          tabindex: htmlAttributeParser,
+          bgcolor: htmlAttributeParser,
+          charset: htmlAttributeParser,
+          checked: htmlAttributeParser,
+          colspan: htmlAttributeParser,
+          content: htmlAttributeParser,
+          default: htmlAttributeParser,
+          dirname: htmlAttributeParser,
+          enctype: htmlAttributeParser,
+          headers: htmlAttributeParser,
+          onabort: htmlAttributeParser,
+          onclick: htmlAttributeParser,
+          onended: htmlAttributeParser,
+          onerror: htmlAttributeParser,
+          onfocus: htmlAttributeParser,
+          oninput: htmlAttributeParser,
+          onkeyup: htmlAttributeParser,
+          onpaste: htmlAttributeParser,
+          onpause: htmlAttributeParser,
+          onreset: htmlAttributeParser,
+          onwheel: htmlAttributeParser,
+          optimum: htmlAttributeParser,
+          pattern: htmlAttributeParser,
+          preload: htmlAttributeParser,
+          rowspan: htmlAttributeParser,
+          sandbox: htmlAttributeParser,
+          srclang: htmlAttributeParser,
+          accept: htmlAttributeParser,
+          action: htmlAttributeParser,
+          border: htmlAttributeParser,
+          coords: htmlAttributeParser,
+          height: htmlAttributeParser,
+          hidden: htmlAttributeParser,
+          method: htmlAttributeParser,
+          onblur: htmlAttributeParser,
+          oncopy: htmlAttributeParser,
+          ondrag: htmlAttributeParser,
+          ondrop: htmlAttributeParser,
+          onload: htmlAttributeParser,
+          onplay: htmlAttributeParser,
+          poster: htmlAttributeParser,
+          srcdoc: htmlAttributeParser,
+          srcset: htmlAttributeParser,
+          target: htmlAttributeParser,
+          usemap: htmlAttributeParser,
+          align: htmlAttributeParser,
+          async: htmlAttributeParser,
+          class: htmlAttributeParser,
+          color: htmlAttributeParser,
+          defer: htmlAttributeParser,
+          ismap: htmlAttributeParser,
+          media: htmlAttributeParser,
+          muted: htmlAttributeParser,
+          oncut: htmlAttributeParser,
+          scope: htmlAttributeParser,
+          shape: htmlAttributeParser,
+          sizes: htmlAttributeParser,
+          start: htmlAttributeParser,
+          style: htmlAttributeParser,
+          title: htmlAttributeParser,
+          value: htmlAttributeParser,
+          width: htmlAttributeParser,
+          cols: htmlAttributeParser,
+          high: htmlAttributeParser,
+          href: htmlAttributeParser,
+          kind: htmlAttributeParser,
+          lang: htmlAttributeParser,
+          list: htmlAttributeParser,
+          loop: htmlAttributeParser,
+          name: htmlAttributeParser,
+          open: htmlAttributeParser,
+          rows: htmlAttributeParser,
+          size: htmlAttributeParser,
+          step: htmlAttributeParser,
+          type: htmlAttributeParser,
+          wrap: htmlAttributeParser,
+          alt: htmlAttributeParser,
+          dir: htmlAttributeParser,
+          for: htmlAttributeParser,
+          low: htmlAttributeParser,
+          max: htmlAttributeParser,
+          min: htmlAttributeParser,
+          rel: htmlAttributeParser,
+          src: htmlAttributeParser,
+          id: htmlAttributeParser,
+          lineShiftClickCommand: stumpExtendedAttributeParser,
+          contextMenuCommand: stumpExtendedAttributeParser,
+          doubleClickCommand: stumpExtendedAttributeParser,
+          shiftClickCommand: stumpExtendedAttributeParser,
+          lineClickCommand: stumpExtendedAttributeParser,
+          changeCommand: stumpExtendedAttributeParser,
+          clickCommand: stumpExtendedAttributeParser,
+          keyUpCommand: stumpExtendedAttributeParser,
+          blurCommand: stumpExtendedAttributeParser,
+          collapse: stumpExtendedAttributeParser,
+          bern: bernParser,
         }),
-        [{ regex: /^$/, nodeConstructor: blankLineNode }, { regex: /^[a-zA-Z0-9_]+Component/, nodeConstructor: componentDefinitionNode }]
+        [
+          { regex: /^$/, parser: blankLineParser },
+          { regex: /^[a-zA-Z0-9_]+Component/, parser: componentDefinitionParser },
+        ]
       )
     }
     get htmlTagNameCell() {
@@ -17252,20 +17284,20 @@ bernNode
     get anyHtmlContentCell() {
       return this.getWordsFrom(1)
     }
-    isHtmlTagNode = true
+    isHtmlTagParser = true
     getTag() {
       // we need to remove the "Tag" bit to handle the style and title attribute/tag conflict.
-      const firstWord = this.getFirstWord()
+      const firstWord = this.firstWord
       const map = {
         titleTag: "title",
-        styleTag: "style"
+        styleTag: "style",
       }
       return map[firstWord] || firstWord
     }
     _getHtmlJoinByCharacter() {
       return ""
     }
-    toHtmlWithSuids() {
+    asHtmlWithSuids() {
       return this._toHtml(undefined, true)
     }
     _getOneLiner() {
@@ -17281,23 +17313,25 @@ bernNode
     get domElement() {
       var elem = document.createElement(this.getTag())
       elem.setAttribute("stumpUid", this._getUid())
-      this.filter(node => node.isAttributeNode).forEach(child => elem.setAttribute(child.getFirstWord(), child.getContent()))
+      this.filter((node) => node.isAttributeParser).forEach((child) => elem.setAttribute(child.firstWord, child.content))
       elem.innerHTML = this.has("bern") ? this.getNode("bern").childrenToString() : this._getOneLiner()
-      this.filter(node => node.isHtmlTagNode).forEach(child => elem.appendChild(child.domElement))
+      this.filter((node) => node.isHtmlTagParser).forEach((child) => elem.appendChild(child.domElement))
       return elem
     }
     _toHtml(indentCount, withSuid) {
       const tag = this.getTag()
-      const children = this.map(child => child._toHtml(indentCount + 1, withSuid)).join("")
-      const attributesStr = this.filter(node => node.isAttributeNode)
-        .map(child => child.getAttribute())
+      const children = this.map((child) => child._toHtml(indentCount + 1, withSuid)).join("")
+      const attributesStr = this.filter((node) => node.isAttributeParser)
+        .map((child) => child.getAttribute())
         .join("")
       const indent = " ".repeat(indentCount)
       const collapse = this.shouldCollapse()
-      const indentForChildNodes = !collapse && this.getChildInstancesOfNodeTypeId("htmlTagNode").length > 0
+      const indentForChildParsers = !collapse && this.getChildInstancesOfParserId("htmlTagParser").length > 0
       const suid = withSuid ? ` stumpUid="${this._getUid()}"` : ""
       const oneLiner = this._getOneLiner()
-      return `${!collapse ? indent : ""}<${tag}${attributesStr}${suid}>${oneLiner}${indentForChildNodes ? "\n" : ""}${children}</${tag}>${collapse ? "" : "\n"}`
+      return `${!collapse ? indent : ""}<${tag}${attributesStr}${suid}>${oneLiner}${indentForChildParsers ? "\n" : ""}${children}</${tag}>${
+        collapse ? "" : "\n"
+      }`
     }
     removeCssStumpNode() {
       return this.removeStumpNode()
@@ -17307,31 +17341,31 @@ bernNode
       return this.destroy()
     }
     getNodeByGuid(guid) {
-      return this.getTopDownArray().find(node => node._getUid() === guid)
+      return this.topDownArray.find((node) => node._getUid() === guid)
     }
     addClassToStumpNode(className) {
-      const classNode = this.touchNode("class")
-      const words = classNode.getWordsFrom(1)
+      const classParser = this.touchNode("class")
+      const words = classParser.getWordsFrom(1)
       // note: we call add on shadow regardless, because at the moment stump may have gotten out of
       // sync with shadow, if things modified the dom. todo: cleanup.
       this.getShadow().addClassToShadow(className)
       if (words.includes(className)) return this
       words.push(className)
-      classNode.setContent(words.join(this.getWordBreakSymbol()))
+      classParser.setContent(words.join(this.wordBreakSymbol))
       return this
     }
     removeClassFromStumpNode(className) {
-      const classNode = this.getNode("class")
-      if (!classNode) return this
-      const newClasses = classNode.getWords().filter(word => word !== className)
-      if (!newClasses.length) classNode.destroy()
-      else classNode.setContent(newClasses.join(" "))
+      const classParser = this.getNode("class")
+      if (!classParser) return this
+      const newClasses = classParser.words.filter((word) => word !== className)
+      if (!newClasses.length) classParser.destroy()
+      else classParser.setContent(newClasses.join(" "))
       this.getShadow().removeClassFromShadow(className)
       return this
     }
     stumpNodeHasClass(className) {
-      const classNode = this.getNode("class")
-      return classNode && classNode.getWords().includes(className) ? true : false
+      const classParser = this.getNode("class")
+      return classParser && classParser.words.includes(className) ? true : false
     }
     isStumpNodeCheckbox() {
       return this.get("type") === "checkbox"
@@ -17347,10 +17381,10 @@ bernNode
       return this.insertChildNode(text, index)
     }
     insertChildNode(text, index) {
-      const singleNode = new jtree.TreeNode(text).getChildren()[0]
+      const singleNode = new TreeNode(text).getChildren()[0]
       const newNode = this.insertLineAndChildren(singleNode.getLine(), singleNode.childrenToString(), index)
-      const stumpNodeIndex = this.filter(node => node.isHtmlTagNode).indexOf(newNode)
-      this.getShadow().insertHtmlNode(newNode, stumpNodeIndex)
+      const stumpParserIndex = this.filter((node) => node.isHtmlTagParser).indexOf(newNode)
+      this.getShadow().insertHtmlNode(newNode, stumpParserIndex)
       return newNode
     }
     isInputType() {
@@ -17360,9 +17394,9 @@ bernNode
       return this.findStumpNodesByChild(line)[0]
     }
     findStumpNodeByChildString(line) {
-      return this.getTopDownArray().find(node =>
+      return this.topDownArray.find((node) =>
         node
-          .map(child => child.getLine())
+          .map((child) => child.getLine())
           .join("\n")
           .includes(line)
       )
@@ -17371,31 +17405,23 @@ bernNode
       return this._findStumpNodesByBase(firstWord)[0]
     }
     _findStumpNodesByBase(firstWord) {
-      return this.getTopDownArray().filter(node => node.doesExtend("htmlTagNode") && node.getFirstWord() === firstWord)
+      return this.topDownArray.filter((node) => node.doesExtend("htmlTagParser") && node.firstWord === firstWord)
     }
     hasLine(line) {
-      return this.getChildren().some(node => node.getLine() === line)
+      return this.getChildren().some((node) => node.getLine() === line)
     }
     findStumpNodesByChild(line) {
-      return this.getTopDownArray().filter(node => node.doesExtend("htmlTagNode") && node.hasLine(line))
+      return this.topDownArray.filter((node) => node.doesExtend("htmlTagParser") && node.hasLine(line))
     }
     findStumpNodesWithClass(className) {
-      return this.getTopDownArray().filter(
-        node =>
-          node.doesExtend("htmlTagNode") &&
-          node.has("class") &&
-          node
-            .getNode("class")
-            .getWords()
-            .includes(className)
-      )
+      return this.topDownArray.filter((node) => node.doesExtend("htmlTagParser") && node.has("class") && node.getNode("class").words.includes(className))
     }
     getShadowClass() {
-      return this.getParent().getShadowClass()
+      return this.parent.getShadowClass()
     }
     // todo: should not be here
     getStumpNodeTreeComponent() {
-      return this._treeComponent || this.getParent().getStumpNodeTreeComponent()
+      return this._treeComponent || this.parent.getStumpNodeTreeComponent()
     }
     // todo: should not be here
     setStumpNodeTreeComponent(treeComponent) {
@@ -17412,18 +17438,18 @@ bernNode
       // todo
       return this
     }
-    toHtml() {
+    get asHtml() {
       return this._toHtml()
     }
   }
 
-  class errorNode extends jtree.GrammarBackedNode {
+  class errorParser extends GrammarBackedNode {
     getErrors() {
-      return this._getErrorNodeErrors()
+      return this._getErrorParserErrors()
     }
   }
 
-  class componentDefinitionNode extends htmlTagNode {
+  class componentDefinitionParser extends htmlTagParser {
     get componentTagNameCell() {
       return this.getWord(0)
     }
@@ -17432,9 +17458,9 @@ bernNode
     }
   }
 
-  class htmlAttributeNode extends jtree.GrammarBackedNode {
-    createParser() {
-      return new jtree.TreeNode.Parser(errorNode, undefined, undefined)
+  class htmlAttributeParser extends GrammarBackedNode {
+    createParserCombinator() {
+      return new TreeNode.ParserCombinator(errorParser, undefined, undefined)
     }
     get htmlAttributeNameCell() {
       return this.getWord(0)
@@ -17445,7 +17471,7 @@ bernNode
     get isTileAttribute() {
       return true
     }
-    get isAttributeNode() {
+    get isAttributeParser() {
       return true
     }
     _toHtml() {
@@ -17455,19 +17481,19 @@ bernNode
       return ""
     }
     getAttribute() {
-      return ` ${this.getFirstWord()}="${this.getContent()}"`
+      return ` ${this.firstWord}="${this.content}"`
     }
   }
 
-  class stumpExtendedAttributeNode extends htmlAttributeNode {
+  class stumpExtendedAttributeParser extends htmlAttributeParser {
     get stumpExtendedAttributeNameCell() {
       return this.getWord(0)
     }
   }
 
-  class lineOfHtmlContentNode extends jtree.GrammarBackedNode {
-    createParser() {
-      return new jtree.TreeNode.Parser(lineOfHtmlContentNode, undefined, undefined)
+  class lineOfHtmlContentParser extends GrammarBackedNode {
+    createParserCombinator() {
+      return new TreeNode.ParserCombinator(lineOfHtmlContentParser, undefined, undefined)
     }
     get anyHtmlContentCell() {
       return this.getWordsFrom(0)
@@ -17480,9 +17506,9 @@ bernNode
     }
   }
 
-  class bernNode extends jtree.GrammarBackedNode {
-    createParser() {
-      return new jtree.TreeNode.Parser(lineOfHtmlContentNode, undefined, undefined)
+  class bernParser extends GrammarBackedNode {
+    createParserCombinator() {
+      return new TreeNode.ParserCombinator(lineOfHtmlContentParser, undefined, undefined)
     }
     get bernKeywordCell() {
       return this.getWord(0)
@@ -17498,16 +17524,16 @@ bernNode
     }
   }
 
-  window.stumpNode = stumpNode
+  window.stumpParser = stumpParser
 }
 
 
 {
-  class hakonNode extends jtree.GrammarBackedNode {
-    createParser() {
-      return new jtree.TreeNode.Parser(
-        selectorNode,
-        Object.assign(Object.assign({}, super.createParser()._getFirstWordMapAsObject()), { comment: commentNode }),
+  class hakonParser extends GrammarBackedNode {
+    createParserCombinator() {
+      return new TreeNode.ParserCombinator(
+        selectorParser,
+        Object.assign(Object.assign({}, super.createParserCombinator()._getFirstWordMapAsObject()), { comment: commentParser }),
         undefined
       )
     }
@@ -17515,12 +17541,12 @@ bernNode
       return ""
     }
     compile() {
-      return this.getTopDownArray()
-        .filter(node => node.isSelectorNode)
-        .map(child => child.compile())
+      return this.topDownArray
+        .filter((node) => node.isSelectorParser)
+        .map((child) => child.compile())
         .join("")
     }
-    static cachedHandGrammarProgramRoot = new jtree.HandGrammarProgram(`tooling onsave jtree build produceLang hakon
+    static cachedHandGrammarProgramRoot = new HandGrammarProgram(`// Cell Parsers
 anyCell
 keywordCell
 commentKeywordCell
@@ -17534,7 +17560,7 @@ cssValueCell
 selectorCell
  highlightScope keyword.control
  examples body h1
- todo add html tags, css and ids selector regexes, etc
+ // todo add html tags, css and ids selector regexes, etc
 vendorPrefixPropertyKeywordCell
  description Properties like -moz-column-fill
  highlightScope variable.function
@@ -17542,26 +17568,28 @@ vendorPrefixPropertyKeywordCell
 propertyKeywordCell
  highlightScope variable.function
  extends keywordCell
- todo Where are these coming from? Can we add a url link
+ // todo Where are these coming from? Can we add a url link
  enum align-content align-items align-self all animation animation-delay animation-direction animation-duration animation-fill-mode animation-iteration-count animation-name animation-play-state animation-timing-function backface-visibility background background-attachment background-blend-mode background-clip background-color background-image background-origin background-position background-repeat background-size border border-bottom border-bottom-color border-bottom-left-radius border-bottom-right-radius border-bottom-style border-bottom-width border-collapse border-color border-image border-image-outset border-image-repeat border-image-slice border-image-source border-image-width border-left border-left-color border-left-style border-left-width border-radius border-right border-right-color border-right-style border-right-width border-spacing border-style border-top border-top-color border-top-left-radius border-top-right-radius border-top-style border-top-width border-width bottom box-shadow box-sizing break-inside caption-side clear clip color column-count column-fill column-gap column-rule column-rule-color column-rule-style column-rule-width column-span column-width columns content counter-increment counter-reset cursor direction display empty-cells fill filter flex flex-basis flex-direction flex-flow flex-grow flex-shrink flex-wrap float font @font-face font-family font-size font-size-adjust font-stretch font-style font-variant font-weight  hanging-punctuation height hyphens justify-content @keyframes left letter-spacing line-height list-style list-style-image list-style-position list-style-type margin margin-bottom margin-left margin-right margin-top max-height max-width @media min-height min-width nav-down nav-index nav-left nav-right nav-up opacity order outline outline-color outline-offset outline-style outline-width overflow overflow-x overflow-y padding padding-bottom padding-left padding-right padding-top page-break-after page-break-before page-break-inside perspective perspective-origin position quotes resize right tab-size table-layout text-align text-align-last text-decoration text-decoration-color text-decoration-line text-decoration-style text-indent text-justify text-overflow text-shadow text-transform top transform transform-origin transform-style transition transition-delay transition-duration transition-property transition-timing-function unicode-bidi vertical-align visibility white-space width word-break word-spacing word-wrap z-index overscroll-behavior-x user-select -ms-touch-action -webkit-user-select -webkit-touch-callout -moz-user-select touch-action -ms-user-select -khtml-user-select gap grid-auto-flow grid-column grid-column-end grid-column-gap grid-column-start grid-gap grid-row grid-row-end grid-row-gap grid-row-start grid-template-columns grid-template-rows justify-items justify-self
 errorCell
  highlightScope invalid
 commentCell
  highlightScope comment
-hakonNode
+
+// Line Parsers
+hakonParser
  root
- todo Add variables?
+ // todo Add variables?
  description A prefix Tree Language that compiles to CSS
  compilesTo css
- inScope commentNode
- catchAllNodeType selectorNode
+ inScope commentParser
+ catchAllParser selectorParser
  javascript
   getSelector() {
    return ""
   }
   compile() {
-   return this.getTopDownArray()
-    .filter(node => node.isSelectorNode)
+   return this.topDownArray
+    .filter(node => node.isSelectorParser)
     .map(child => child.compile())
     .join("")
   }
@@ -17574,37 +17602,37 @@ hakonNode
    &:hover
     color blue
     font-size 17px
-propertyNode
+propertyParser
  catchAllCellType cssValueCell
- catchAllNodeType errorNode
+ catchAllParser errorParser
  javascript
   compile(spaces) {
-   return \`\${spaces}\${this.getFirstWord()}: \${this.getContent()};\`
+   return \`\${spaces}\${this.firstWord}: \${this.content};\`
   }
  cells propertyKeywordCell
-variableNode
- extends propertyNode
+variableParser
+ extends propertyParser
  pattern --
-browserPrefixPropertyNode
- extends propertyNode
+browserPrefixPropertyParser
+ extends propertyParser
  pattern ^\\-\\w.+
  cells vendorPrefixPropertyKeywordCell
-errorNode
- catchAllNodeType errorNode
+errorParser
+ catchAllParser errorParser
  catchAllCellType errorCell
- baseNodeType errorNode
-commentNode
+ baseParser errorParser
+commentParser
  cells commentKeywordCell
  catchAllCellType commentCell
- catchAllNodeType commentNode
-selectorNode
- inScope propertyNode variableNode commentNode
- catchAllNodeType selectorNode
- boolean isSelectorNode true
+ catchAllParser commentParser
+selectorParser
+ inScope propertyParser variableParser commentParser
+ catchAllParser selectorParser
+ boolean isSelectorParser true
  javascript
   getSelector() {
-   const parentSelector = this.getParent().getSelector()
-   return this.getFirstWord()
+   const parentSelector = this.parent.getSelector()
+   return this.firstWord
     .split(",")
     .map(part => {
      if (part.startsWith("&")) return parentSelector + part.substr(1)
@@ -17613,33 +17641,23 @@ selectorNode
     .join(",")
   }
   compile() {
-   const propertyNodes = this.getChildren().filter(node => node.doesExtend("propertyNode"))
-   if (!propertyNodes.length) return ""
+   const propertyParsers = this.getChildren().filter(node => node.doesExtend("propertyParser"))
+   if (!propertyParsers.length) return ""
    const spaces = "  "
    return \`\${this.getSelector()} {
-  \${propertyNodes.map(child => child.compile(spaces)).join("\\n")}
+  \${propertyParsers.map(child => child.compile(spaces)).join("\\n")}
   }\\n\`
   }
  cells selectorCell`)
-    getHandGrammarProgram() {
+    get handGrammarProgram() {
       return this.constructor.cachedHandGrammarProgramRoot
     }
-    static getNodeTypeMap() {
-      return {
-        hakonNode: hakonNode,
-        propertyNode: propertyNode,
-        variableNode: variableNode,
-        browserPrefixPropertyNode: browserPrefixPropertyNode,
-        errorNode: errorNode,
-        commentNode: commentNode,
-        selectorNode: selectorNode
-      }
-    }
+    static rootParser = hakonParser
   }
 
-  class propertyNode extends jtree.GrammarBackedNode {
-    createParser() {
-      return new jtree.TreeNode.Parser(errorNode, undefined, undefined)
+  class propertyParser extends GrammarBackedNode {
+    createParserCombinator() {
+      return new TreeNode.ParserCombinator(errorParser, undefined, undefined)
     }
     get propertyKeywordCell() {
       return this.getWord(0)
@@ -17648,33 +17666,33 @@ selectorNode
       return this.getWordsFrom(1)
     }
     compile(spaces) {
-      return `${spaces}${this.getFirstWord()}: ${this.getContent()};`
+      return `${spaces}${this.firstWord}: ${this.content};`
     }
   }
 
-  class variableNode extends propertyNode {}
+  class variableParser extends propertyParser {}
 
-  class browserPrefixPropertyNode extends propertyNode {
+  class browserPrefixPropertyParser extends propertyParser {
     get vendorPrefixPropertyKeywordCell() {
       return this.getWord(0)
     }
   }
 
-  class errorNode extends jtree.GrammarBackedNode {
-    createParser() {
-      return new jtree.TreeNode.Parser(errorNode, undefined, undefined)
+  class errorParser extends GrammarBackedNode {
+    createParserCombinator() {
+      return new TreeNode.ParserCombinator(errorParser, undefined, undefined)
     }
     getErrors() {
-      return this._getErrorNodeErrors()
+      return this._getErrorParserErrors()
     }
     get errorCell() {
       return this.getWordsFrom(0)
     }
   }
 
-  class commentNode extends jtree.GrammarBackedNode {
-    createParser() {
-      return new jtree.TreeNode.Parser(commentNode, undefined, undefined)
+  class commentParser extends GrammarBackedNode {
+    createParserCombinator() {
+      return new TreeNode.ParserCombinator(commentParser, undefined, undefined)
     }
     get commentKeywordCell() {
       return this.getWord(0)
@@ -17684,251 +17702,254 @@ selectorNode
     }
   }
 
-  class selectorNode extends jtree.GrammarBackedNode {
-    createParser() {
-      return new jtree.TreeNode.Parser(
-        selectorNode,
-        Object.assign(Object.assign({}, super.createParser()._getFirstWordMapAsObject()), {
-          "border-bottom-right-radius": propertyNode,
-          "transition-timing-function": propertyNode,
-          "animation-iteration-count": propertyNode,
-          "animation-timing-function": propertyNode,
-          "border-bottom-left-radius": propertyNode,
-          "border-top-right-radius": propertyNode,
-          "border-top-left-radius": propertyNode,
-          "background-attachment": propertyNode,
-          "background-blend-mode": propertyNode,
-          "text-decoration-color": propertyNode,
-          "text-decoration-style": propertyNode,
-          "overscroll-behavior-x": propertyNode,
-          "-webkit-touch-callout": propertyNode,
-          "grid-template-columns": propertyNode,
-          "animation-play-state": propertyNode,
-          "text-decoration-line": propertyNode,
-          "animation-direction": propertyNode,
-          "animation-fill-mode": propertyNode,
-          "backface-visibility": propertyNode,
-          "background-position": propertyNode,
-          "border-bottom-color": propertyNode,
-          "border-bottom-style": propertyNode,
-          "border-bottom-width": propertyNode,
-          "border-image-outset": propertyNode,
-          "border-image-repeat": propertyNode,
-          "border-image-source": propertyNode,
-          "hanging-punctuation": propertyNode,
-          "list-style-position": propertyNode,
-          "transition-duration": propertyNode,
-          "transition-property": propertyNode,
-          "-webkit-user-select": propertyNode,
-          "animation-duration": propertyNode,
-          "border-image-slice": propertyNode,
-          "border-image-width": propertyNode,
-          "border-right-color": propertyNode,
-          "border-right-style": propertyNode,
-          "border-right-width": propertyNode,
-          "perspective-origin": propertyNode,
-          "-khtml-user-select": propertyNode,
-          "grid-template-rows": propertyNode,
-          "background-origin": propertyNode,
-          "background-repeat": propertyNode,
-          "border-left-color": propertyNode,
-          "border-left-style": propertyNode,
-          "border-left-width": propertyNode,
-          "column-rule-color": propertyNode,
-          "column-rule-style": propertyNode,
-          "column-rule-width": propertyNode,
-          "counter-increment": propertyNode,
-          "page-break-before": propertyNode,
-          "page-break-inside": propertyNode,
-          "grid-column-start": propertyNode,
-          "background-color": propertyNode,
-          "background-image": propertyNode,
-          "border-top-color": propertyNode,
-          "border-top-style": propertyNode,
-          "border-top-width": propertyNode,
-          "font-size-adjust": propertyNode,
-          "list-style-image": propertyNode,
-          "page-break-after": propertyNode,
-          "transform-origin": propertyNode,
-          "transition-delay": propertyNode,
-          "-ms-touch-action": propertyNode,
-          "-moz-user-select": propertyNode,
-          "animation-delay": propertyNode,
-          "background-clip": propertyNode,
-          "background-size": propertyNode,
-          "border-collapse": propertyNode,
-          "justify-content": propertyNode,
-          "list-style-type": propertyNode,
-          "text-align-last": propertyNode,
-          "text-decoration": propertyNode,
-          "transform-style": propertyNode,
-          "-ms-user-select": propertyNode,
-          "grid-column-end": propertyNode,
-          "grid-column-gap": propertyNode,
-          "animation-name": propertyNode,
-          "border-spacing": propertyNode,
-          "flex-direction": propertyNode,
-          "letter-spacing": propertyNode,
-          "outline-offset": propertyNode,
-          "padding-bottom": propertyNode,
-          "text-transform": propertyNode,
-          "vertical-align": propertyNode,
-          "grid-auto-flow": propertyNode,
-          "grid-row-start": propertyNode,
-          "align-content": propertyNode,
-          "border-bottom": propertyNode,
-          "border-radius": propertyNode,
-          "counter-reset": propertyNode,
-          "margin-bottom": propertyNode,
-          "outline-color": propertyNode,
-          "outline-style": propertyNode,
-          "outline-width": propertyNode,
-          "padding-right": propertyNode,
-          "text-overflow": propertyNode,
-          "justify-items": propertyNode,
-          "border-color": propertyNode,
-          "border-image": propertyNode,
-          "border-right": propertyNode,
-          "border-style": propertyNode,
-          "border-width": propertyNode,
-          "break-inside": propertyNode,
-          "caption-side": propertyNode,
-          "column-count": propertyNode,
-          "column-width": propertyNode,
-          "font-stretch": propertyNode,
-          "font-variant": propertyNode,
-          "margin-right": propertyNode,
-          "padding-left": propertyNode,
-          "table-layout": propertyNode,
-          "text-justify": propertyNode,
-          "unicode-bidi": propertyNode,
-          "word-spacing": propertyNode,
-          "touch-action": propertyNode,
-          "grid-row-end": propertyNode,
-          "grid-row-gap": propertyNode,
-          "justify-self": propertyNode,
-          "align-items": propertyNode,
-          "border-left": propertyNode,
-          "column-fill": propertyNode,
-          "column-rule": propertyNode,
-          "column-span": propertyNode,
-          "empty-cells": propertyNode,
-          "flex-shrink": propertyNode,
-          "font-family": propertyNode,
-          "font-weight": propertyNode,
-          "line-height": propertyNode,
-          "margin-left": propertyNode,
-          "padding-top": propertyNode,
-          perspective: propertyNode,
-          "text-indent": propertyNode,
-          "text-shadow": propertyNode,
-          "white-space": propertyNode,
-          "user-select": propertyNode,
-          "grid-column": propertyNode,
-          "align-self": propertyNode,
-          background: propertyNode,
-          "border-top": propertyNode,
-          "box-shadow": propertyNode,
-          "box-sizing": propertyNode,
-          "column-gap": propertyNode,
-          "flex-basis": propertyNode,
-          "@font-face": propertyNode,
-          "font-style": propertyNode,
-          "@keyframes": propertyNode,
-          "list-style": propertyNode,
-          "margin-top": propertyNode,
-          "max-height": propertyNode,
-          "min-height": propertyNode,
-          "overflow-x": propertyNode,
-          "overflow-y": propertyNode,
-          "text-align": propertyNode,
-          transition: propertyNode,
-          visibility: propertyNode,
-          "word-break": propertyNode,
-          animation: propertyNode,
-          direction: propertyNode,
-          "flex-flow": propertyNode,
-          "flex-grow": propertyNode,
-          "flex-wrap": propertyNode,
-          "font-size": propertyNode,
-          "max-width": propertyNode,
-          "min-width": propertyNode,
-          "nav-index": propertyNode,
-          "nav-right": propertyNode,
-          transform: propertyNode,
-          "word-wrap": propertyNode,
-          "nav-down": propertyNode,
-          "nav-left": propertyNode,
-          overflow: propertyNode,
-          position: propertyNode,
-          "tab-size": propertyNode,
-          "grid-gap": propertyNode,
-          "grid-row": propertyNode,
-          columns: propertyNode,
-          content: propertyNode,
-          display: propertyNode,
-          hyphens: propertyNode,
-          opacity: propertyNode,
-          outline: propertyNode,
-          padding: propertyNode,
-          "z-index": propertyNode,
-          border: propertyNode,
-          bottom: propertyNode,
-          cursor: propertyNode,
-          filter: propertyNode,
-          height: propertyNode,
-          margin: propertyNode,
-          "@media": propertyNode,
-          "nav-up": propertyNode,
-          quotes: propertyNode,
-          resize: propertyNode,
-          clear: propertyNode,
-          color: propertyNode,
-          float: propertyNode,
-          order: propertyNode,
-          right: propertyNode,
-          width: propertyNode,
-          clip: propertyNode,
-          fill: propertyNode,
-          flex: propertyNode,
-          font: propertyNode,
-          left: propertyNode,
-          all: propertyNode,
-          top: propertyNode,
-          gap: propertyNode,
-          "": propertyNode,
-          comment: commentNode
+  class selectorParser extends GrammarBackedNode {
+    createParserCombinator() {
+      return new TreeNode.ParserCombinator(
+        selectorParser,
+        Object.assign(Object.assign({}, super.createParserCombinator()._getFirstWordMapAsObject()), {
+          "border-bottom-right-radius": propertyParser,
+          "transition-timing-function": propertyParser,
+          "animation-iteration-count": propertyParser,
+          "animation-timing-function": propertyParser,
+          "border-bottom-left-radius": propertyParser,
+          "border-top-right-radius": propertyParser,
+          "border-top-left-radius": propertyParser,
+          "background-attachment": propertyParser,
+          "background-blend-mode": propertyParser,
+          "text-decoration-color": propertyParser,
+          "text-decoration-style": propertyParser,
+          "overscroll-behavior-x": propertyParser,
+          "-webkit-touch-callout": propertyParser,
+          "grid-template-columns": propertyParser,
+          "animation-play-state": propertyParser,
+          "text-decoration-line": propertyParser,
+          "animation-direction": propertyParser,
+          "animation-fill-mode": propertyParser,
+          "backface-visibility": propertyParser,
+          "background-position": propertyParser,
+          "border-bottom-color": propertyParser,
+          "border-bottom-style": propertyParser,
+          "border-bottom-width": propertyParser,
+          "border-image-outset": propertyParser,
+          "border-image-repeat": propertyParser,
+          "border-image-source": propertyParser,
+          "hanging-punctuation": propertyParser,
+          "list-style-position": propertyParser,
+          "transition-duration": propertyParser,
+          "transition-property": propertyParser,
+          "-webkit-user-select": propertyParser,
+          "animation-duration": propertyParser,
+          "border-image-slice": propertyParser,
+          "border-image-width": propertyParser,
+          "border-right-color": propertyParser,
+          "border-right-style": propertyParser,
+          "border-right-width": propertyParser,
+          "perspective-origin": propertyParser,
+          "-khtml-user-select": propertyParser,
+          "grid-template-rows": propertyParser,
+          "background-origin": propertyParser,
+          "background-repeat": propertyParser,
+          "border-left-color": propertyParser,
+          "border-left-style": propertyParser,
+          "border-left-width": propertyParser,
+          "column-rule-color": propertyParser,
+          "column-rule-style": propertyParser,
+          "column-rule-width": propertyParser,
+          "counter-increment": propertyParser,
+          "page-break-before": propertyParser,
+          "page-break-inside": propertyParser,
+          "grid-column-start": propertyParser,
+          "background-color": propertyParser,
+          "background-image": propertyParser,
+          "border-top-color": propertyParser,
+          "border-top-style": propertyParser,
+          "border-top-width": propertyParser,
+          "font-size-adjust": propertyParser,
+          "list-style-image": propertyParser,
+          "page-break-after": propertyParser,
+          "transform-origin": propertyParser,
+          "transition-delay": propertyParser,
+          "-ms-touch-action": propertyParser,
+          "-moz-user-select": propertyParser,
+          "animation-delay": propertyParser,
+          "background-clip": propertyParser,
+          "background-size": propertyParser,
+          "border-collapse": propertyParser,
+          "justify-content": propertyParser,
+          "list-style-type": propertyParser,
+          "text-align-last": propertyParser,
+          "text-decoration": propertyParser,
+          "transform-style": propertyParser,
+          "-ms-user-select": propertyParser,
+          "grid-column-end": propertyParser,
+          "grid-column-gap": propertyParser,
+          "animation-name": propertyParser,
+          "border-spacing": propertyParser,
+          "flex-direction": propertyParser,
+          "letter-spacing": propertyParser,
+          "outline-offset": propertyParser,
+          "padding-bottom": propertyParser,
+          "text-transform": propertyParser,
+          "vertical-align": propertyParser,
+          "grid-auto-flow": propertyParser,
+          "grid-row-start": propertyParser,
+          "align-content": propertyParser,
+          "border-bottom": propertyParser,
+          "border-radius": propertyParser,
+          "counter-reset": propertyParser,
+          "margin-bottom": propertyParser,
+          "outline-color": propertyParser,
+          "outline-style": propertyParser,
+          "outline-width": propertyParser,
+          "padding-right": propertyParser,
+          "text-overflow": propertyParser,
+          "justify-items": propertyParser,
+          "border-color": propertyParser,
+          "border-image": propertyParser,
+          "border-right": propertyParser,
+          "border-style": propertyParser,
+          "border-width": propertyParser,
+          "break-inside": propertyParser,
+          "caption-side": propertyParser,
+          "column-count": propertyParser,
+          "column-width": propertyParser,
+          "font-stretch": propertyParser,
+          "font-variant": propertyParser,
+          "margin-right": propertyParser,
+          "padding-left": propertyParser,
+          "table-layout": propertyParser,
+          "text-justify": propertyParser,
+          "unicode-bidi": propertyParser,
+          "word-spacing": propertyParser,
+          "touch-action": propertyParser,
+          "grid-row-end": propertyParser,
+          "grid-row-gap": propertyParser,
+          "justify-self": propertyParser,
+          "align-items": propertyParser,
+          "border-left": propertyParser,
+          "column-fill": propertyParser,
+          "column-rule": propertyParser,
+          "column-span": propertyParser,
+          "empty-cells": propertyParser,
+          "flex-shrink": propertyParser,
+          "font-family": propertyParser,
+          "font-weight": propertyParser,
+          "line-height": propertyParser,
+          "margin-left": propertyParser,
+          "padding-top": propertyParser,
+          perspective: propertyParser,
+          "text-indent": propertyParser,
+          "text-shadow": propertyParser,
+          "white-space": propertyParser,
+          "user-select": propertyParser,
+          "grid-column": propertyParser,
+          "align-self": propertyParser,
+          background: propertyParser,
+          "border-top": propertyParser,
+          "box-shadow": propertyParser,
+          "box-sizing": propertyParser,
+          "column-gap": propertyParser,
+          "flex-basis": propertyParser,
+          "@font-face": propertyParser,
+          "font-style": propertyParser,
+          "@keyframes": propertyParser,
+          "list-style": propertyParser,
+          "margin-top": propertyParser,
+          "max-height": propertyParser,
+          "min-height": propertyParser,
+          "overflow-x": propertyParser,
+          "overflow-y": propertyParser,
+          "text-align": propertyParser,
+          transition: propertyParser,
+          visibility: propertyParser,
+          "word-break": propertyParser,
+          animation: propertyParser,
+          direction: propertyParser,
+          "flex-flow": propertyParser,
+          "flex-grow": propertyParser,
+          "flex-wrap": propertyParser,
+          "font-size": propertyParser,
+          "max-width": propertyParser,
+          "min-width": propertyParser,
+          "nav-index": propertyParser,
+          "nav-right": propertyParser,
+          transform: propertyParser,
+          "word-wrap": propertyParser,
+          "nav-down": propertyParser,
+          "nav-left": propertyParser,
+          overflow: propertyParser,
+          position: propertyParser,
+          "tab-size": propertyParser,
+          "grid-gap": propertyParser,
+          "grid-row": propertyParser,
+          columns: propertyParser,
+          content: propertyParser,
+          display: propertyParser,
+          hyphens: propertyParser,
+          opacity: propertyParser,
+          outline: propertyParser,
+          padding: propertyParser,
+          "z-index": propertyParser,
+          border: propertyParser,
+          bottom: propertyParser,
+          cursor: propertyParser,
+          filter: propertyParser,
+          height: propertyParser,
+          margin: propertyParser,
+          "@media": propertyParser,
+          "nav-up": propertyParser,
+          quotes: propertyParser,
+          resize: propertyParser,
+          clear: propertyParser,
+          color: propertyParser,
+          float: propertyParser,
+          order: propertyParser,
+          right: propertyParser,
+          width: propertyParser,
+          clip: propertyParser,
+          fill: propertyParser,
+          flex: propertyParser,
+          font: propertyParser,
+          left: propertyParser,
+          all: propertyParser,
+          top: propertyParser,
+          gap: propertyParser,
+          "": propertyParser,
+          comment: commentParser,
         }),
-        [{ regex: /--/, nodeConstructor: variableNode }, { regex: /^\-\w.+/, nodeConstructor: browserPrefixPropertyNode }]
+        [
+          { regex: /--/, parser: variableParser },
+          { regex: /^\-\w.+/, parser: browserPrefixPropertyParser },
+        ]
       )
     }
     get selectorCell() {
       return this.getWord(0)
     }
-    get isSelectorNode() {
+    get isSelectorParser() {
       return true
     }
     getSelector() {
-      const parentSelector = this.getParent().getSelector()
-      return this.getFirstWord()
+      const parentSelector = this.parent.getSelector()
+      return this.firstWord
         .split(",")
-        .map(part => {
+        .map((part) => {
           if (part.startsWith("&")) return parentSelector + part.substr(1)
           return parentSelector ? parentSelector + " " + part : part
         })
         .join(",")
     }
     compile() {
-      const propertyNodes = this.getChildren().filter(node => node.doesExtend("propertyNode"))
-      if (!propertyNodes.length) return ""
+      const propertyParsers = this.getChildren().filter((node) => node.doesExtend("propertyParser"))
+      if (!propertyParsers.length) return ""
       const spaces = "  "
       return `${this.getSelector()} {
-${propertyNodes.map(child => child.compile(spaces)).join("\n")}
+${propertyParsers.map((child) => child.compile(spaces)).join("\n")}
 }\n`
     }
   }
 
-  window.hakonNode = hakonNode
+  window.hakonParser = hakonParser
 }
 
 
@@ -17986,7 +18007,7 @@ WillowConstants.checkedSelector = ":checked"
 WillowConstants.contenteditable = "contenteditable"
 WillowConstants.inputTypes = ["input", "textarea"]
 var CacheType
-;(function(CacheType) {
+;(function (CacheType) {
   CacheType["inBrowserMemory"] = "inBrowserMemory"
 })(CacheType || (CacheType = {}))
 class WillowHTTPResponse {
@@ -18053,9 +18074,7 @@ class AbstractWillowShadow {
     return this
   }
   getShadowParent() {
-    return this.getShadowStumpNode()
-      .getParent()
-      .getShadow()
+    return this.getShadowStumpNode().parent.getShadow()
   }
   getPositionAndDimensions(gridSize = 1) {
     const offset = this.getShadowOffset()
@@ -18171,7 +18190,7 @@ class WillowMousetrap {
   bind() {}
 }
 // this one should have no document, window, $, et cetera.
-class AbstractWillowBrowser extends stumpNode {
+class AbstractWillowBrowser extends stumpParser {
   constructor(fullHtmlPageUrlIncludingProtocolAndFileName) {
     super(`${WillowConstants.tags.html}
  ${WillowConstants.tags.head}
@@ -18275,7 +18294,7 @@ class AbstractWillowBrowser extends stumpNode {
     return this._fullHtmlPageUrlIncludingProtocolAndFileName
   }
   getAppWebPageParentFolderWithoutTrailingSlash() {
-    return jtree.Utils.getPathWithoutFileName(this._fullHtmlPageUrlIncludingProtocolAndFileName)
+    return Utils.getPathWithoutFileName(this._fullHtmlPageUrlIncludingProtocolAndFileName)
   }
   _makeRelativeUrlAbsolute(url) {
     if (url.startsWith("http://") || url.startsWith("https://")) return url
@@ -18334,13 +18353,13 @@ class AbstractWillowBrowser extends stumpNode {
   async appendScript(url) {}
   getWindowTitle() {
     // todo: deep getNodeByBase/withBase/type/word or something?
-    const nodes = this.getTopDownArray()
-    const titleNode = nodes.find(node => node.getFirstWord() === WillowConstants.titleTag)
-    return titleNode ? titleNode.getContent() : ""
+    const nodes = this.topDownArray
+    const titleNode = nodes.find(node => node.firstWord === WillowConstants.titleTag)
+    return titleNode ? titleNode.content : ""
   }
   setWindowTitle(value) {
-    const nodes = this.getTopDownArray()
-    const headNode = nodes.find(node => node.getFirstWord() === WillowConstants.tags.head)
+    const nodes = this.topDownArray
+    const headNode = nodes.find(node => node.firstWord === WillowConstants.tags.head)
     headNode.touchNode(WillowConstants.titleTag).setContent(value)
     return this
   }
@@ -18351,7 +18370,7 @@ class AbstractWillowBrowser extends stumpNode {
     // noop in willow
   }
   getPageHtml() {
-    return this.getHtmlStumpNode().toHtmlWithSuids()
+    return this.getHtmlStumpNode().asHtmlWithSuids()
   }
   getStumpNodeFromElement(el) {}
   setPasteHandler(fn) {
@@ -18516,7 +18535,7 @@ class WillowBrowserShadow extends AbstractWillowShadow {
     return this
   }
   onShadowEventWithSelector(event, selector, fn) {
-    this.element.addEventListener(event, function(evt) {
+    this.element.addEventListener(event, function (evt) {
       let target = evt.target
       while (target !== null) {
         if (target.matches(selector)) {
@@ -18667,13 +18686,13 @@ class RealWillowBrowser extends AbstractWillowBrowser {
   }
   _appendScript(url) {
     //https://bradb.net/blog/promise-based-js-script-loader/
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
       let resolved = false
       const scriptEl = document.createElement("script")
       scriptEl.type = "text/javascript"
       scriptEl.src = url
       scriptEl.async = true
-      scriptEl.onload = scriptEl.onreadystatechange = function() {
+      scriptEl.onload = scriptEl.onreadystatechange = function () {
         if (!resolved && (!this.readyState || this.readyState == "complete")) {
           resolved = true
           resolve(this)
@@ -18754,7 +18773,7 @@ class RealWillowBrowser extends AbstractWillowBrowser {
         // Add the help, and then hopefull we'll get a dragover event on the dragOverHelp, then
         // 50ms later, add the dragleave handler, and from now on drag leave will only happen on the help
         // div
-        setTimeout(function() {
+        setTimeout(function () {
           bodyShadow.onShadowEvent(BrowserEvents.dragleave, dragleaveHandler)
         }, 50)
       }
@@ -18786,7 +18805,7 @@ class RealWillowBrowser extends AbstractWillowBrowser {
     bodyShadow.onShadowEvent(BrowserEvents.dragover, dragoverHandler)
     bodyShadow.onShadowEvent(BrowserEvents.drop, dropHandler)
     // todo: why do we do this?
-    bodyShadow.onShadowEvent(BrowserEvents.dragenter, function(event) {
+    bodyShadow.onShadowEvent(BrowserEvents.dragenter, function (event) {
       event.preventDefault()
       event.stopPropagation()
     })
@@ -18829,13 +18848,13 @@ class RealWillowBrowser extends AbstractWillowBrowser {
 }
 class AbstractTheme {
   hakonToCss(str) {
-    const hakonProgram = new hakonNode(str)
+    const hakonProgram = new hakonParser(str)
     // console.log(hakonProgram.getAllErrors())
     return hakonProgram.compile()
   }
 }
 class DefaultTheme extends AbstractTheme {}
-class AbstractTreeComponent extends jtree.GrammarBackedNode {
+class AbstractTreeComponentParser extends GrammarBackedNode {
   async startWhenReady() {
     if (this.isNodeJs()) return this.start()
     document.addEventListener(
@@ -18901,16 +18920,16 @@ class AbstractTreeComponent extends jtree.GrammarBackedNode {
   _getHtmlOnlyNodes() {
     const nodes = []
     this.willowBrowser.getHtmlStumpNode().deepVisit(node => {
-      if (node.getFirstWord() === "styleTag" || (node.getContent() || "").startsWith("<svg ")) return false
+      if (node.firstWord === "styleTag" || (node.content || "").startsWith("<svg ")) return false
       nodes.push(node)
     })
     return nodes
   }
   getStumpNodeStringWithoutCssAndSvg() {
     // todo: cleanup. feels hacky.
-    const clone = new jtree.TreeNode(this.willowBrowser.getHtmlStumpNode().toString())
-    clone.getTopDownArray().forEach(node => {
-      if (node.getFirstWord() === "styleTag" || (node.getContent() || "").startsWith("<svg ")) node.destroy()
+    const clone = new TreeNode(this.willowBrowser.getHtmlStumpNode().toString())
+    clone.topDownArray.forEach(node => {
+      if (node.firstWord === "styleTag" || (node.content || "").startsWith("<svg ")) node.destroy()
     })
     return clone.toString()
   }
@@ -18932,7 +18951,7 @@ class AbstractTreeComponent extends jtree.GrammarBackedNode {
     this._onCommandWillRun() // todo: remove. currently used by ohayo
     let treeComponent = stumpNode.getStumpNodeTreeComponent()
     while (!treeComponent[commandMethod]) {
-      const parent = treeComponent.getParent()
+      const parent = treeComponent.parent
       if (parent === treeComponent) throw new Error(`Unknown command "${commandMethod}"`)
       if (!parent) debugger
       treeComponent = parent
@@ -18954,28 +18973,28 @@ class AbstractTreeComponent extends jtree.GrammarBackedNode {
       this._executeCommandOnStumpNode(stumpNode, stumpNode.getStumpNodeAttr(attr))
       return false
     }
-    bodyShadow.onShadowEventWithSelector(BrowserEvents.contextmenu, `[${WillowConstants.contextMenuCommand}]`, function(target, evt) {
+    bodyShadow.onShadowEventWithSelector(BrowserEvents.contextmenu, `[${WillowConstants.contextMenuCommand}]`, function (target, evt) {
       if (evt.ctrlKey) return true
       app._setMouseEvent(evt) // todo: remove?
       return checkAndExecute(target, WillowConstants.contextMenuCommand, evt)
     })
-    bodyShadow.onShadowEventWithSelector(BrowserEvents.click, `[${WillowConstants.clickCommand}]`, function(target, evt) {
+    bodyShadow.onShadowEventWithSelector(BrowserEvents.click, `[${WillowConstants.clickCommand}]`, function (target, evt) {
       if (evt.shiftKey) return checkAndExecute(this, WillowConstants.shiftClickCommand, evt)
       app._setMouseEvent(evt) // todo: remove?
       return checkAndExecute(target, WillowConstants.clickCommand, evt)
     })
-    bodyShadow.onShadowEventWithSelector(BrowserEvents.dblclick, `[${WillowConstants.doubleClickCommand}]`, function(target, evt) {
+    bodyShadow.onShadowEventWithSelector(BrowserEvents.dblclick, `[${WillowConstants.doubleClickCommand}]`, function (target, evt) {
       if (evt.target !== evt.currentTarget) return true // direct dblclicks only
       app._setMouseEvent(evt) // todo: remove?
       return checkAndExecute(target, WillowConstants.doubleClickCommand, evt)
     })
-    bodyShadow.onShadowEventWithSelector(BrowserEvents.blur, `[${WillowConstants.blurCommand}]`, function(target, evt) {
+    bodyShadow.onShadowEventWithSelector(BrowserEvents.blur, `[${WillowConstants.blurCommand}]`, function (target, evt) {
       return checkAndExecute(target, WillowConstants.blurCommand, evt)
     })
-    bodyShadow.onShadowEventWithSelector(BrowserEvents.keyup, `[${WillowConstants.keyUpCommand}]`, function(target, evt) {
+    bodyShadow.onShadowEventWithSelector(BrowserEvents.keyup, `[${WillowConstants.keyUpCommand}]`, function (target, evt) {
       return checkAndExecute(target, WillowConstants.keyUpCommand, evt)
     })
-    bodyShadow.onShadowEventWithSelector(BrowserEvents.change, `[${WillowConstants.changeCommand}]`, function(target, evt) {
+    bodyShadow.onShadowEventWithSelector(BrowserEvents.change, `[${WillowConstants.changeCommand}]`, function (target, evt) {
       return checkAndExecute(target, WillowConstants.changeCommand, evt)
     })
   }
@@ -18994,7 +19013,7 @@ class AbstractTreeComponent extends jtree.GrammarBackedNode {
   toggleTreeComponentFrameworkDebuggerCommand() {
     // todo: move somewhere else?
     // todo: cleanup
-    const app = this.getRootNode()
+    const app = this.root
     const node = app.getNode("TreeComponentFrameworkDebuggerComponent")
     if (node) {
       node.unmountAndDestroy()
@@ -19010,7 +19029,7 @@ class AbstractTreeComponent extends jtree.GrammarBackedNode {
     return ""
   }
   getTheme() {
-    if (!this.isRoot()) return this.getRootNode().getTheme()
+    if (!this.isRoot()) return this.root.getTheme()
     if (!this._theme) this._theme = new DefaultTheme()
     return this._theme
   }
@@ -19025,7 +19044,7 @@ class AbstractTreeComponent extends jtree.GrammarBackedNode {
     })
   }
   getMessageBuffer() {
-    if (!this._messageBuffer) this._messageBuffer = new jtree.TreeNode()
+    if (!this._messageBuffer) this._messageBuffer = new TreeNode()
     return this._messageBuffer
   }
   // todo: move this to tree class? or other higher level class?
@@ -19039,11 +19058,11 @@ class AbstractTreeComponent extends jtree.GrammarBackedNode {
     // todo: cleanup!
     return this.addStumpCodeMessageToLog(`div
  class OhayoError
- bern${jtree.TreeNode.nest(errorMessage, 2)}`)
+ bern${TreeNode.nest(errorMessage, 2)}`)
   }
   logMessageText(message = "") {
     const pre = `pre
- bern${jtree.TreeNode.nest(message, 2)}`
+ bern${TreeNode.nest(message, 2)}`
     return this.addStumpCodeMessageToLog(pre)
   }
   unmount() {
@@ -19067,14 +19086,14 @@ class AbstractTreeComponent extends jtree.GrammarBackedNode {
  class ${this.getCssClassNames().join(" ")}`
   }
   getCssClassNames() {
-    return this._getJavascriptPrototypeChainUpTo("AbstractTreeComponent")
+    return this._getJavascriptPrototypeChainUpTo("AbstractTreeComponentParser")
   }
   treeComponentWillMount() {}
   async treeComponentDidMount() {
-    AbstractTreeComponent._mountedTreeComponents++
+    AbstractTreeComponentParser._mountedTreeComponents++
   }
   treeComponentDidUnmount() {
-    AbstractTreeComponent._mountedTreeComponents--
+    AbstractTreeComponentParser._mountedTreeComponents--
   }
   treeComponentWillUnmount() {}
   getNewestTimeToRender() {
@@ -19086,7 +19105,7 @@ class AbstractTreeComponent extends jtree.GrammarBackedNode {
   }
   async treeComponentDidUpdate() {}
   _getChildTreeComponents() {
-    return this.getChildrenByNodeConstructor(AbstractTreeComponent)
+    return this.getChildrenByParser(AbstractTreeComponentParser)
   }
   _hasChildrenTreeComponents() {
     return this._getChildTreeComponents().length > 0
@@ -19104,7 +19123,7 @@ class AbstractTreeComponent extends jtree.GrammarBackedNode {
   toPlainHtml(containerId) {
     return `<div id="${containerId}">
  <style>${this.getTheme().hakonToCss(this.toHakonCode())}</style>
-${new stumpNode(this.toStumpCode()).compile()}
+${new stumpParser(this.toStumpCode()).compile()}
 </div>`
   }
   _updateAndGetUpdateReport() {
@@ -19122,7 +19141,7 @@ ${new stumpNode(this.toStumpCode()).compile()}
     return reasonForUpdatingOrNot
   }
   _updateHtml() {
-    const stumpNodeToMountOn = this._htmlStumpNode.getParent()
+    const stumpNodeToMountOn = this._htmlStumpNode.parent
     const currentIndex = this._htmlStumpNode.getIndex()
     this._removeHtml()
     this._mountHtml(stumpNodeToMountOn, this._toLoadedOrLoadingStumpCode(), currentIndex)
@@ -19135,7 +19154,7 @@ ${new stumpNode(this.toStumpCode()).compile()}
   toggle(firstWord, contentOptions) {
     const currentNode = this.getNode(firstWord)
     if (!contentOptions) return currentNode ? currentNode.unmountAndDestroy() : this.appendLine(firstWord)
-    const currentContent = currentNode === undefined ? undefined : currentNode.getContent()
+    const currentContent = currentNode === undefined ? undefined : currentNode.content
     const index = contentOptions.indexOf(currentContent)
     const newContent = index === -1 || index + 1 === contentOptions.length ? contentOptions[0] : contentOptions[index + 1]
     this.delete(firstWord)
@@ -19147,7 +19166,7 @@ ${new stumpNode(this.toStumpCode()).compile()}
   }
   toggleAndRender(firstWord, contentOptions) {
     this.toggle(firstWord, contentOptions)
-    this.getRootNode().renderAndGetRenderReport()
+    this.root.renderAndGetRenderReport()
   }
   _getFirstOutdatedDependency(lastRenderedTime = this._getLastRenderedTime() || 0) {
     return this.getDependencies().find(dep => dep.getLineModifiedTime() > lastRenderedTime)
@@ -19194,7 +19213,7 @@ ${new stumpNode(this.toStumpCode()).compile()}
     })
   }
   toStumpLoadingCode() {
-    return `div Loading ${this.getFirstWord()}...
+    return `div Loading ${this.firstWord}...
  class ${this.getCssClassNames().join(" ")}
  id ${this.getTreeComponentId()}`
   }
@@ -19233,10 +19252,10 @@ ${new stumpNode(this.toStumpCode()).compile()}
     // todo: only insert css once per class? have a set?
     this._cssStumpNode = this._getPageHeadStump().insertCssChildNode(`styleTag
  for ${this.constructor.name}
- bern${jtree.TreeNode.nest(css, 2)}`)
+ bern${TreeNode.nest(css, 2)}`)
   }
   _getPageHeadStump() {
-    return this.getRootNode().willowBrowser.getHeadStumpNode()
+    return this.root.willowBrowser.getHeadStumpNode()
   }
   _removeCss() {
     if (!this._cssStumpNode) return this
@@ -19275,11 +19294,11 @@ ${new stumpNode(this.toStumpCode()).compile()}
     }
     let str = `${this.getWord(0) || this.constructor.name} ${isUpdateOp ? "update" : "mount"} ${treeComponentUpdateReport.shouldUpdate} ${treeComponentUpdateReport.reason}`
     childResults.forEach(child => (str += "\n" + child.toString(1)))
-    return new jtree.TreeNode(str)
+    return new TreeNode(str)
   }
 }
-AbstractTreeComponent._mountedTreeComponents = 0
-class TreeComponentFrameworkDebuggerComponent extends AbstractTreeComponent {
+AbstractTreeComponentParser._mountedTreeComponents = 0
+class TreeComponentFrameworkDebuggerComponent extends AbstractTreeComponentParser {
   toHakonCode() {
     return `.TreeComponentFrameworkDebuggerComponent
  position fixed
@@ -19301,7 +19320,7 @@ class TreeComponentFrameworkDebuggerComponent extends AbstractTreeComponent {
   opacity 1`
   }
   toStumpCode() {
-    const app = this.getRootNode()
+    const app = this.root
     return `div
  class TreeComponentFrameworkDebuggerComponent
  div x
@@ -19311,13 +19330,13 @@ class TreeComponentFrameworkDebuggerComponent extends AbstractTreeComponent {
   span This app is powered by the
   a Tree Component Framework
    href https://github.com/treenotation/jtree/tree/main/treeComponentFramework
- p ${app.getNumberOfLines()} components loaded. ${WillowBrowser._stumpsOnPage} stumps on page.
+ p ${app.numberOfLines} components loaded. ${WillowBrowser._stumpsOnPage} stumps on page.
  pre
   bern
 ${app.toString(3)}`
   }
 }
-class AbstractGithubTriangleComponent extends AbstractTreeComponent {
+class AbstractGithubTriangleComponent extends AbstractTreeComponentParser {
   constructor() {
     super(...arguments)
     this.githubLink = `https://github.com/treenotation/jtree`
@@ -19338,6 +19357,6 @@ class AbstractGithubTriangleComponent extends AbstractTreeComponent {
   }
 }
 window.AbstractGithubTriangleComponent = AbstractGithubTriangleComponent
-window.AbstractTreeComponent = AbstractTreeComponent
+window.AbstractTreeComponentParser = AbstractTreeComponentParser
 window.WillowBrowser = WillowBrowser
 window.TreeComponentFrameworkDebuggerComponent = TreeComponentFrameworkDebuggerComponent

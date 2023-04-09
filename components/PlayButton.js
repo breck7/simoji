@@ -1,8 +1,8 @@
-const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework.node.js")
+const { AbstractTreeComponentParser } = require("jtree/products/TreeComponentFramework.node.js")
 
-class PlayButtonComponent extends AbstractTreeComponent {
+class PlayButtonComponent extends AbstractTreeComponentParser {
   get isStarted() {
-    return this.getRootNode().isRunning
+    return this.root.isRunning
   }
 
   toStumpCode() {

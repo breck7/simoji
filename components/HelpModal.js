@@ -1,7 +1,7 @@
-const { jtree } = require("jtree")
-const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework.node.js")
+const { TreeNode } = require("jtree/products/TreeNode.js")
+const { AbstractTreeComponentParser } = require("jtree/products/TreeComponentFramework.node.js")
 
-class AbstractModalTreeComponent extends AbstractTreeComponent {
+class AbstractModalTreeComponent extends AbstractTreeComponentParser {
   toHakonCode() {
     return `.modalBackground
  position fixed
@@ -39,7 +39,7 @@ class AbstractModalTreeComponent extends AbstractTreeComponent {
   }
 
   toStumpCode() {
-    return new jtree.TreeNode(`section
+    return new TreeNode(`section
  clickCommand unmountAndDestroyCommand
  class modalBackground
  section

@@ -1,11 +1,11 @@
-const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework.node.js")
+const { AbstractTreeComponentParser } = require("jtree/products/TreeComponentFramework.node.js")
 const { ShareComponent } = require("./Share.js")
 const { ExamplesComponent } = require("./Examples.js")
-const { jtree } = require("jtree")
+const { TreeNode } = require("jtree/products/TreeNode.js")
 
-class TopBarComponent extends AbstractTreeComponent {
-  createParser() {
-    return new jtree.TreeNode.Parser(undefined, {
+class TopBarComponent extends AbstractTreeComponentParser {
+  createParserCombinator() {
+    return new TreeNode.ParserCombinator(undefined, {
       LogoComponent,
       ShareComponent,
       ExamplesComponent
@@ -13,7 +13,7 @@ class TopBarComponent extends AbstractTreeComponent {
   }
 }
 
-class LogoComponent extends AbstractTreeComponent {
+class LogoComponent extends AbstractTreeComponentParser {
   toStumpCode() {
     return `a ❔
  href cheatSheet.html
@@ -22,7 +22,7 @@ class LogoComponent extends AbstractTreeComponent {
   }
 
   toggleHelpCommand() {
-    this.getRootNode().toggleHelpCommand()
+    this.root.toggleHelpCommand()
   }
 }
 

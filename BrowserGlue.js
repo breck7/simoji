@@ -1,10 +1,11 @@
 const DEFAULT_SIM = "fire"
-const { jtree } = require("jtree")
+const { TreeNode } = require("jtree/products/TreeNode.js")
+const { HandGrammarProgram } = require("jtree/products/GrammarLanguage.js")
 const { ExampleSims } = require("./components/ExampleSims.js")
-const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework.node.js")
+const { AbstractTreeComponentParser } = require("jtree/products/TreeComponentFramework.node.js")
 const { Keywords, LocalStorageKeys, UrlKeys } = require("./components/Types.js")
 
-class BrowserGlue extends AbstractTreeComponent {
+class BrowserGlue extends AbstractTreeComponentParser {
   async fetchAndLoadSimCodeFromUrlCommand(url) {
     const simCode = await this.fetchText(url)
     return simCode
@@ -22,7 +23,7 @@ class BrowserGlue extends AbstractTreeComponent {
 
   async fetchSimCode() {
     const hash = this.willowBrowser.getHash().substr(1)
-    const deepLink = new jtree.TreeNode(decodeURIComponent(hash))
+    const deepLink = new TreeNode(decodeURIComponent(hash))
     const example = deepLink.get(UrlKeys.example)
     const fromUrl = deepLink.get(UrlKeys.url)
     const simojiCode = deepLink.getNode(UrlKeys.simoji)
@@ -50,7 +51,7 @@ class BrowserGlue extends AbstractTreeComponent {
   }
 
   async init(grammarCode, theExamples) {
-    window.simojiCompiler = new jtree.HandGrammarProgram(grammarCode).compileAndReturnRootConstructor()
+    window.simojiParser = new HandGrammarProgram(grammarCode).compileAndReturnRootParser()
     ExampleSims.setChildren(theExamples)
 
     const simCode = await this.fetchSimCode()

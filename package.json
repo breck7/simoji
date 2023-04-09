@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "jquery": "^3.6.0",
-    "jtree": "^53.8.0",
+    "jtree": "^74.0.0",
     "lodash": "^4.17.21",
     "mathjs": "^9.4.4",
     "minimist": "^1.2.5"
@@ -32,8 +32,10 @@
     "tap": "^15.0.9"
   },
   "scripts": {
+    "build": "./build.js",
     "buildCoverageReport": "tap testAll.js",
     "buildCoverageHtmlReport": "tap testAll.js --coverage-report=lcov",
+    "local": "./server.js",
     "test": "node testAll.js"
   },
   "repository": {

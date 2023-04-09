@@ -1,7 +1,7 @@
 // prettier-ignore
-/*NODE_JS_ONLY*/ const { AbstractTreeComponent, TreeComponentFrameworkDebuggerComponent } = require("jtree/products/TreeComponentFramework.node.js")
+/*NODE_JS_ONLY*/ const { AbstractTreeComponentParser, TreeComponentFrameworkDebuggerComponent } = require("jtree/products/TreeComponentFramework.node.js")
 
-const { jtree } = require("jtree")
+const { TreeNode } = require("jtree/products/TreeNode.js")
 const { yodash } = require("../yodash")
 
 const { ExampleSims } = require("./ExampleSims.js")
@@ -20,7 +20,7 @@ const { BottomBarComponent } = require("./BottomBar.js")
 const { RightBarComponent } = require("./RightBar.js")
 const { EditorHandleComponent } = require("./EditorHandle.js")
 const { TitleComponent } = require("./Title.js")
-const { Keywords, LocalStorageKeys, UrlKeys, Directions, NodeTypes } = require("./Types.js")
+const { Keywords, LocalStorageKeys, UrlKeys, Directions, ParserTypes } = require("./Types.js")
 
 const MIN_GRID_SIZE = 10
 const MAX_GRID_SIZE = 200
@@ -29,9 +29,9 @@ const MIN_GRID_COLUMNS = 10
 const MIN_GRID_ROWS = 10
 
 // prettier-ignore
-/*NODE_JS_ONLY*/ const simojiCompiler = jtree.compileGrammarFileAtPathAndReturnRootConstructor(   __dirname + "/../simoji.grammar")
+/*NODE_JS_ONLY*/ const simojiParser = require("jtree/products/GrammarCompiler.js").GrammarCompiler.compileGrammarFileAtPathAndReturnRootParser(   __dirname + "/../simoji.grammar")
 
-class githubTriangleComponent extends AbstractTreeComponent {
+class githubTriangleComponent extends AbstractTreeComponentParser {
   githubLink = `https://github.com/breck7/simoji`
   toHakonCode() {
     return `.AbstractGithubTriangleComponent
@@ -52,8 +52,8 @@ class githubTriangleComponent extends AbstractTreeComponent {
   }
 }
 
-class ErrorNode extends AbstractTreeComponent {
-  _isErrorNodeType() {
+class ErrorParser extends AbstractTreeComponentParser {
+  _isErrorParser() {
     return true
   }
   toStumpCode() {
@@ -63,9 +63,9 @@ class ErrorNode extends AbstractTreeComponent {
   }
 }
 
-class SimojiApp extends AbstractTreeComponent {
-  createParser() {
-    return new jtree.TreeNode.Parser(ErrorNode, {
+class SimojiApp extends AbstractTreeComponentParser {
+  createParserCombinator() {
+    return new TreeNode.ParserCombinator(ErrorParser, {
       TopBarComponent,
       githubTriangleComponent,
       SimEditorComponent,
@@ -122,7 +122,7 @@ class SimojiApp extends AbstractTreeComponent {
 
       try {
         program
-          .filter(node => node.doesExtend(NodeTypes.abstractInjectCommandNode))
+          .filter(node => node.doesExtend(ParserTypes.abstractInjectCommandParser))
           .forEach(command => board.runInjectCommand(command))
       } catch (err) {
         if (this.verbose) console.error(err)
@@ -203,8 +203,8 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
   }
 
   dumpErrorsCommand() {
-    const errs = new simojiCompiler(this.simCode).getAllErrors()
-    console.log(new jtree.TreeNode(errs.map(err => err.toObject())).toFormattedTable(200))
+    const errs = new simojiParser(this.simCode).getAllErrors()
+    console.log(new TreeNode(errs.map(err => err.toObject())).toFormattedTable(200))
   }
 
   get boards() {
@@ -216,7 +216,7 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
   }
 
   get mainExperiment() {
-    return new simojiCompiler(this.simCode)
+    return new simojiParser(this.simCode)
   }
 
   get simojiPrograms() {
@@ -229,7 +229,7 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
         this._simojiPrograms.push(yodash.patchExperimentAndReplaceSymbols(mainExperiment, experiment))
       })
       // Evaluate the variables
-      this._simojiPrograms = this._simojiPrograms.map(program => new simojiCompiler(program.toString()))
+      this._simojiPrograms = this._simojiPrograms.map(program => new simojiParser(program.toString()))
     }
     return this._simojiPrograms
   }
@@ -273,7 +273,7 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
 
     const keyboardShortcuts = this._getKeyboardShortcuts()
     Object.keys(keyboardShortcuts).forEach(key => {
-      willowBrowser.getMousetrap().bind(key, function(evt) {
+      willowBrowser.getMousetrap().bind(key, function (evt) {
         keyboardShortcuts[key]()
         // todo: handle the below when we need to
         if (evt.preventDefault) evt.preventDefault()
@@ -310,14 +310,7 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
 
     if (!this.selection.length) return ""
 
-    const str = this.selection
-      .map(agent =>
-        agent
-          .getWords()
-          .slice(0, 3)
-          .join(" ")
-      )
-      .join("\n")
+    const str = this.selection.map(agent => agent.words.slice(0, 3).join(" ")).join("\n")
 
     evt.preventDefault()
     evt.clipboardData.setData("text/plain", str)
@@ -376,7 +369,7 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
   }
 
   get urlHash() {
-    const tree = new jtree.TreeNode()
+    const tree = new TreeNode()
     tree.appendLineAndChildren(UrlKeys.simoji, this.simCode ?? "")
     return "#" + encodeURIComponent(tree.toString())
   }
@@ -455,12 +448,12 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
 
   get isSnapshotOn() {
     // technically also needs rows and column settings
-    return new jtree.TreeNode(this.simCode).has(Keywords.seed)
+    return new TreeNode(this.simCode).has(Keywords.seed)
   }
 
   // Save the current random play for reproducibility and shareability
   snapShotCommand() {
-    const newCode = new jtree.TreeNode(this.simCode)
+    const newCode = new TreeNode(this.simCode)
     const boards = this.boards
 
     // todo: buggy. we should rename the board class to experiment, or rename experiment keyword to board.
@@ -546,7 +539,7 @@ SimojiApp.setupApp = (simojiCode, windowWidth = 1000, windowHeight = 1000) => {
     typeof localStorage !== "undefined"
       ? localStorage.getItem(LocalStorageKeys.editorStartWidth) ?? SIZES.EDITOR_WIDTH
       : SIZES.EDITOR_WIDTH
-  const startState = new jtree.TreeNode(`${githubTriangleComponent.name}
+  const startState = new TreeNode(`${githubTriangleComponent.name}
 ${TopBarComponent.name}
  ${LogoComponent.name}
  ${ShareComponent.name}

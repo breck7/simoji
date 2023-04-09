@@ -1,6 +1,6 @@
-const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework.node.js")
+const { AbstractTreeComponentParser } = require("jtree/products/TreeComponentFramework.node.js")
 
-class ReportButtonComponent extends AbstractTreeComponent {
+class ReportButtonComponent extends AbstractTreeComponentParser {
   toStumpCode() {
     return `span Δ
  title Generate Report

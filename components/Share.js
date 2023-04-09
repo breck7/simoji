@@ -1,6 +1,6 @@
-const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework.node.js")
+const { AbstractTreeComponentParser } = require("jtree/products/TreeComponentFramework.node.js")
 
-class ShareComponent extends AbstractTreeComponent {
+class ShareComponent extends AbstractTreeComponentParser {
   toStumpCode() {
     return `div
  class ShareComponent
@@ -11,13 +11,13 @@ class ShareComponent extends AbstractTreeComponent {
   }
 
   getDependencies() {
-    return [this.getRootNode().firstProgram]
+    return [this.root.firstProgram]
   }
 
   get link() {
     const url = new URL(typeof location === "undefined" ? "http://localhost/" : location.href) // todo: TCF should provide shim for this
     url.hash = ""
-    return url.toString() + this.getRootNode().urlHash
+    return url.toString() + this.root.urlHash
   }
 }
 

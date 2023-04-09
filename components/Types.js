@@ -36,11 +36,11 @@ Directions.East = "East"
 Directions.South = "South"
 Directions.West = "West"
 
-const NodeTypes = {}
+const ParserTypes = {}
 
-NodeTypes.agentDefinitionNode = "agentDefinitionNode"
-NodeTypes.experimentNode = "experimentNode"
-NodeTypes.settingDefinitionNode = "settingDefinitionNode"
-NodeTypes.abstractInjectCommandNode = "abstractInjectCommandNode"
+ParserTypes.agentDefinitionParser = "agentDefinitionParser"
+ParserTypes.experimentParser = "experimentParser"
+ParserTypes.settingDefinitionParser = "settingDefinitionParser"
+ParserTypes.abstractInjectCommandParser = "abstractInjectCommandParser"
 
-module.exports = { Keywords, LocalStorageKeys, UrlKeys, Directions, NodeTypes }
+module.exports = { Keywords, LocalStorageKeys, UrlKeys, Directions, ParserTypes }

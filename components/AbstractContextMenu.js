@@ -1,9 +1,9 @@
-const { jtree } = require("jtree")
-const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework.node.js")
+const { TreeNode } = require("jtree/products/TreeNode.js")
+const { AbstractTreeComponentParser } = require("jtree/products/TreeComponentFramework.node.js")
 
 var jQuery
 
-class AbstractContextMenuComponent extends AbstractTreeComponent {
+class AbstractContextMenuComponent extends AbstractTreeComponentParser {
   toHakonCode() {
     const theme = this.getTheme()
     return `.AbstractContextMenuComponent
@@ -26,14 +26,14 @@ class AbstractContextMenuComponent extends AbstractTreeComponent {
   }
 
   toStumpCode() {
-    return new jtree.TreeNode(`div
+    return new TreeNode(`div
  class AbstractContextMenuComponent {constructorName}
  {body}`).templateToString({ constructorName: this.constructor.name, body: this.getContextMenuBodyStumpCode() })
   }
 
   treeComponentDidMount() {
     const container = this.getStumpNode()
-    const app = this.getRootNode()
+    const app = this.root
     const { willowBrowser } = app
     const bodyShadow = willowBrowser.getBodyStumpNode().getShadow()
     const unmountOnClick = function() {
@@ -55,7 +55,7 @@ class AbstractContextMenuComponent extends AbstractTreeComponent {
 
   top = undefined
   get left() {
-    return this.getRootNode().getMouseEvent().clientX
+    return this.root.getMouseEvent().clientX
   }
 
   _getContextMenuPosition(windowWidth, windowHeight, x, y, shadow) {

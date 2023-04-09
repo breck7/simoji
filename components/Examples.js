@@ -1,10 +1,11 @@
-const { jtree } = require("jtree")
+const { TreeNode } = require("jtree/products/TreeNode.js")
+const { Utils } = require("jtree/products/Utils.js")
 const { ExampleSims } = require("./ExampleSims.js")
 
 const { AbstractContextMenuComponent } = require("./AbstractContextMenu.js")
-const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework.node.js")
+const { AbstractTreeComponentParser } = require("jtree/products/TreeComponentFramework.node.js")
 
-const Categories = new jtree.TreeNode(`🦠 Epidemiology
+const Categories = new TreeNode(`🦠 Epidemiology
  virus
  covid19
 🌲 Forests
@@ -32,10 +33,10 @@ class ExampleMenuComponent extends AbstractContextMenuComponent {
 
     return category
       .map(node => {
-        const name = node.getFirstWord()
+        const name = node.firstWord
         const program = ExampleSims.getNode(name)
         const icon = program.childrenToString().match(/(\p{Extended_Pictographic}+)/u)[1]
-        const properName = jtree.Utils.ucfirst(name)
+        const properName = Utils.ucfirst(name)
         return `a ${icon}  &nbsp; ${properName}
  clickCommand loadExampleCommand ${name}
  class ExampleButton`
@@ -46,17 +47,17 @@ class ExampleMenuComponent extends AbstractContextMenuComponent {
   // Align these to below and to the left of the clicked button
   top = 28
   get left() {
-    const evt = this.getRootNode().getMouseEvent()
+    const evt = this.root.getMouseEvent()
     return evt.clientX - evt.offsetX
   }
 }
 
-class ExamplesComponent extends AbstractTreeComponent {
+class ExamplesComponent extends AbstractTreeComponentParser {
   toStumpCode() {
     const categories = Categories.map(category => {
-      const icon = category.getFirstWord()
-      const name = category.getContent()
-      const firstFile = category.nodeAt(0).getFirstWord()
+      const icon = category.firstWord
+      const name = category.content
+      const firstFile = category.nodeAt(0).firstWord
       return ` a ${icon}
   href index.html#example%20${firstFile}
   title ${name}
@@ -68,10 +69,10 @@ ${categories}`
   }
 
   async openCategoryCommand(icon) {
-    const root = this.getRootNode()
+    const root = this.root
     const category = Categories.getNode(icon)
-    const firstFile = category.nodeAt(0).getFirstWord()
-    this.getRootNode().toggleAndRender(`${ExampleMenuComponent.name} ${icon}`)
+    const firstFile = category.nodeAt(0).firstWord
+    this.root.toggleAndRender(`${ExampleMenuComponent.name} ${icon}`)
   }
 }
 

@@ -1,11 +1,11 @@
-const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework.node.js")
+const { AbstractTreeComponentParser } = require("jtree/products/TreeComponentFramework.node.js")
 const { yodash } = require("../yodash.js")
-const { jtree } = require("jtree")
+const { TreeNode } = require("jtree/products/TreeNode.js")
 const { Keywords, Directions } = require("./Types.js")
 
 const SelectedClass = "selected"
 
-class Agent extends jtree.TreeNode {
+class Agent extends TreeNode {
   get name() {
     return this._name ?? this.icon
   }
@@ -17,8 +17,8 @@ class Agent extends jtree.TreeNode {
   }
 
   get definitionWithBehaviors() {
-    if (!this.behaviors.length) return this.board.simojiProgram.getNode(this.getWord(0))
-    const behaviors = yodash.flatten(yodash.pick(this.board.simojiProgram, [this.getWord(0), ...this.behaviors]))
+    if (!this.behaviors.length) return this.board.simojiProgram.getNode(this.firstWord)
+    const behaviors = yodash.flatten(yodash.pick(this.board.simojiProgram, [this.firstWord, ...this.behaviors]))
     return behaviors
   }
 
@@ -39,7 +39,7 @@ class Agent extends jtree.TreeNode {
       const { neighorCount } = this
 
       neighborConditions.forEach(conditionAndCommandsBlock => {
-        const [emoji, operator, count] = conditionAndCommandsBlock.getWords()
+        const [emoji, operator, count] = conditionAndCommandsBlock.words
         const actual = neighorCount[emoji]
         if (!yodash.compare(actual ?? 0, operator, count)) return
         conditionAndCommandsBlock.forEach(command => this._executeCommand(this, command))
@@ -57,7 +57,7 @@ class Agent extends jtree.TreeNode {
       for (let pos of yodash.positionsAdjacentTo(this.position)) {
         const hits = agentPositionMap.get(yodash.makePositionHash(pos)) ?? []
         for (let target of hits) {
-          const targetId = target.getWord(0)
+          const targetId = target.firstWord
           const commandBlock = touchMap.getNode(targetId)
           if (commandBlock) {
             commandBlock.forEach(command => this._executeCommand(target, command))
@@ -73,7 +73,7 @@ class Agent extends jtree.TreeNode {
     this.getCommandBlocks(Keywords.onHit).forEach(hitMap => {
       if (this.skip(hitMap.getWord(1))) return
       targets.forEach(target => {
-        const targetId = target.getWord(0)
+        const targetId = target.firstWord
         const commandBlock = hitMap.getNode(targetId)
         if (commandBlock) commandBlock.forEach(command => this._executeCommand(target, command))
       })
@@ -85,7 +85,7 @@ class Agent extends jtree.TreeNode {
   }
 
   _executeCommand(target, instruction) {
-    const commandName = instruction.getWord(0)
+    const commandName = instruction.firstWord
     if (this[commandName]) this[commandName](target, instruction)
     // board commands
     else this.board[commandName](instruction)
@@ -133,7 +133,7 @@ class Agent extends jtree.TreeNode {
   }
 
   _replaceWith(newObject) {
-    this.getParent().appendLine(`${newObject} ${this.positionHash}`)
+    this.parent.appendLine(`${newObject} ${this.positionHash}`)
 
     this.remove()
   }
@@ -183,10 +183,6 @@ class Agent extends jtree.TreeNode {
     }
   }
 
-  get root() {
-    return this.getRootNode()
-  }
-
   set position(value) {
     if (this.board.isSolidAgent(value)) return this.bouncy ? this.bounce() : this
     const newLine = this.getLine()
@@ -197,7 +193,7 @@ class Agent extends jtree.TreeNode {
   }
 
   get board() {
-    return this.getParent()
+    return this.parent
   }
 
   get maxRight() {
@@ -223,7 +219,7 @@ class Agent extends jtree.TreeNode {
   }
 
   get position() {
-    return yodash.parsePosition(this.getWords())
+    return yodash.parsePosition(this.words)
   }
 
   get positionHash() {
@@ -231,7 +227,7 @@ class Agent extends jtree.TreeNode {
   }
 
   get gridSize() {
-    return this.getParent().gridSize
+    return this.parent.gridSize
   }
 
   get selected() {
@@ -272,8 +268,9 @@ class Agent extends jtree.TreeNode {
   get inlineStyle() {
     const { gridSize, health } = this
     const opacity = health === undefined ? "" : `opacity:${this.health / this.startHealth};`
-    return `top:${this.top * gridSize}px;left:${this.left *
-      gridSize}px;font-size:${gridSize}px;line-height: ${gridSize}px;${opacity};${this.style ?? ""}`
+    return `top:${this.top * gridSize}px;left:${
+      this.left * gridSize
+    }px;font-size:${gridSize}px;line-height: ${gridSize}px;${opacity};${this.style ?? ""}`
   }
 
   toElement() {
@@ -309,7 +306,7 @@ class Agent extends jtree.TreeNode {
 
   kickIt(target) {
     target.angle = this.angle
-    target.tickStack = new jtree.TreeNode(`1
+    target.tickStack = new TreeNode(`1
  move
  move
  move
@@ -342,7 +339,7 @@ class Agent extends jtree.TreeNode {
   }
 
   narrate(subject, command) {
-    this.root.log(`${this.getWord(0)} ${command.getContent()}`)
+    this.root.log(`${this.firstWord} ${command.content}`)
   }
 
   shoot() {

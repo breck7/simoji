@@ -1,13 +1,13 @@
-const { AbstractTreeComponent } = require("jtree/products/TreeComponentFramework.node.js")
+const { AbstractTreeComponentParser } = require("jtree/products/TreeComponentFramework.node.js")
 const { Keywords } = require("./Types.js")
 
-class TitleComponent extends AbstractTreeComponent {
+class TitleComponent extends AbstractTreeComponentParser {
   get question() {
     return this.app.mainExperiment.get(Keywords.question) ?? ""
   }
 
   get app() {
-    return this.getRootNode()
+    return this.root
   }
 
   getDependencies() {

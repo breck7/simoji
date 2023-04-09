@@ -1,7 +1,8 @@
 const yodash = {}
 const lodash = require("lodash")
 const math = require("mathjs")
-const { Directions, NodeTypes } = require("./components/Types.js")
+const { Utils } = require("jtree/products/Utils.js")
+const { Directions, ParserTypes } = require("./components/Types.js")
 
 yodash.parseInts = (arr, start) => arr.map((item, index) => (index >= start ? parseInt(item) : item))
 
@@ -33,9 +34,9 @@ yodash.compare = (left, operator, right) => {
 
 yodash.compileAgentClassDeclarationsAndMap = program => {
   const clone = program.clone()
-  clone.filter(node => node.getNodeTypeId() !== NodeTypes.agentDefinitionNode).forEach(node => node.destroy())
+  clone.filter(node => node.parserId !== ParserTypes.agentDefinitionParser).forEach(node => node.destroy())
   clone.agentKeywordMap = {}
-  clone.agentTypes.forEach((node, index) => (clone.agentKeywordMap[node.getWord(0)] = `simAgent${index}`))
+  clone.agentTypes.forEach((node, index) => (clone.agentKeywordMap[node.firstWord] = `simAgent${index}`))
   const compiled = clone.compile()
   const agentMap = Object.keys(clone.agentKeywordMap)
     .map(key => `"${key}":${clone.agentKeywordMap[key]}`)
@@ -48,15 +49,15 @@ yodash.compileAgentClassDeclarationsAndMap = program => {
 yodash.patchExperimentAndReplaceSymbols = (program, experiment) => {
   const clone = program.clone()
   // drop experiment nodes
-  clone.filter(node => node.getNodeTypeId() === NodeTypes.experimentNode).forEach(node => node.destroy())
+  clone.filter(node => node.parserId === ParserTypes.experimentParser).forEach(node => node.destroy())
   // Append current experiment
   if (experiment) clone.concat(experiment.childrenToString())
   // Build symbol table
   const symbolTable = {}
   clone
-    .filter(node => node.getNodeTypeId() === NodeTypes.settingDefinitionNode)
+    .filter(node => node.parserId === ParserTypes.settingDefinitionParser)
     .forEach(node => {
-      symbolTable[node.getWord(0)] = node.getContent()
+      symbolTable[node.firstWord] = node.content
       node.destroy()
     })
   // Find and replace
@@ -200,7 +201,7 @@ yodash.draw = str => {
 
 yodash.updateOccupiedSpots = (board, occupiedSpots) => {
   new TreeNode(board).forEach(line => {
-    occupiedSpots.add(yodash.makePositionHash(yodash.parsePosition(line.getWords())))
+    occupiedSpots.add(yodash.makePositionHash(yodash.parsePosition(line.words)))
   })
 }
 
@@ -269,16 +270,16 @@ const shuffleArray = (array, randomNumberGenerator) => {
 
 yodash.pick = (tree, fields) => {
   const newTree = tree.clone()
-  const map = TreeUtils.arrayToMap(fields)
+  const map = Utils.arrayToMap(fields)
   newTree.forEach(node => {
-    if (!map[node.getWord(0)]) node.destroy()
+    if (!map[node.firstWord]) node.destroy()
   })
 
   return newTree
 }
 
 yodash.flatten = tree => {
-  const newTree = new jtree.TreeNode()
+  const newTree = new TreeNode()
   tree.forEach(node => node.forEach(child => newTree.appendNode(child)))
   return newTree
 }

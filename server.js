@@ -4,7 +4,7 @@ const express = require("express")
 const { readFile } = require("fs")
 const { TypeScriptRewriter } = require("jtree/products/TypeScriptRewriter.js")
 const stamp = require("jtree/products/stamp.nodejs.js")
-const { jtree } = require("jtree")
+const { TreeNode } = require("jtree/products/TreeNode.js")
 const { getExamples } = require("./examples")
 
 class Server {

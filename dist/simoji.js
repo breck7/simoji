@@ -3,284 +3,285 @@ const yodash = {}
 
 
 
+
 yodash.parseInts = (arr, start) => arr.map((item, index) => (index >= start ? parseInt(item) : item))
 
 yodash.getRandomAngle = randomNumberGenerator => {
-	const r1 = randomNumberGenerator()
-	const r2 = randomNumberGenerator()
-	if (r1 > 0.5) return r2 > 0.5 ? Directions.North : Directions.South
-	return r2 > 0.5 ? Directions.West : Directions.East
+  const r1 = randomNumberGenerator()
+  const r2 = randomNumberGenerator()
+  if (r1 > 0.5) return r2 > 0.5 ? Directions.North : Directions.South
+  return r2 > 0.5 ? Directions.West : Directions.East
 }
 
 yodash.flipAngle = angle => {
-	let newAngle = ""
-	if (angle.includes(Directions.North)) newAngle += Directions.South
-	else if (angle.includes(Directions.South)) newAngle += Directions.North
-	if (angle.includes(Directions.East)) newAngle += Directions.West
-	else if (angle.includes(Directions.West)) newAngle += Directions.East
-	return newAngle
+  let newAngle = ""
+  if (angle.includes(Directions.North)) newAngle += Directions.South
+  else if (angle.includes(Directions.South)) newAngle += Directions.North
+  if (angle.includes(Directions.East)) newAngle += Directions.West
+  else if (angle.includes(Directions.West)) newAngle += Directions.East
+  return newAngle
 }
 
 yodash.compare = (left, operator, right) => {
-	if (operator === "=") return left == right
-	if (operator === "<") return left < right
-	if (operator === ">") return left > right
-	if (operator === "<=") return left <= right
-	if (operator === ">=") return left >= right
+  if (operator === "=") return left == right
+  if (operator === "<") return left < right
+  if (operator === ">") return left > right
+  if (operator === "<=") return left <= right
+  if (operator === ">=") return left >= right
 
-	return false
+  return false
 }
 
 yodash.compileAgentClassDeclarationsAndMap = program => {
-	const clone = program.clone()
-	clone.filter(node => node.getNodeTypeId() !== NodeTypes.agentDefinitionNode).forEach(node => node.destroy())
-	clone.agentKeywordMap = {}
-	clone.agentTypes.forEach((node, index) => (clone.agentKeywordMap[node.getWord(0)] = `simAgent${index}`))
-	const compiled = clone.compile()
-	const agentMap = Object.keys(clone.agentKeywordMap)
-		.map(key => `"${key}":${clone.agentKeywordMap[key]}`)
-		.join(",")
-	return `${compiled}
+  const clone = program.clone()
+  clone.filter(node => node.parserId !== ParserTypes.agentDefinitionParser).forEach(node => node.destroy())
+  clone.agentKeywordMap = {}
+  clone.agentTypes.forEach((node, index) => (clone.agentKeywordMap[node.firstWord] = `simAgent${index}`))
+  const compiled = clone.compile()
+  const agentMap = Object.keys(clone.agentKeywordMap)
+    .map(key => `"${key}":${clone.agentKeywordMap[key]}`)
+    .join(",")
+  return `${compiled}
     const map = {${agentMap}};
     map;`
 }
 
 yodash.patchExperimentAndReplaceSymbols = (program, experiment) => {
-	const clone = program.clone()
-	// drop experiment nodes
-	clone.filter(node => node.getNodeTypeId() === NodeTypes.experimentNode).forEach(node => node.destroy())
-	// Append current experiment
-	if (experiment) clone.concat(experiment.childrenToString())
-	// Build symbol table
-	const symbolTable = {}
-	clone
-		.filter(node => node.getNodeTypeId() === NodeTypes.settingDefinitionNode)
-		.forEach(node => {
-			symbolTable[node.getWord(0)] = node.getContent()
-			node.destroy()
-		})
-	// Find and replace
-	let withVarsReplaced = clone.toString()
-	Object.keys(symbolTable).forEach(key => {
-		withVarsReplaced = withVarsReplaced.replaceAll(key, symbolTable[key])
-	})
-	return withVarsReplaced
+  const clone = program.clone()
+  // drop experiment nodes
+  clone.filter(node => node.parserId === ParserTypes.experimentParser).forEach(node => node.destroy())
+  // Append current experiment
+  if (experiment) clone.concat(experiment.childrenToString())
+  // Build symbol table
+  const symbolTable = {}
+  clone
+    .filter(node => node.parserId === ParserTypes.settingDefinitionParser)
+    .forEach(node => {
+      symbolTable[node.firstWord] = node.content
+      node.destroy()
+    })
+  // Find and replace
+  let withVarsReplaced = clone.toString()
+  Object.keys(symbolTable).forEach(key => {
+    withVarsReplaced = withVarsReplaced.replaceAll(key, symbolTable[key])
+  })
+  return withVarsReplaced
 }
 
 yodash.getBestAngle = (targets, position) => {
-	let closest = Infinity
-	let target
-	targets.forEach(candidate => {
-		const pos = candidate.position
-		const distance = math.distance([pos.down, pos.right], [position.down, position.right])
-		if (distance < closest) {
-			closest = distance
-			target = candidate
-		}
-	})
-	const heading = target.position
-	return yodash.angle(position.down, position.right, heading.down, heading.right)
+  let closest = Infinity
+  let target
+  targets.forEach(candidate => {
+    const pos = candidate.position
+    const distance = math.distance([pos.down, pos.right], [position.down, position.right])
+    if (distance < closest) {
+      closest = distance
+      target = candidate
+    }
+  })
+  const heading = target.position
+  return yodash.angle(position.down, position.right, heading.down, heading.right)
 }
 
 yodash.angle = (cx, cy, ex, ey) => {
-	const dy = ey - cy
-	const dx = ex - cx
-	let theta = Math.atan2(dy, dx) // range (-PI, PI]
-	theta *= 180 / Math.PI // rads to degs, range (-180, 180]
-	//if (theta < 0) theta = 360 + theta; // range [0, 360)
-	let angle = ""
+  const dy = ey - cy
+  const dx = ex - cx
+  let theta = Math.atan2(dy, dx) // range (-PI, PI]
+  theta *= 180 / Math.PI // rads to degs, range (-180, 180]
+  //if (theta < 0) theta = 360 + theta; // range [0, 360)
+  let angle = ""
 
-	if (Math.abs(theta) > 90) angle += Directions.North
-	else angle += Directions.South
-	if (theta < 0) angle += Directions.West
-	else angle += Directions.East
-	return angle
+  if (Math.abs(theta) > 90) angle += Directions.North
+  else angle += Directions.South
+  if (theta < 0) angle += Directions.West
+  else angle += Directions.East
+  return angle
 }
 
 yodash.getRandomLocation = (rows, cols, randomNumberGenerator) => {
-	const maxRight = cols
-	const maxBottom = rows
-	const right = Math.round(randomNumberGenerator() * maxRight)
-	const down = Math.round(randomNumberGenerator() * maxBottom)
-	return { right, down }
+  const maxRight = cols
+  const maxBottom = rows
+  const right = Math.round(randomNumberGenerator() * maxRight)
+  const down = Math.round(randomNumberGenerator() * maxBottom)
+  return { right, down }
 }
 
 yodash.getRandomLocationHash = (rows, cols, occupiedSpots, randomNumberGenerator) => {
-	const { right, down } = yodash.getRandomLocation(rows, cols, randomNumberGenerator)
-	const hash = yodash.makePositionHash({ right, down })
-	if (occupiedSpots && occupiedSpots.has(hash))
-		return yodash.getRandomLocationHash(rows, cols, occupiedSpots, randomNumberGenerator)
-	return hash
+  const { right, down } = yodash.getRandomLocation(rows, cols, randomNumberGenerator)
+  const hash = yodash.makePositionHash({ right, down })
+  if (occupiedSpots && occupiedSpots.has(hash))
+    return yodash.getRandomLocationHash(rows, cols, occupiedSpots, randomNumberGenerator)
+  return hash
 }
 
 yodash.fill = (rows, cols, occupiedSpots, emoji) => {
-	const board = []
-	while (rows >= 0) {
-		let col = cols
-		while (col >= 0) {
-			const hash = yodash.makePositionHash({ right: col, down: rows })
-			col--
-			if (occupiedSpots.has(hash)) continue
-			board.push(`${emoji} ${hash}`)
-		}
-		rows--
-	}
-	return board.join("\n")
+  const board = []
+  while (rows >= 0) {
+    let col = cols
+    while (col >= 0) {
+      const hash = yodash.makePositionHash({ right: col, down: rows })
+      col--
+      if (occupiedSpots.has(hash)) continue
+      board.push(`${emoji} ${hash}`)
+    }
+    rows--
+  }
+  return board.join("\n")
 }
 
 yodash.positionsAdjacentTo = position => {
-	let { right, down } = position
-	const positions = []
-	down--
-	positions.push({ down, right })
-	right--
-	positions.push({ down, right })
-	right++
-	right++
-	positions.push({ down, right })
-	down++
-	positions.push({ down, right })
-	right--
-	right--
-	positions.push({ down, right })
-	down++
-	positions.push({ down, right })
-	right++
-	positions.push({ down, right })
-	right++
-	positions.push({ down, right })
-	return positions
+  let { right, down } = position
+  const positions = []
+  down--
+  positions.push({ down, right })
+  right--
+  positions.push({ down, right })
+  right++
+  right++
+  positions.push({ down, right })
+  down++
+  positions.push({ down, right })
+  right--
+  right--
+  positions.push({ down, right })
+  down++
+  positions.push({ down, right })
+  right++
+  positions.push({ down, right })
+  right++
+  positions.push({ down, right })
+  return positions
 }
 
 yodash.makePositionHash = position => `${position.down + "⬇️ " + position.right + "➡️"}`
 
 yodash.makeRectangle = (character = "🧱", width = 20, height = 20, startRight = 0, startDown = 0) => {
-	if (width < 1 || height < 1) {
-		return ""
-	}
-	const cells = []
-	let row = 0
-	while (row < height) {
-		let col = 0
-		while (col < width) {
-			const isPerimeter = row === 0 || row === height - 1 || col === 0 || col === width - 1
-			if (isPerimeter)
-				cells.push(
-					`${character} ${yodash.makePositionHash({
-						down: startDown + row,
-						right: startRight + col
-					})}`
-				)
-			col++
-		}
-		row++
-	}
-	return cells.join("\n")
+  if (width < 1 || height < 1) {
+    return ""
+  }
+  const cells = []
+  let row = 0
+  while (row < height) {
+    let col = 0
+    while (col < width) {
+      const isPerimeter = row === 0 || row === height - 1 || col === 0 || col === width - 1
+      if (isPerimeter)
+        cells.push(
+          `${character} ${yodash.makePositionHash({
+            down: startDown + row,
+            right: startRight + col
+          })}`
+        )
+      col++
+    }
+    row++
+  }
+  return cells.join("\n")
 }
 
 yodash.parsePosition = words => {
-	return {
-		down: parseInt(words.find(word => word.includes("⬇️")).slice(0, -1)),
-		right: parseInt(words.find(word => word.includes("➡️")).slice(0, -1))
-	}
+  return {
+    down: parseInt(words.find(word => word.includes("⬇️")).slice(0, -1)),
+    right: parseInt(words.find(word => word.includes("➡️")).slice(0, -1))
+  }
 }
 
 yodash.draw = str => {
-	const lines = str.split("\n")
-	const output = []
-	for (let index = 0; index < lines.length; index++) {
-		const words = lines[index].split(" ")
-		for (let wordIndex = 0; wordIndex < words.length; wordIndex++) {
-			const word = words[wordIndex]
-			if (word !== "") output.push(`${word} ${yodash.makePositionHash({ down: index, right: wordIndex })}`)
-		}
-	}
-	return output.join("\n")
+  const lines = str.split("\n")
+  const output = []
+  for (let index = 0; index < lines.length; index++) {
+    const words = lines[index].split(" ")
+    for (let wordIndex = 0; wordIndex < words.length; wordIndex++) {
+      const word = words[wordIndex]
+      if (word !== "") output.push(`${word} ${yodash.makePositionHash({ down: index, right: wordIndex })}`)
+    }
+  }
+  return output.join("\n")
 }
 
 yodash.updateOccupiedSpots = (board, occupiedSpots) => {
-	new TreeNode(board).forEach(line => {
-		occupiedSpots.add(yodash.makePositionHash(yodash.parsePosition(line.getWords())))
-	})
+  new TreeNode(board).forEach(line => {
+    occupiedSpots.add(yodash.makePositionHash(yodash.parsePosition(line.words)))
+  })
 }
 
 yodash.getAllAvailableSpots = (rows, cols, occupiedSpots, rowStart = 0, colStart = 0) => {
-	const availablePositions = []
-	let down = rows
-	while (down >= rowStart) {
-		let right = cols
-		while (right >= colStart) {
-			const hash = yodash.makePositionHash({ right, down })
-			if (!occupiedSpots.has(hash)) availablePositions.push({ right, down, hash })
-			right--
-		}
-		down--
-	}
-	return availablePositions
+  const availablePositions = []
+  let down = rows
+  while (down >= rowStart) {
+    let right = cols
+    while (right >= colStart) {
+      const hash = yodash.makePositionHash({ right, down })
+      if (!occupiedSpots.has(hash)) availablePositions.push({ right, down, hash })
+      right--
+    }
+    down--
+  }
+  return availablePositions
 }
 
 yodash.parsePercent = str => parseFloat(str.replace("%", "")) / 100
 
 yodash.insertClusteredRandomAgents = (
-	randomNumberGenerator,
-	amount,
-	char,
-	rows,
-	cols,
-	occupiedSpots,
-	originRow,
-	originColumn
+  randomNumberGenerator,
+  amount,
+  char,
+  rows,
+  cols,
+  occupiedSpots,
+  originRow,
+  originColumn
 ) => {
-	const availableSpots = yodash.getAllAvailableSpots(rows, cols, occupiedSpots)
-	const spots = yodash.sampleFrom(availableSpots, amount * 10, randomNumberGenerator)
-	const origin = originColumn
-		? { down: parseInt(originRow), right: parseInt(originColumn) }
-		: yodash.getRandomLocation(rows, cols, randomNumberGenerator)
-	const sortedByDistance = lodash.sortBy(spots, spot =>
-		math.distance([origin.down, origin.right], [spot.down, spot.right])
-	)
+  const availableSpots = yodash.getAllAvailableSpots(rows, cols, occupiedSpots)
+  const spots = yodash.sampleFrom(availableSpots, amount * 10, randomNumberGenerator)
+  const origin = originColumn
+    ? { down: parseInt(originRow), right: parseInt(originColumn) }
+    : yodash.getRandomLocation(rows, cols, randomNumberGenerator)
+  const sortedByDistance = lodash.sortBy(spots, spot =>
+    math.distance([origin.down, origin.right], [spot.down, spot.right])
+  )
 
-	return sortedByDistance
-		.slice(0, amount)
-		.map(spot => {
-			const { hash } = spot
-			occupiedSpots.add(hash)
-			return `${char} ${hash}`
-		})
-		.join("\n")
+  return sortedByDistance
+    .slice(0, amount)
+    .map(spot => {
+      const { hash } = spot
+      occupiedSpots.add(hash)
+      return `${char} ${hash}`
+    })
+    .join("\n")
 }
 
 yodash.getRandomNumberGenerator = seed => () => {
-	const semiRand = Math.sin(seed++) * 10000
-	return semiRand - Math.floor(semiRand)
+  const semiRand = Math.sin(seed++) * 10000
+  return semiRand - Math.floor(semiRand)
 }
 
 yodash.sampleFrom = (collection, howMany, randomNumberGenerator) =>
-	shuffleArray(collection, randomNumberGenerator).slice(0, howMany)
+  shuffleArray(collection, randomNumberGenerator).slice(0, howMany)
 
 const shuffleArray = (array, randomNumberGenerator) => {
-	const clonedArr = array.slice()
-	for (let index = clonedArr.length - 1; index > 0; index--) {
-		const replacerIndex = Math.floor(randomNumberGenerator() * (index + 1))
-		;[clonedArr[index], clonedArr[replacerIndex]] = [clonedArr[replacerIndex], clonedArr[index]]
-	}
-	return clonedArr
+  const clonedArr = array.slice()
+  for (let index = clonedArr.length - 1; index > 0; index--) {
+    const replacerIndex = Math.floor(randomNumberGenerator() * (index + 1))
+    ;[clonedArr[index], clonedArr[replacerIndex]] = [clonedArr[replacerIndex], clonedArr[index]]
+  }
+  return clonedArr
 }
 
 yodash.pick = (tree, fields) => {
-	const newTree = tree.clone()
-	const map = TreeUtils.arrayToMap(fields)
-	newTree.forEach(node => {
-		if (!map[node.getWord(0)]) node.destroy()
-	})
+  const newTree = tree.clone()
+  const map = Utils.arrayToMap(fields)
+  newTree.forEach(node => {
+    if (!map[node.firstWord]) node.destroy()
+  })
 
-	return newTree
+  return newTree
 }
 
 yodash.flatten = tree => {
-	const newTree = new jtree.TreeNode()
-	tree.forEach(node => node.forEach(child => newTree.appendNode(child)))
-	return newTree
+  const newTree = new TreeNode()
+  tree.forEach(node => node.forEach(child => newTree.appendNode(child)))
+  return newTree
 }
 
 window.yodash = yodash
@@ -291,7 +292,7 @@ window.yodash = yodash
 
 var jQuery
 
-class AbstractContextMenuComponent extends AbstractTreeComponent {
+class AbstractContextMenuComponent extends AbstractTreeComponentParser {
   toHakonCode() {
     const theme = this.getTheme()
     return `.AbstractContextMenuComponent
@@ -314,14 +315,14 @@ class AbstractContextMenuComponent extends AbstractTreeComponent {
   }
 
   toStumpCode() {
-    return new jtree.TreeNode(`div
+    return new TreeNode(`div
  class AbstractContextMenuComponent {constructorName}
  {body}`).templateToString({ constructorName: this.constructor.name, body: this.getContextMenuBodyStumpCode() })
   }
 
   treeComponentDidMount() {
     const container = this.getStumpNode()
-    const app = this.getRootNode()
+    const app = this.root
     const { willowBrowser } = app
     const bodyShadow = willowBrowser.getBodyStumpNode().getShadow()
     const unmountOnClick = function() {
@@ -343,7 +344,7 @@ class AbstractContextMenuComponent extends AbstractTreeComponent {
 
   top = undefined
   get left() {
-    return this.getRootNode().getMouseEvent().clientX
+    return this.root.getMouseEvent().clientX
   }
 
   _getContextMenuPosition(windowWidth, windowHeight, x, y, shadow) {
@@ -378,7 +379,7 @@ window.AbstractContextMenuComponent = AbstractContextMenuComponent
 
 const SelectedClass = "selected"
 
-class Agent extends jtree.TreeNode {
+class Agent extends TreeNode {
   get name() {
     return this._name ?? this.icon
   }
@@ -390,8 +391,8 @@ class Agent extends jtree.TreeNode {
   }
 
   get definitionWithBehaviors() {
-    if (!this.behaviors.length) return this.board.simojiProgram.getNode(this.getWord(0))
-    const behaviors = yodash.flatten(yodash.pick(this.board.simojiProgram, [this.getWord(0), ...this.behaviors]))
+    if (!this.behaviors.length) return this.board.simojiProgram.getNode(this.firstWord)
+    const behaviors = yodash.flatten(yodash.pick(this.board.simojiProgram, [this.firstWord, ...this.behaviors]))
     return behaviors
   }
 
@@ -412,7 +413,7 @@ class Agent extends jtree.TreeNode {
       const { neighorCount } = this
 
       neighborConditions.forEach(conditionAndCommandsBlock => {
-        const [emoji, operator, count] = conditionAndCommandsBlock.getWords()
+        const [emoji, operator, count] = conditionAndCommandsBlock.words
         const actual = neighorCount[emoji]
         if (!yodash.compare(actual ?? 0, operator, count)) return
         conditionAndCommandsBlock.forEach(command => this._executeCommand(this, command))
@@ -430,7 +431,7 @@ class Agent extends jtree.TreeNode {
       for (let pos of yodash.positionsAdjacentTo(this.position)) {
         const hits = agentPositionMap.get(yodash.makePositionHash(pos)) ?? []
         for (let target of hits) {
-          const targetId = target.getWord(0)
+          const targetId = target.firstWord
           const commandBlock = touchMap.getNode(targetId)
           if (commandBlock) {
             commandBlock.forEach(command => this._executeCommand(target, command))
@@ -446,7 +447,7 @@ class Agent extends jtree.TreeNode {
     this.getCommandBlocks(Keywords.onHit).forEach(hitMap => {
       if (this.skip(hitMap.getWord(1))) return
       targets.forEach(target => {
-        const targetId = target.getWord(0)
+        const targetId = target.firstWord
         const commandBlock = hitMap.getNode(targetId)
         if (commandBlock) commandBlock.forEach(command => this._executeCommand(target, command))
       })
@@ -458,7 +459,7 @@ class Agent extends jtree.TreeNode {
   }
 
   _executeCommand(target, instruction) {
-    const commandName = instruction.getWord(0)
+    const commandName = instruction.firstWord
     if (this[commandName]) this[commandName](target, instruction)
     // board commands
     else this.board[commandName](instruction)
@@ -506,7 +507,7 @@ class Agent extends jtree.TreeNode {
   }
 
   _replaceWith(newObject) {
-    this.getParent().appendLine(`${newObject} ${this.positionHash}`)
+    this.parent.appendLine(`${newObject} ${this.positionHash}`)
 
     this.remove()
   }
@@ -556,10 +557,6 @@ class Agent extends jtree.TreeNode {
     }
   }
 
-  get root() {
-    return this.getRootNode()
-  }
-
   set position(value) {
     if (this.board.isSolidAgent(value)) return this.bouncy ? this.bounce() : this
     const newLine = this.getLine()
@@ -570,7 +567,7 @@ class Agent extends jtree.TreeNode {
   }
 
   get board() {
-    return this.getParent()
+    return this.parent
   }
 
   get maxRight() {
@@ -596,7 +593,7 @@ class Agent extends jtree.TreeNode {
   }
 
   get position() {
-    return yodash.parsePosition(this.getWords())
+    return yodash.parsePosition(this.words)
   }
 
   get positionHash() {
@@ -604,7 +601,7 @@ class Agent extends jtree.TreeNode {
   }
 
   get gridSize() {
-    return this.getParent().gridSize
+    return this.parent.gridSize
   }
 
   get selected() {
@@ -645,8 +642,9 @@ class Agent extends jtree.TreeNode {
   get inlineStyle() {
     const { gridSize, health } = this
     const opacity = health === undefined ? "" : `opacity:${this.health / this.startHealth};`
-    return `top:${this.top * gridSize}px;left:${this.left *
-      gridSize}px;font-size:${gridSize}px;line-height: ${gridSize}px;${opacity};${this.style ?? ""}`
+    return `top:${this.top * gridSize}px;left:${
+      this.left * gridSize
+    }px;font-size:${gridSize}px;line-height: ${gridSize}px;${opacity};${this.style ?? ""}`
   }
 
   toElement() {
@@ -682,7 +680,7 @@ class Agent extends jtree.TreeNode {
 
   kickIt(target) {
     target.angle = this.angle
-    target.tickStack = new jtree.TreeNode(`1
+    target.tickStack = new TreeNode(`1
  move
  move
  move
@@ -715,7 +713,7 @@ class Agent extends jtree.TreeNode {
   }
 
   narrate(subject, command) {
-    this.root.log(`${this.getWord(0)} ${command.getContent()}`)
+    this.root.log(`${this.firstWord} ${command.content}`)
   }
 
   shoot() {
@@ -802,12 +800,12 @@ window.Agent = Agent
 
 
 
-class AgentPaletteComponent extends AbstractTreeComponent {
+class AgentPaletteComponent extends AbstractTreeComponentParser {
   toStumpCode() {
-    const root = this.getRootNode()
+    const root = this.root
     const { agentToInsert } = root
     const items = this.paletteItems
-      .map(item => item.getWord(0))
+      .map(item => item.firstWord)
       .map(
         word => ` div ${word}
   class ${agentToInsert === word ? "ActiveAgent" : ""}
@@ -820,16 +818,16 @@ ${items}`
   }
 
   get paletteItems() {
-    return this.getRootNode().allAgentTypes.filter(item => !item.has("noPalette"))
+    return this.root.allAgentTypes.filter(item => !item.has("noPalette"))
   }
 
   changeAgentBrushCommand(x) {
-    this.getRootNode().changeAgentBrushCommand(x)
+    this.root.changeAgentBrushCommand(x)
     this.setContent(Date.now()).renderAndGetRenderReport()
   }
 
   getDependencies() {
-    return [this.getRootNode().board]
+    return [this.root.board]
   }
 }
 
@@ -847,8 +845,8 @@ let nodeJsPrefix = ""
 
 // prettier-ignore
 
-class BoardErrorNode extends AbstractTreeComponent {
-  _isErrorNodeType() {
+class BoardErrorParser extends AbstractTreeComponentParser {
+  _isErrorParser() {
     return true
   }
   toStumpCode() {
@@ -858,17 +856,17 @@ class BoardErrorNode extends AbstractTreeComponent {
   }
 }
 
-class leftStartPosition extends jtree.TreeNode {
+class leftStartPosition extends TreeNode {
   get width() {
     return parseInt(this.getWord(1))
   }
 }
 
-class BoardComponent extends AbstractTreeComponent {
+class BoardComponent extends AbstractTreeComponentParser {
   // override default parser creation.
   _getParser() {
     if (!this._parser)
-      this._parser = new jtree.TreeNode.Parser(BoardErrorNode, {
+      this._parser = new TreeNode.ParserCombinator(BoardErrorParser, {
         ...this.agentMap,
         GridComponent,
         BoardStyleComponent,
@@ -909,7 +907,7 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   get populationCsv() {
-    const csv = new TreeNode(this._populationCounts).toCsv()
+    const csv = new TreeNode(this._populationCounts).asCsv
     // add 0's for missing values
     return csv
       .split("\n")
@@ -939,7 +937,7 @@ class BoardComponent extends AbstractTreeComponent {
     if (blocks)
       blocks.forEach(block =>
         block
-          .filter(node => node.doesExtend(NodeTypes.abstractInjectCommandNode))
+          .filter(node => node.doesExtend(ParserTypes.abstractInjectCommandParser))
           .forEach(command => this.runInjectCommand(command))
       )
   }
@@ -1005,7 +1003,7 @@ class BoardComponent extends AbstractTreeComponent {
 
     if (this.resetAfterLoop) {
       this.resetAfterLoop = false
-      this.getRootNode().resetAllCommand()
+      this.root.resetAllCommand()
     }
   }
 
@@ -1037,7 +1035,7 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   get root() {
-    return this.getParent()
+    return this.parent
   }
 
   get ticksPerSecond() {
@@ -1048,10 +1046,10 @@ class BoardComponent extends AbstractTreeComponent {
   occupiedSpots = new Set()
 
   runInjectCommand(command) {
-    this[command.getNodeTypeId()](command)
+    this[command.parserId](command)
   }
 
-  insertClusterNode(commandNode) {
+  insertClusterParser(commandNode) {
     this.concat(
       yodash.insertClusteredRandomAgents(
         this.randomNumberGenerator,
@@ -1066,28 +1064,28 @@ class BoardComponent extends AbstractTreeComponent {
     )
   }
 
-  insertAtNode(commandNode) {
+  insertAtParser(commandNode) {
     this.appendLine(`${commandNode.getWord(1)} ${commandNode.getWord(3)} ${commandNode.getWord(2)}`)
     // TODO: update occupied spots cache?
   }
 
-  rectangleDrawNode(commandNode) {
-    const newLines = yodash.makeRectangle(...yodash.parseInts(commandNode.getWords().slice(1), 1))
+  rectangleDrawParser(commandNode) {
+    const newLines = yodash.makeRectangle(...yodash.parseInts(commandNode.words.slice(1), 1))
     this.concat(newLines)
     // TODO: update occupied spots cache?
   }
 
-  pasteDrawNode(commandNode) {
+  pasteDrawParser(commandNode) {
     const newSpots = new TreeNode(commandNode.childrenToString())
     yodash.updateOccupiedSpots(newSpots, this.occupiedSpots)
     this.concat(newSpots)
   }
 
-  fillNode(commandNode) {
+  fillParser(commandNode) {
     this.concat(yodash.fill(this.rows, this.cols, this.occupiedSpots, commandNode.getWord(1)))
   }
 
-  drawNode(commandNode) {
+  drawParser(commandNode) {
     const { occupiedSpots } = this
     const spots = yodash.draw(commandNode.childrenToString())
     yodash.updateOccupiedSpots(spots, occupiedSpots)
@@ -1105,7 +1103,7 @@ class BoardComponent extends AbstractTreeComponent {
     return this._rng
   }
 
-  insertNode(commandNode) {
+  insertParser(commandNode) {
     const { rows, cols, occupiedSpots } = this
     const emoji = commandNode.getWord(2)
     let amount = commandNode.getWord(1)
@@ -1128,7 +1126,7 @@ class BoardComponent extends AbstractTreeComponent {
       const emoji = commands.getWord(1)
       if (emoji && this.has(emoji)) return
       commands.forEach(instruction => {
-        this[instruction.getWord(0)](instruction)
+        this[instruction.firstWord](instruction)
       })
     })
   }
@@ -1138,7 +1136,7 @@ class BoardComponent extends AbstractTreeComponent {
       const probability = commands.getWord(1)
       if (probability && this.randomNumberGenerator() > parseFloat(probability)) return
       commands.forEach(instruction => {
-        this[instruction.getWord(0)](instruction)
+        this[instruction.firstWord](instruction)
       })
     })
   }
@@ -1152,7 +1150,7 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   get agents() {
-    return this.getTopDownArray().filter(node => node instanceof Agent)
+    return this.topDownArray.filter(node => node instanceof Agent)
   }
 
   get agentPositionMap() {
@@ -1244,7 +1242,7 @@ class BoardComponent extends AbstractTreeComponent {
 
   get experimentTitle() {
     if (!this.hasMultipleBoards) return ""
-    return this.root.mainExperiment.findNodes(Keywords.experiment)[this.boardIndex].getContent() ?? ""
+    return this.root.mainExperiment.findNodes(Keywords.experiment)[this.boardIndex].content ?? ""
   }
 
   startInterval() {
@@ -1291,7 +1289,7 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   alert(command) {
-    const message = command.getContent()
+    const message = command.content
     if (!this.isNodeJs())
       // todo: willow should shim this
       alert(message)
@@ -1309,13 +1307,13 @@ class BoardComponent extends AbstractTreeComponent {
   }
 
   log(command) {
-    this.root.log(command.getContent())
+    this.root.log(command.content)
   }
 }
 
-class BoardStyleComponent extends AbstractTreeComponent {
-  createParser() {
-    return new jtree.TreeNode.Parser(TreeNode)
+class BoardStyleComponent extends AbstractTreeComponentParser {
+  createParserCombinator() {
+    return new TreeNode.ParserCombinator(TreeNode)
   }
 
   toStumpCode() {
@@ -1340,9 +1338,9 @@ window.BoardComponent = BoardComponent
 
 
 
-class BottomBarComponent extends AbstractTreeComponent {
-  createParser() {
-    return new jtree.TreeNode.Parser(undefined, {
+class BottomBarComponent extends AbstractTreeComponentParser {
+  createParserCombinator() {
+    return new TreeNode.ParserCombinator(undefined, {
       PlayButtonComponent,
       ReportButtonComponent,
       ResetButtonComponent
@@ -1355,15 +1353,15 @@ window.BottomBarComponent = BottomBarComponent
 
 
 
-class EditorHandleComponent extends AbstractTreeComponent {
+class EditorHandleComponent extends AbstractTreeComponentParser {
   get left() {
-    return this.getRootNode().editor.width
+    return this.root.editor.width
   }
 
   makeDraggable() {
     if (this.isNodeJs()) return
 
-    const root = this.getRootNode()
+    const root = this.root
     jQuery(this.getStumpNode().getShadow().element).draggable({
       axis: "x",
       drag: function(event, ui) {
@@ -1392,7 +1390,7 @@ class EditorHandleComponent extends AbstractTreeComponent {
   }
 
   getDependencies() {
-    return [this.getRootNode().editor]
+    return [this.root.editor]
   }
 }
 
@@ -1401,7 +1399,7 @@ window.EditorHandleComponent = EditorHandleComponent
 
 
 
-const ExampleSims = new jtree.TreeNode()
+const ExampleSims = new TreeNode()
 
 // prettier-ignore
 
@@ -1414,7 +1412,8 @@ window.ExampleSims = ExampleSims
 
 
 
-const Categories = new jtree.TreeNode(`🦠 Epidemiology
+
+const Categories = new TreeNode(`🦠 Epidemiology
  virus
  covid19
 🌲 Forests
@@ -1442,10 +1441,10 @@ class ExampleMenuComponent extends AbstractContextMenuComponent {
 
     return category
       .map(node => {
-        const name = node.getFirstWord()
+        const name = node.firstWord
         const program = ExampleSims.getNode(name)
         const icon = program.childrenToString().match(/(\p{Extended_Pictographic}+)/u)[1]
-        const properName = jtree.Utils.ucfirst(name)
+        const properName = Utils.ucfirst(name)
         return `a ${icon}  &nbsp; ${properName}
  clickCommand loadExampleCommand ${name}
  class ExampleButton`
@@ -1456,17 +1455,17 @@ class ExampleMenuComponent extends AbstractContextMenuComponent {
   // Align these to below and to the left of the clicked button
   top = 28
   get left() {
-    const evt = this.getRootNode().getMouseEvent()
+    const evt = this.root.getMouseEvent()
     return evt.clientX - evt.offsetX
   }
 }
 
-class ExamplesComponent extends AbstractTreeComponent {
+class ExamplesComponent extends AbstractTreeComponentParser {
   toStumpCode() {
     const categories = Categories.map(category => {
-      const icon = category.getFirstWord()
-      const name = category.getContent()
-      const firstFile = category.nodeAt(0).getFirstWord()
+      const icon = category.firstWord
+      const name = category.content
+      const firstFile = category.nodeAt(0).firstWord
       return ` a ${icon}
   href index.html#example%20${firstFile}
   title ${name}
@@ -1478,10 +1477,10 @@ ${categories}`
   }
 
   async openCategoryCommand(icon) {
-    const root = this.getRootNode()
+    const root = this.root
     const category = Categories.getNode(icon)
-    const firstFile = category.nodeAt(0).getFirstWord()
-    this.getRootNode().toggleAndRender(`${ExampleMenuComponent.name} ${icon}`)
+    const firstFile = category.nodeAt(0).firstWord
+    this.root.toggleAndRender(`${ExampleMenuComponent.name} ${icon}`)
   }
 }
 
@@ -1493,9 +1492,9 @@ window.ExampleMenuComponent = ExampleMenuComponent
 
 
 
-class GridComponent extends AbstractTreeComponent {
+class GridComponent extends AbstractTreeComponentParser {
   gridClickCommand(down, right) {
-    return this.getParent().insertAgentAtCommand(right, down)
+    return this.parent.insertAgentAtCommand(right, down)
   }
 
   makeBlock(down, right, gridSize) {
@@ -1506,7 +1505,7 @@ class GridComponent extends AbstractTreeComponent {
   }
 
   toStumpCode() {
-    const { cols, rows, gridSize } = this.getParent()
+    const { cols, rows, gridSize } = this.parent
     let blocks = ""
     let rs = rows
     while (rs >= 0) {
@@ -1530,7 +1529,7 @@ window.GridComponent = GridComponent
 
 
 
-class AbstractModalTreeComponent extends AbstractTreeComponent {
+class AbstractModalTreeComponent extends AbstractTreeComponentParser {
   toHakonCode() {
     return `.modalBackground
  position fixed
@@ -1568,7 +1567,7 @@ class AbstractModalTreeComponent extends AbstractTreeComponent {
   }
 
   toStumpCode() {
-    return new jtree.TreeNode(`section
+    return new TreeNode(`section
  clickCommand unmountAndDestroyCommand
  class modalBackground
  section
@@ -1595,9 +1594,9 @@ window.HelpModalComponent = HelpModalComponent
 
 
 
-class PlayButtonComponent extends AbstractTreeComponent {
+class PlayButtonComponent extends AbstractTreeComponentParser {
   get isStarted() {
-    return this.getRootNode().isRunning
+    return this.root.isRunning
   }
 
   toStumpCode() {
@@ -1612,7 +1611,7 @@ window.PlayButtonComponent = PlayButtonComponent
 
 
 
-class ReportButtonComponent extends AbstractTreeComponent {
+class ReportButtonComponent extends AbstractTreeComponentParser {
   toStumpCode() {
     return `span Δ
  title Generate Report
@@ -1626,7 +1625,7 @@ window.ReportButtonComponent = ReportButtonComponent
 
 
 
-class ResetButtonComponent extends AbstractTreeComponent {
+class ResetButtonComponent extends AbstractTreeComponentParser {
   toStumpCode() {
     return `span ≪
  title Clear and reset
@@ -1635,8 +1634,8 @@ class ResetButtonComponent extends AbstractTreeComponent {
   }
 
   resetAllCommand() {
-    this.getRootNode().pauseAllCommand()
-    this.getRootNode().resetAllCommand()
+    this.root.pauseAllCommand()
+    this.root.resetAllCommand()
   }
 }
 
@@ -1647,12 +1646,12 @@ window.ResetButtonComponent = ResetButtonComponent
 
 
 
-class RightBarComponent extends AbstractTreeComponent {
-	createParser() {
-		return new jtree.TreeNode.Parser(undefined, {
-			AgentPaletteComponent
-		})
-	}
+class RightBarComponent extends AbstractTreeComponentParser {
+  createParserCombinator() {
+    return new TreeNode.ParserCombinator(undefined, {
+      AgentPaletteComponent
+    })
+  }
 }
 
 window.RightBarComponent = RightBarComponent
@@ -1660,7 +1659,7 @@ window.RightBarComponent = RightBarComponent
 
 
 
-class ShareComponent extends AbstractTreeComponent {
+class ShareComponent extends AbstractTreeComponentParser {
   toStumpCode() {
     return `div
  class ShareComponent
@@ -1671,13 +1670,13 @@ class ShareComponent extends AbstractTreeComponent {
   }
 
   getDependencies() {
-    return [this.getRootNode().firstProgram]
+    return [this.root.firstProgram]
   }
 
   get link() {
     const url = new URL(typeof location === "undefined" ? "http://localhost/" : location.href) // todo: TCF should provide shim for this
     url.hash = ""
-    return url.toString() + this.getRootNode().urlHash
+    return url.toString() + this.root.urlHash
   }
 }
 
@@ -1699,7 +1698,7 @@ class CodeMirrorShim {
   }
 }
 
-class SimEditorComponent extends AbstractTreeComponent {
+class SimEditorComponent extends AbstractTreeComponentParser {
   toStumpCode() {
     return `div
  class ${SimEditorComponent.name}
@@ -1711,9 +1710,9 @@ class SimEditorComponent extends AbstractTreeComponent {
   id codeErrorsConsole`
   }
 
-  createParser() {
-    return new jtree.TreeNode.Parser(undefined, {
-      value: jtree.TreeNode
+  createParserCombinator() {
+    return new TreeNode.ParserCombinator(undefined, {
+      value: TreeNode
     })
   }
 
@@ -1728,11 +1727,11 @@ class SimEditorComponent extends AbstractTreeComponent {
     const code = this.codeMirrorValue
     if (this._code === code) return
     this._code = code
-    const root = this.getRootNode()
+    const root = this.root
     root.pauseAllCommand()
     // this._updateLocalStorage()
 
-    this.program = new simojiCompiler(code)
+    this.program = new simojiParser(code)
     const errs = this.program.getAllErrors()
 
     const errMessage = errs.length ? `${errs.length} errors` : "&nbsp;"
@@ -1755,7 +1754,7 @@ class SimEditorComponent extends AbstractTreeComponent {
             this._onCodeKeyUp()
           })
           this.codeWidgets.push(
-            this.codeMirrorInstance.addLineWidget(err.getLineNumber() - 1, el, { coverGutter: false, noHScroll: false })
+            this.codeMirrorInstance.addLineWidget(err.lineNumber - 1, el, { coverGutter: false, noHScroll: false })
           )
         })
       const info = this.codeMirrorInstance.getScrollInfo()
@@ -1770,7 +1769,7 @@ class SimEditorComponent extends AbstractTreeComponent {
   }
 
   loadFromEditor() {
-    this.getRootNode().loadNewSim(this._code)
+    this.root.loadNewSim(this._code)
   }
 
   get simCode() {
@@ -1801,12 +1800,7 @@ class SimEditorComponent extends AbstractTreeComponent {
 
   _initCodeMirror() {
     if (this.isNodeJs()) return (this.codeMirrorInstance = new CodeMirrorShim())
-    this.codeMirrorInstance = new jtree.TreeNotationCodeMirrorMode(
-      "custom",
-      () => simojiCompiler,
-      undefined,
-      CodeMirror
-    )
+    this.codeMirrorInstance = new GrammarCodeMirrorMode("custom", () => simojiParser, undefined, CodeMirror)
       .register()
       .fromTextAreaWithAutocomplete(document.getElementById("EditorTextarea"), {
         lineWrapping: false,
@@ -1868,8 +1862,8 @@ const MIN_GRID_ROWS = 10
 
 // prettier-ignore
 
-class githubTriangleComponent extends AbstractTreeComponent {
-  githubLink = `https://github.com/publicdomaincompany/simoji`
+class githubTriangleComponent extends AbstractTreeComponentParser {
+  githubLink = `https://github.com/breck7/simoji`
   toHakonCode() {
     return `.AbstractGithubTriangleComponent
  display block
@@ -1889,8 +1883,8 @@ class githubTriangleComponent extends AbstractTreeComponent {
   }
 }
 
-class ErrorNode extends AbstractTreeComponent {
-  _isErrorNodeType() {
+class ErrorParser extends AbstractTreeComponentParser {
+  _isErrorParser() {
     return true
   }
   toStumpCode() {
@@ -1900,9 +1894,9 @@ class ErrorNode extends AbstractTreeComponent {
   }
 }
 
-class SimojiApp extends AbstractTreeComponent {
-  createParser() {
-    return new jtree.TreeNode.Parser(ErrorNode, {
+class SimojiApp extends AbstractTreeComponentParser {
+  createParserCombinator() {
+    return new TreeNode.ParserCombinator(ErrorParser, {
       TopBarComponent,
       githubTriangleComponent,
       SimEditorComponent,
@@ -1959,7 +1953,7 @@ class SimojiApp extends AbstractTreeComponent {
 
       try {
         program
-          .filter(node => node.doesExtend(NodeTypes.abstractInjectCommandNode))
+          .filter(node => node.doesExtend(ParserTypes.abstractInjectCommandParser))
           .forEach(command => board.runInjectCommand(command))
       } catch (err) {
         if (this.verbose) console.error(err)
@@ -2040,8 +2034,8 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
   }
 
   dumpErrorsCommand() {
-    const errs = new simojiCompiler(this.simCode).getAllErrors()
-    console.log(new jtree.TreeNode(errs.map(err => err.toObject())).toFormattedTable(200))
+    const errs = new simojiParser(this.simCode).getAllErrors()
+    console.log(new TreeNode(errs.map(err => err.toObject())).toFormattedTable(200))
   }
 
   get boards() {
@@ -2053,7 +2047,7 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
   }
 
   get mainExperiment() {
-    return new simojiCompiler(this.simCode)
+    return new simojiParser(this.simCode)
   }
 
   get simojiPrograms() {
@@ -2066,7 +2060,7 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
         this._simojiPrograms.push(yodash.patchExperimentAndReplaceSymbols(mainExperiment, experiment))
       })
       // Evaluate the variables
-      this._simojiPrograms = this._simojiPrograms.map(program => new simojiCompiler(program.toString()))
+      this._simojiPrograms = this._simojiPrograms.map(program => new simojiParser(program.toString()))
     }
     return this._simojiPrograms
   }
@@ -2110,7 +2104,7 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
 
     const keyboardShortcuts = this._getKeyboardShortcuts()
     Object.keys(keyboardShortcuts).forEach(key => {
-      willowBrowser.getMousetrap().bind(key, function(evt) {
+      willowBrowser.getMousetrap().bind(key, function (evt) {
         keyboardShortcuts[key]()
         // todo: handle the below when we need to
         if (evt.preventDefault) evt.preventDefault()
@@ -2147,14 +2141,7 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
 
     if (!this.selection.length) return ""
 
-    const str = this.selection
-      .map(agent =>
-        agent
-          .getWords()
-          .slice(0, 3)
-          .join(" ")
-      )
-      .join("\n")
+    const str = this.selection.map(agent => agent.words.slice(0, 3).join(" ")).join("\n")
 
     evt.preventDefault()
     evt.clipboardData.setData("text/plain", str)
@@ -2213,7 +2200,7 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
   }
 
   get urlHash() {
-    const tree = new jtree.TreeNode()
+    const tree = new TreeNode()
     tree.appendLineAndChildren(UrlKeys.simoji, this.simCode ?? "")
     return "#" + encodeURIComponent(tree.toString())
   }
@@ -2292,12 +2279,12 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
 
   get isSnapshotOn() {
     // technically also needs rows and column settings
-    return new jtree.TreeNode(this.simCode).has(Keywords.seed)
+    return new TreeNode(this.simCode).has(Keywords.seed)
   }
 
   // Save the current random play for reproducibility and shareability
   snapShotCommand() {
-    const newCode = new jtree.TreeNode(this.simCode)
+    const newCode = new TreeNode(this.simCode)
     const boards = this.boards
 
     // todo: buggy. we should rename the board class to experiment, or rename experiment keyword to board.
@@ -2383,7 +2370,7 @@ SimojiApp.setupApp = (simojiCode, windowWidth = 1000, windowHeight = 1000) => {
     typeof localStorage !== "undefined"
       ? localStorage.getItem(LocalStorageKeys.editorStartWidth) ?? SIZES.EDITOR_WIDTH
       : SIZES.EDITOR_WIDTH
-  const startState = new jtree.TreeNode(`${githubTriangleComponent.name}
+  const startState = new TreeNode(`${githubTriangleComponent.name}
 ${TopBarComponent.name}
  ${LogoComponent.name}
  ${ShareComponent.name}
@@ -2413,13 +2400,13 @@ window.SimojiApp = SimojiApp
 
 
 
-class TitleComponent extends AbstractTreeComponent {
+class TitleComponent extends AbstractTreeComponentParser {
   get question() {
     return this.app.mainExperiment.get(Keywords.question) ?? ""
   }
 
   get app() {
-    return this.getRootNode()
+    return this.root
   }
 
   getDependencies() {
@@ -2443,9 +2430,9 @@ window.TitleComponent = TitleComponent
 
 
 
-class TopBarComponent extends AbstractTreeComponent {
-  createParser() {
-    return new jtree.TreeNode.Parser(undefined, {
+class TopBarComponent extends AbstractTreeComponentParser {
+  createParserCombinator() {
+    return new TreeNode.ParserCombinator(undefined, {
       LogoComponent,
       ShareComponent,
       ExamplesComponent
@@ -2453,7 +2440,7 @@ class TopBarComponent extends AbstractTreeComponent {
   }
 }
 
-class LogoComponent extends AbstractTreeComponent {
+class LogoComponent extends AbstractTreeComponentParser {
   toStumpCode() {
     return `a ❔
  href cheatSheet.html
@@ -2462,7 +2449,7 @@ class LogoComponent extends AbstractTreeComponent {
   }
 
   toggleHelpCommand() {
-    this.getRootNode().toggleHelpCommand()
+    this.root.toggleHelpCommand()
   }
 }
 
@@ -2509,12 +2496,12 @@ Directions.East = "East"
 Directions.South = "South"
 Directions.West = "West"
 
-const NodeTypes = {}
+const ParserTypes = {}
 
-NodeTypes.agentDefinitionNode = "agentDefinitionNode"
-NodeTypes.experimentNode = "experimentNode"
-NodeTypes.settingDefinitionNode = "settingDefinitionNode"
-NodeTypes.abstractInjectCommandNode = "abstractInjectCommandNode"
+ParserTypes.agentDefinitionParser = "agentDefinitionParser"
+ParserTypes.experimentParser = "experimentParser"
+ParserTypes.settingDefinitionParser = "settingDefinitionParser"
+ParserTypes.abstractInjectCommandParser = "abstractInjectCommandParser"
 
 window.Keywords = Keywords
 
@@ -2524,7 +2511,7 @@ window.UrlKeys = UrlKeys
 
 window.Directions = Directions
 
-window.NodeTypes = NodeTypes
+window.ParserTypes = ParserTypes
 
 
 const DEFAULT_SIM = "fire"
@@ -2533,7 +2520,8 @@ const DEFAULT_SIM = "fire"
 
 
 
-class BrowserGlue extends AbstractTreeComponent {
+
+class BrowserGlue extends AbstractTreeComponentParser {
   async fetchAndLoadSimCodeFromUrlCommand(url) {
     const simCode = await this.fetchText(url)
     return simCode
@@ -2551,7 +2539,7 @@ class BrowserGlue extends AbstractTreeComponent {
 
   async fetchSimCode() {
     const hash = this.willowBrowser.getHash().substr(1)
-    const deepLink = new jtree.TreeNode(decodeURIComponent(hash))
+    const deepLink = new TreeNode(decodeURIComponent(hash))
     const example = deepLink.get(UrlKeys.example)
     const fromUrl = deepLink.get(UrlKeys.url)
     const simojiCode = deepLink.getNode(UrlKeys.simoji)
@@ -2579,7 +2567,7 @@ class BrowserGlue extends AbstractTreeComponent {
   }
 
   async init(grammarCode, theExamples) {
-    window.simojiCompiler = new jtree.HandGrammarProgram(grammarCode).compileAndReturnRootConstructor()
+    window.simojiParser = new HandGrammarProgram(grammarCode).compileAndReturnRootParser()
     ExampleSims.setChildren(theExamples)
 
     const simCode = await this.fetchSimCode()
