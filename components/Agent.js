@@ -82,7 +82,7 @@ class Agent extends TreeNode {
 
     if (this.holding) {
       this.holding.forEach(node => {
-        node.setPosition({ right: this.left, down: this.top })
+        node.setPosition({ x: this.left, y: this.top })
       })
     }
   }
@@ -104,7 +104,7 @@ class Agent extends TreeNode {
   }
 
   get shape() {
-    return { width: this.agentSize, height: this.agentSize }
+    return { width: this.width, height: this.height }
   }
 
   get x() {
@@ -115,16 +115,19 @@ class Agent extends TreeNode {
     return this.top
   }
 
+  width = 10
+  height = 10
+
   get top() {
-    return this.position.down
+    return this.position.y
   }
 
   set top(value) {
     if (value > this.maxDown) value = this.maxDown
     if (value < 0) value = 0
     this.setPosition({
-      down: value,
-      right: this.left
+      y: value,
+      x: this.left
     })
   }
 
@@ -133,15 +136,10 @@ class Agent extends TreeNode {
   }
 
   setPosition(newPosition) {
-    if (!this.worldMap.canGoHere(this.agentSize, newPosition.right, newPosition.down))
+    if (!this.board.canGoHere(newPosition.x, newPosition.y, this.width, this.height))
       return this.bouncy ? this.bounce() : this
-    const newLine = this.getLine()
-      .split(" ")
-      .map(part =>
-        part.includes("⬇️") ? newPosition.down + "⬇️" : part.includes("➡️") ? newPosition.right + "➡️" : part
-      )
-      .join(" ")
-    return this.setLine(newLine)
+    // Todo: do we need to update the string?
+    return this.setLine([this.firstWord, newPosition.x, newPosition.y].join(" "))
   }
 
   handleNeighbors() {
@@ -165,11 +163,11 @@ class Agent extends TreeNode {
 
   handleTouches() {
     if (!this.stillExists) return
-    const { worldMap } = this
+    const { board } = this
     this.getCommandBlocks(Keywords.onTouch).forEach(touchMap => {
       if (this.skip(touchMap.getWord(1))) return
 
-      for (let target of worldMap.objectsTouching(this)) {
+      for (let target of board.objectsTouching(this)) {
         const targetId = target.firstWord
         const commandBlock = touchMap.getNode(targetId)
         if (commandBlock) {
@@ -197,19 +195,19 @@ class Agent extends TreeNode {
   }
 
   get collidingAgents() {
-    return this.worldMap.objectsCollidingWith(this.right, this.down, this.agentSize).filter(node => node !== this)
+    return this.board.objectsCollidingWith(this.x, this.y, this.width, this.height).filter(node => node !== this)
   }
 
   get neighorCount() {
-    return this.worldMap.getNeighborCount(this)
+    return this.board.getNeighborCount(this)
   }
 
   get maxRight() {
-    return this.board.cols - Math.floor(this.size / this.gridSize)
+    return this.board.width - this.width
   }
 
   get maxDown() {
-    return this.board.rows - Math.floor(this.size / this.gridSize)
+    return this.board.height - this.height
   }
 
   set left(value) {
@@ -217,29 +215,28 @@ class Agent extends TreeNode {
 
     if (value < 0) value = 0
     this.setPosition({
-      down: this.top,
-      right: value
+      y: this.top,
+      x: value
     })
   }
 
   get left() {
-    return this.position.right
+    return this.position.x
   }
 
   get position() {
-    return this.worldMap.parsePosition(this.words)
+    return {
+      x: parseInt(this.words[1]),
+      y: parseInt(this.words[2])
+    }
   }
 
   get positionHash() {
-    return this.worldMap.makePositionHash(this.position)
+    return `${this.words[1]} ${this.words[2]}`
   }
 
   get gridSize() {
-    return this.parent.gridSize
-  }
-
-  get worldMap() {
-    return this.board.worldMap
+    return 1
   }
 
   get agentSize() {
@@ -282,11 +279,11 @@ class Agent extends TreeNode {
   }
 
   get inlineStyle() {
-    const { gridSize, health, agentSize } = this
+    const { health, width, height } = this
     const opacity = health === undefined ? "" : `opacity:${this.health / this.startHealth};`
-    return `top:${this.top * gridSize}px;left:${
-      this.left * gridSize
-    }px;font-size:${agentSize}px;line-height:${agentSize}px;${opacity};${this.style ?? ""}`
+    return `top:${this.top}px;left:${this.left}px;font-size:${height}px;line-height:${height}px;${opacity};${
+      this.style ?? ""
+    }`
   }
 
   toElement() {

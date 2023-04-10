@@ -2,9 +2,8 @@ const Keywords = {}
 
 Keywords.experiment = "experiment"
 Keywords.seed = "seed"
-Keywords.size = "size"
-Keywords.rows = "rows"
-Keywords.columns = "columns"
+Keywords.height = "height"
+Keywords.width = "width"
 Keywords.report = "report"
 Keywords.ticksPerSecond = "ticksPerSecond"
 Keywords.style = "style"

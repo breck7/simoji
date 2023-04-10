@@ -11,7 +11,6 @@ question Can you move the moths from one light to the other?
 💡
 
 ticksPerSecond 10
-size 20
 style
  .BoardComponent {background:black;}
 

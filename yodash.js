@@ -72,14 +72,14 @@ yodash.getBestAngle = (targets, position) => {
   let target
   targets.forEach(candidate => {
     const pos = candidate.position
-    const distance = math.distance([pos.down, pos.right], [position.down, position.right])
+    const distance = math.distance([pos.y, pos.x], [position.y, position.x])
     if (distance < closest) {
       closest = distance
       target = candidate
     }
   })
   const heading = target.position
-  return yodash.angle(position.down, position.right, heading.down, heading.right)
+  return yodash.angle(position.y, position.x, heading.y, heading.x)
 }
 
 yodash.angle = (cx, cy, ex, ey) => {

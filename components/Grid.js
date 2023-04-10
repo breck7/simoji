@@ -1,8 +1,8 @@
 const { AbstractTreeComponentParser } = require("jtree/products/TreeComponentFramework.node.js")
 
 class GridComponent extends AbstractTreeComponentParser {
-  gridClickCommand(right, down) {
-    return this.parent.insertAgentAtCommand(right + "➡️", down + "⬇️")
+  gridClickCommand(x, y) {
+    return this.parent.insertAgentAtCommand(x, y)
   }
 
   evtToRightDown(evt) {
@@ -12,10 +12,9 @@ class GridComponent extends AbstractTreeComponentParser {
     const el = jQuery(evt.target)
     const height = el.height()
     const width = el.width()
-    const { cols, rows, gridSize } = this.parent
 
-    const right = Math.round((offsetX / width) * cols)
-    const down = Math.round((offsetY / height) * rows)
+    const right = Math.round(offsetX / width)
+    const down = Math.round(offsetY / height)
 
     return { right, down }
   }

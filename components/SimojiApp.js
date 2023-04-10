@@ -22,12 +22,6 @@ const { EditorHandleComponent } = require("./EditorHandle.js")
 const { TitleComponent } = require("./Title.js")
 const { Keywords, LocalStorageKeys, UrlKeys, Directions, ParserTypes } = require("./Types.js")
 
-const MIN_GRID_SIZE = 10
-const MAX_GRID_SIZE = 200
-const DEFAULT_GRID_SIZE = 20
-const MIN_GRID_COLUMNS = 10
-const MIN_GRID_ROWS = 10
-
 // prettier-ignore
 /*NODE_JS_ONLY*/ const simojiParser = require("jtree/products/GrammarCompiler.js").GrammarCompiler.compileGrammarFileAtPathAndReturnRootParser(   __dirname + "/../simoji.grammar")
 
@@ -87,20 +81,15 @@ class SimojiApp extends AbstractTreeComponentParser {
   }
 
   makeGrid(simojiProgram, windowWidth, windowHeight) {
-    const setSize = simojiProgram.get(Keywords.size)
-    const gridSize = Math.min(Math.max(setSize ? parseInt(setSize) : DEFAULT_GRID_SIZE, MIN_GRID_SIZE), MAX_GRID_SIZE)
-
     const chromeWidth = this.leftStartPosition + SIZES.RIGHT_BAR_WIDTH + SIZES.BOARD_MARGIN
-    const maxAvailableCols = Math.floor((windowWidth - chromeWidth) / gridSize) - 1
-    const maxAvailableRows = Math.floor((windowHeight - SIZES.CHROME_HEIGHT - SIZES.TITLE_HEIGHT) / gridSize) - 1
+    const width = windowWidth - chromeWidth - 1
+    const height = windowHeight - SIZES.CHROME_HEIGHT - SIZES.TITLE_HEIGHT - 1
 
-    const setCols = simojiProgram.get(Keywords.columns)
-    const cols = Math.max(1, setCols ? parseInt(setCols) : Math.max(MIN_GRID_COLUMNS, maxAvailableCols))
+    const setWidth = simojiProgram.get(Keywords.width)
+    const setHeight = simojiProgram.get(Keywords.height)
+    // todo: use the set values if present
 
-    const setRows = simojiProgram.get(Keywords.rows)
-    const rows = Math.max(1, setRows ? parseInt(setRows) : Math.max(MIN_GRID_ROWS, maxAvailableRows))
-
-    return { gridSize, cols, rows }
+    return { width, height }
   }
 
   verbose = true
@@ -140,11 +129,11 @@ class SimojiApp extends AbstractTreeComponentParser {
 
   _appendExperiment(program, index) {
     const { windowWidth, windowHeight } = this
-    const { gridSize, cols, rows } = this.makeGrid(program, windowWidth, windowHeight)
+    const { width, height } = this.makeGrid(program, windowWidth, windowHeight)
 
     const styleNode = program.getNode(Keywords.style) ?? undefined
     const board = this.appendLineAndChildren(
-      `${BoardComponent.name} ${gridSize} ${rows} ${cols} ${index}`,
+      `${BoardComponent.name} 1 ${width} ${height} ${index}`,
       `leftStartPosition ${this.leftStartPosition}
 ${GridComponent.name}
 ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : ""}`.trim()
@@ -426,7 +415,7 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
   }
 
   get isSnapshotOn() {
-    // technically also needs rows and column settings
+    // technically also needs width and height settings
     return new TreeNode(this.simCode).has(Keywords.seed)
   }
 
@@ -438,13 +427,13 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
     // todo: buggy. we should rename the board class to experiment, or rename experiment keyword to board.
     const board = boards[0]
     newCode.set(Keywords.seed, board.seed.toString())
-    newCode.set(Keywords.rows, board.rows.toString())
-    newCode.set(Keywords.columns, board.cols.toString())
+    newCode.set(Keywords.height, board.height.toString())
+    newCode.set(Keywords.width, board.width.toString())
     newCode.findNodes(Keywords.experiment).forEach((experiment, index) => {
       const board = boards[index]
       experiment.set(Keywords.seed, board.seed.toString())
-      experiment.set(Keywords.rows, board.rows.toString())
-      experiment.set(Keywords.columns, board.cols.toString())
+      experiment.set(Keywords.height, board.height.toString())
+      experiment.set(Keywords.width, board.width.toString())
     })
 
     this.editor.setCodeMirrorValue(newCode.toString())
