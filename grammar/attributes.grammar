@@ -6,7 +6,7 @@ stringAttributeParser
  catchAllCellType stringCell
  javascript
   compile() {
-   return `${this.firstWord} = "${this.getWord(1)}"`
+   return `${this.firstWord} = "${this.content}"`
   }
 angleParser
  extends stringAttributeParser

@@ -5,27 +5,15 @@ class GridComponent extends AbstractTreeComponentParser {
     return this.parent.insertAgentAtCommand(x, y)
   }
 
-  evtToRightDown(evt) {
-    if (this.isNodeJs()) return { right: 1, down: 1 }
-
-    const { offsetX, offsetY } = evt
-    const el = jQuery(evt.target)
-    const height = el.height()
-    const width = el.width()
-
-    const right = Math.round(offsetX / width)
-    const down = Math.round(offsetY / height)
-
-    return { right, down }
-  }
-
   treeComponentDidMount() {
     const that = this
     if (this.isNodeJs()) return super.treeComponentDidMount()
 
     jQuery(`.${GridComponent.name}`).on("click", function (evt) {
-      const { right, down } = that.evtToRightDown(evt)
-      that.gridClickCommand(right, down)
+      const { offsetX, offsetY } = evt
+      const x = offsetX
+      const y = offsetY
+      that.gridClickCommand(x, y)
     })
   }
 

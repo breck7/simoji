@@ -112,15 +112,13 @@ class BoardComponent extends AbstractTreeComponentParser {
 
   insertAgentAtCommand(x, y) {
     const root = this.root
-    const positionHash = y + " " + x
-    this.clearCollisionDetector()
     const { agentToInsert } = root
-
     if (!agentToInsert) return
+    this.clearCollisionDetector()
 
     //if (parent.findNodes(agentToInsert).length > MAX_ITEMS) return true
 
-    this.prependLine(`${agentToInsert} ${positionHash}`)
+    this.prependLine(`${agentToInsert} ${x} ${y}`)
     this.renderAndGetRenderReport()
     this.clearCollisionDetector()
 
