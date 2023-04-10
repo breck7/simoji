@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { WorldMap } = require("./WorldMap.js")
+const { WorldMap, BoardType } = require("./WorldMap.js")
 const { TestRacer } = require("jtree/products/TestRacer.js")
 
 const testTree = {}
@@ -11,7 +11,7 @@ testTree.makeRectangle = areEqual => {
 😀 1⬇️ 0➡️
 😀 1⬇️ 1➡️`
 
-	const map = new WorldMap([])
+	const map = new WorldMap(new BoardType())
 	areEqual(map.makeRectangle("😀", 2, 2), expected)
 	areEqual(
 		map.makeRectangle("🚪", 2, 1, 1, 1),
