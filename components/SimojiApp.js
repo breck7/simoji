@@ -416,14 +416,13 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
       node._move()
     })
 
-
     this.ensureRender()
   }
 
   deleteSelectionCommand() {
     this.selection.forEach(node => node.nuke())
     this.selection = []
-    this.boards.forEach(board => board.resetAgentPositionMap())
+    // todo: update any state?
   }
 
   get isSnapshotOn() {

@@ -79,8 +79,8 @@ class CollisionDetector {
     this.quadtree = new Quadtree({ x: 0, y: 0, w: worldWidth, h: worldHeight }, 4)
   }
 
-  detectCollisions(callback = () => {}) {
-    let collissionCount = 0
+  detectCollisions() {
+    let collissions = []
     for (const agent of this.agents) this.quadtree.insert(agent)
 
     for (const agentA of this.agents) {
@@ -90,17 +90,12 @@ class CollisionDetector {
         agentA.shape.width * 2,
         agentA.shape.height * 2
       )
-
       const nearbyAgents = this.quadtree.query(searchBounds)
-
       for (const agentB of nearbyAgents) {
-        if (agentA !== agentB && this.checkCollision(agentA, agentB)) {
-          callback(agentA, agentB)
-          collissionCount++
-        }
+        if (agentA !== agentB && this.checkCollision(agentA, agentB)) collissions.push([agentA, agentB])
       }
     }
-    return collissionCount
+    return collissions
   }
 
   checkCollision(a, b) {

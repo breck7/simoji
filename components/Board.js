@@ -2,6 +2,7 @@ const { TreeNode } = require("jtree/products/TreeNode.js")
 const { yodash } = require("../yodash.js")
 const { AbstractTreeComponentParser } = require("jtree/products/TreeComponentFramework.node.js")
 const { GridComponent } = require("./Grid.js")
+const { CollisionDetector } = require("./CollisionDetector.js")
 const { Agent } = require("./Agent.js")
 const { Keywords, ParserTypes } = require("./Types.js")
 const { WorldMap } = require("./WorldMap.js")
@@ -152,8 +153,8 @@ class BoardComponent extends AbstractTreeComponentParser {
 
     this.resetWorldMap()
     this.handleCollisions()
-    this.handleTouches()
-    this.handleNeighbors()
+    //    this.handleTouches()
+    //    this.handleNeighbors()
 
     this.executeBoardCommands(Keywords.onTick)
     this.handleExtinctions()
@@ -331,9 +332,22 @@ class BoardComponent extends AbstractTreeComponentParser {
     this._worldMap = new WorldMap(this)
   }
 
+  get width() {
+    return this.cols
+  }
+
+  get height() {
+    return this.rows
+  }
+
   // YY
   handleCollisions() {
-    this.worldMap.collidingAgents.forEach(agents => agents.forEach(agent => agent.handleCollisions(agents)))
+    const collisions = new CollisionDetector(this.agents, this.width, this.height).detectCollisions()
+    collisions.forEach(collision => {
+      const [agentA, agentB] = collision
+      agentA.handleCollisions([agentB])
+      agentB.handleCollisions([agentA])
+    })
   }
 
   // YY

@@ -31,7 +31,7 @@ testTree.empty = areEqual => {
 	const world = new MockWorld(500, 500)
 	const agents = []
 	const collisionDetector = new CollisionDetector(agents, world.width, world.height)
-	areEqual(collisionDetector.detectCollisions(), 0) // Should not detect any collisions
+	areEqual(collisionDetector.detectCollisions().length, 0) // Should not detect any collisions
 }
 
 testTree.miss = areEqual => {
@@ -41,7 +41,7 @@ testTree.miss = areEqual => {
 		new MockAgent(2, { x: 200, y: 200, width: 10, height: 10 })
 	]
 	const collisionDetector = new CollisionDetector(agents, world.width, world.height)
-	areEqual(collisionDetector.detectCollisions(), 0) // Should not detect any collisions
+	areEqual(collisionDetector.detectCollisions().length, 0) // Should not detect any collisions
 }
 
 testTree.hit = areEqual => {
@@ -51,7 +51,7 @@ testTree.hit = areEqual => {
 		new MockAgent(2, { x: 55, y: 55, width: 10, height: 10 })
 	]
 	const collisionDetector = new CollisionDetector(agents, world.width, world.height)
-	areEqual(collisionDetector.detectCollisions(), 1) // Should detect a collision between agents 1 and 2
+	areEqual(collisionDetector.detectCollisions().length, 1) // Should detect a collision between agents 1 and 2
 }
 
 testTree.multiple = areEqual => {
@@ -64,7 +64,7 @@ testTree.multiple = areEqual => {
 		new MockAgent(5, { x: 400, y: 400, width: 10, height: 10 })
 	]
 	const collisionDetector = new CollisionDetector(agents, world.width, world.height)
-	areEqual(collisionDetector.detectCollisions(), 2) // Should detect collisions between agents 1 and 2, and agents 3 and 4
+	areEqual(collisionDetector.detectCollisions().length, 2) // Should detect collisions between agents 1 and 2, and agents 3 and 4
 }
 
 if (!module.parent) TestRacer.testSingleFile(__filename, testTree)

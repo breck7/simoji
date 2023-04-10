@@ -92,15 +92,27 @@ class Agent extends TreeNode {
   }
 
   moveNorth() {
-    this.top--
+    this.top = Math.max(this.top - 1, 0)
   }
 
   moveWest() {
-    this.left--
+    this.left = Math.max(this.left - 1, 0)
   }
 
   moveEast() {
     this.left++
+  }
+
+  get shape() {
+    return { width: this.agentSize, height: this.agentSize }
+  }
+
+  get x() {
+    return this.left
+  }
+
+  get y() {
+    return this.top
   }
 
   get top() {
@@ -158,7 +170,7 @@ class Agent extends TreeNode {
       if (this.skip(touchMap.getWord(1))) return
 
       for (let target of worldMap.objectsTouching(this)) {
-        const targetId = target.getWord(0)
+        const targetId = target.firstWord
         const commandBlock = touchMap.getNode(targetId)
         if (commandBlock) {
           commandBlock.forEach(command => this._executeCommand(target, command))
@@ -173,10 +185,15 @@ class Agent extends TreeNode {
     this.getCommandBlocks(Keywords.onHit).forEach(hitMap => {
       if (this.skip(hitMap.getWord(1))) return
       targetAgents.forEach(targetAgent => {
+        const targetId = targetAgent.firstWord
         const commandBlock = hitMap.getNode(targetId)
         if (commandBlock) commandBlock.forEach(command => this._executeCommand(targetAgent, command))
       })
     })
+  }
+
+  get symbol() {
+    return this.firstWord
   }
 
   get collidingAgents() {
