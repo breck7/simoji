@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const { WorldMap } = require("./WorldMap.js")
+const { TestRacer } = require("jtree/products/TestRacer.js")
 
 const testTree = {}
 
@@ -19,11 +20,5 @@ testTree.makeRectangle = areEqual => {
 	)
 }
 
+if (!module.parent) TestRacer.testSingleFile(__filename, testTree)
 module.exports = { testTree }
-const runTree = testTree => {
-	const tap = require("tap")
-	Object.keys(testTree).forEach(key => {
-		testTree[key](tap.equal)
-	})
-}
-if (module && !module.parent) runTree(testTree)
