@@ -436,6 +436,7 @@ class Agent extends TreeNode {
   }
 
   shrink() {
+    if (!this.width || !this.height) return
     this.width--
     this.height--
   }

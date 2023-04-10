@@ -112,19 +112,16 @@ class CollisionDetector {
     // Divide the world into cells
     for (let x = 0; x < this.width - width; x += width) {
       for (let y = 0; y < this.height - height; y += height) {
-        if (this.isSpotAvailable(x, y, width, height)) {
-          availableCells.push({ x: x, y: y })
-        }
+        if (this.isSpotAvailable(x, y, width, height)) availableCells.push({ x, y })
       }
     }
 
     // Randomly select non-overlapping cells
-    while (nonOverlappingSquares.length < N && availableCells.length > 0) {
+    while (nonOverlappingSquares.length < N && availableCells.length) {
       const randomIndex = Math.floor(Math.random() * availableCells.length)
       nonOverlappingSquares.push(availableCells[randomIndex])
       availableCells.splice(randomIndex, 1)
     }
-
     return nonOverlappingSquares
   }
 

@@ -282,7 +282,7 @@ class BoardComponent extends AbstractTreeComponentParser {
 
     const spots = this.collisionDetector.findNonOverlappingSquares(10, 10, amount)
 
-    const newAgents = spots.map(spot => `${emoji} ${spot.x + " " + spot.x}`).join("\n")
+    const newAgents = spots.map(spot => `${emoji} ${spot.x + " " + spot.y}`).join("\n")
 
     this.concat(newAgents)
     this.clearCollisionDetector()
@@ -511,7 +511,7 @@ class BoardComponent extends AbstractTreeComponentParser {
     const width = 10
     const height = 10
     const spots = this.collisionDetector.findNonOverlappingSquares(width, height, amount)
-    return spots.map(spot => `${char} ${this.makePositionHash(spot)}`).join("\n")
+    return spots.map(spot => `${char} ${spot.x} ${spot.y}`).join("\n")
   }
 
   getRandomLocation() {
