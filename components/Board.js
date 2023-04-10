@@ -65,12 +65,12 @@ class BoardComponent extends AbstractTreeComponentParser {
   }
 
   get width() {
-    if (this._width === undefined) this._width = parseInt(this.getWord(3))
+    if (this._width === undefined) this._width = parseInt(this.getWord(2))
     return this._width
   }
 
   get height() {
-    if (this._height === undefined) this._height = parseInt(this.getWord(2))
+    if (this._height === undefined) this._height = parseInt(this.getWord(3))
     return this._height
   }
 
@@ -276,7 +276,10 @@ class BoardComponent extends AbstractTreeComponentParser {
     const { width, height } = this
     const emoji = commandNode.getWord(2)
     let amount = commandNode.getWord(1)
-    amount = amount.includes("%") ? yodash.parsePercent(amount) * (width * height) : parseInt(amount)
+    const agentWidth = 10
+    const agentHeight = 10
+    const maxCells = (width * height) / (agentWidth * agentHeight)
+    amount = amount.includes("%") ? yodash.parsePercent(amount) * maxCells : parseInt(amount)
 
     const spots = this.collisionDetector.findNonOverlappingSquares(10, 10, amount)
 
