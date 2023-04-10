@@ -88,19 +88,21 @@ class Agent extends TreeNode {
   }
 
   moveSouth() {
-    this.top++
+    this.top += this.speed
   }
 
+  speed = 1
+
   moveNorth() {
-    this.top = Math.max(this.top - 1, 0)
+    this.top = Math.max(this.top - this.speed, 0)
   }
 
   moveWest() {
-    this.left = Math.max(this.left - 1, 0)
+    this.left = Math.max(this.left - this.speed, 0)
   }
 
   moveEast() {
-    this.left++
+    this.left += this.speed
   }
 
   get shape() {

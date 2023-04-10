@@ -125,18 +125,31 @@ class CollisionDetector {
     return nonOverlappingSquares
   }
 
-  findClosestAvailableSpot(x, y, width, height, maxDistance = 100, step = 1) {
-    for (let dist = 0; dist <= maxDistance; dist += step) {
-      for (let angle = 0; angle < 360; angle += step) {
-        const newX = x + dist * Math.cos(angle * (Math.PI / 180))
-        const newY = y + dist * Math.sin(angle * (Math.PI / 180))
+  findClusteredNonOverlappingSquares(width, height, N, centerX, centerY, clusterRadius) {
+    const nonOverlappingSquares = []
+    const availableCells = []
 
-        if (this.isSpotAvailable(newX, newY, width, height)) {
-          return { x: newX, y: newY }
+    // Divide the world into cells and filter by clusterRadius
+    for (let x = 0; x < this.width - width; x += width) {
+      for (let y = 0; y < this.height - height; y += height) {
+        const dx = x - centerX
+        const dy = y - centerY
+        const distance = Math.sqrt(dx * dx + dy * dy)
+
+        if (distance <= clusterRadius && this.isSpotAvailable(x, y, width, height)) {
+          availableCells.push({ x: x, y: y })
         }
       }
     }
-    return null
+
+    // Randomly select non-overlapping cells
+    while (nonOverlappingSquares.length < N && availableCells.length > 0) {
+      const randomIndex = Math.floor(Math.random() * availableCells.length)
+      nonOverlappingSquares.push(availableCells[randomIndex])
+      availableCells.splice(randomIndex, 1)
+    }
+
+    return nonOverlappingSquares
   }
 
   getCollidingAgents(x, y, width, height) {

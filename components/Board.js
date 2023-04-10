@@ -222,6 +222,14 @@ class BoardComponent extends AbstractTreeComponentParser {
     this[command.parserId](command)
   }
 
+  // todo: origin
+  insertClusteredRandomAgents(amount, char, x, y) {
+    const width = 10
+    const height = 10
+    const spots = this.collisionDetector.findClusteredNonOverlappingSquares(width, height, amount, x, y, amount * width)
+    return spots.map(spot => `${char} ${spot.x} ${spot.y}`).join("\n")
+  }
+
   insertClusterParser(commandNode) {
     this.concat(
       this.insertClusteredRandomAgents(
@@ -281,7 +289,7 @@ class BoardComponent extends AbstractTreeComponentParser {
     const maxCells = (width * height) / (agentWidth * agentHeight)
     amount = amount.includes("%") ? yodash.parsePercent(amount) * maxCells : parseInt(amount)
 
-    const spots = this.collisionDetector.findNonOverlappingSquares(10, 10, amount)
+    const spots = this.collisionDetector.findNonOverlappingSquares(agentWidth, agentHeight, amount)
 
     const newAgents = spots.map(spot => `${emoji} ${spot.x + " " + spot.y}`).join("\n")
 
@@ -505,14 +513,6 @@ class BoardComponent extends AbstractTreeComponentParser {
     const { x, y } = this.getRandomLocation()
     if (this.isRectOccupied(x, y, size, size)) return this.getRandomLocationHash()
     return this.makePositionHash({ x, y })
-  }
-
-  // todo: origin
-  insertClusteredRandomAgents(amount, char, y, x) {
-    const width = 10
-    const height = 10
-    const spots = this.collisionDetector.findNonOverlappingSquares(width, height, amount)
-    return spots.map(spot => `${char} ${spot.x} ${spot.y}`).join("\n")
   }
 
   getRandomLocation() {

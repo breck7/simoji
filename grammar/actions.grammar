@@ -24,10 +24,6 @@ spawnCommandParser
  extends abstractCommandParser
  cells keywordCell emojiCell
  catchAllCellType positionCell
-moveToEmptySpotCommandParser
- crux moveToEmptySpot
- extends abstractCommandParser
- cells keywordCell
 removeCommandParser
  description Remove this agent from the board.
  crux remove
@@ -73,26 +69,6 @@ growCommandParser
 shrinkCommandParser
  extends abstractCommandParser
  crux shrink
-
-moveCommandParser
- extends abstractCommandParser
- crux move
-turnRandomlyCommandParser
- extends abstractCommandParser
- crux turnRandomly
-jitterCommandParser
- extends abstractCommandParser
- crux jitter
-turnTowardCommandParser
- description Turn to the closest agent of a certain type.
- extends abstractCommandParser
- crux turnToward
- cells keywordCell emojiCell
-turnFromCommandParser
- description Turn away from the closest agent of a certain type.
- extends abstractCommandParser
- crux turnFrom
- cells keywordCell emojiCell
 
 learnCommandParser
  crux learn

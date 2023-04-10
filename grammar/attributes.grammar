@@ -63,6 +63,10 @@ agentHeightParser
  extends abstractIntegerAttributeParser
  description Height of the agent.
  crux height
+speedParser
+ extends abstractIntegerAttributeParser
+ description Movement speed. Default is 1
+ crux speed
 settingDefinitionParser
  description Define a configurable input.
  cells keywordCell settingValueCell
