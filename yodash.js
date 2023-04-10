@@ -1,5 +1,4 @@
 const yodash = {}
-const lodash = require("lodash")
 const math = require("mathjs")
 const { Utils } = require("jtree/products/Utils.js")
 const { Directions, ParserTypes } = require("./components/Types.js")

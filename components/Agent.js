@@ -1,8 +1,6 @@
-const { AbstractTreeComponentParser } = require("jtree/products/TreeComponentFramework.node.js")
 const { yodash } = require("../yodash.js")
 const { TreeNode } = require("jtree/products/TreeNode.js")
 const { Keywords, Directions } = require("./Types.js")
-const { WorldMap } = require("./WorldMap.js")
 
 const SelectedClass = "selected"
 

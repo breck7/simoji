@@ -3,7 +3,7 @@ const { TreeNode } = require("jtree/products/TreeNode.js")
 const { HandGrammarProgram } = require("jtree/products/GrammarLanguage.js")
 const { ExampleSims } = require("./components/ExampleSims.js")
 const { AbstractTreeComponentParser } = require("jtree/products/TreeComponentFramework.node.js")
-const { Keywords, LocalStorageKeys, UrlKeys } = require("./components/Types.js")
+const { LocalStorageKeys, UrlKeys } = require("./components/Types.js")
 
 class BrowserGlue extends AbstractTreeComponentParser {
   async fetchAndLoadSimCodeFromUrlCommand(url) {

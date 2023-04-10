@@ -3,7 +3,6 @@ const yodash = {}
 
 
 
-
 yodash.parseInts = (arr, start) => arr.map((item, index) => (index >= start ? parseInt(item) : item))
 
 yodash.getRandomAngle = randomNumberGenerator => {
@@ -225,8 +224,6 @@ window.AbstractContextMenuComponent = AbstractContextMenuComponent
 
 
 
-
-
 const SelectedClass = "selected"
 
 class Agent extends TreeNode {
@@ -366,7 +363,7 @@ class Agent extends TreeNode {
       const { neighorCount } = this
 
       neighborConditions.forEach(conditionAndCommandsBlock => {
-        const [emoji, operator, count] = conditionAndCommandsBlock.getWords()
+        const [emoji, operator, count] = conditionAndCommandsBlock.words
         const actual = neighorCount[emoji]
         if (!yodash.compare(actual ?? 0, operator, count)) return
         conditionAndCommandsBlock.forEach(command => this._executeCommand(this, command))
@@ -443,7 +440,7 @@ class Agent extends TreeNode {
   }
 
   get position() {
-    return this.worldMap.parsePosition(this.getWords())
+    return this.worldMap.parsePosition(this.words)
   }
 
   get positionHash() {
@@ -885,13 +882,9 @@ class BoardComponent extends AbstractTreeComponentParser {
   treeComponentDidMount() {
     const that = this
     if (this.isNodeJs()) return
-    jQuery(this.getStumpNode().getShadow().element).on("click", ".Agent", function(evt) {
+    jQuery(this.getStumpNode().getShadow().element).on("click", ".Agent", function (evt) {
       const agent = evt.target
-      const id = parseInt(
-        jQuery(agent)
-          .attr("id")
-          .replace("agent", "")
-      )
+      const id = parseInt(jQuery(agent).attr("id").replace("agent", ""))
       that.getAgent(id).toggleSelectCommand()
     })
   }
@@ -953,7 +946,7 @@ class BoardComponent extends AbstractTreeComponentParser {
   }
 
   rectangleDrawParser(commandNode) {
-    const newLines = this.worldMap.makeRectangle(...yodash.parseInts(commandNode.getWords().slice(1), 1))
+    const newLines = this.worldMap.makeRectangle(...yodash.parseInts(commandNode.words.slice(1), 1))
     this.concat(newLines)
     this.resetWorldMap()
   }
