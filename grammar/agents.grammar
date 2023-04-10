@@ -1,0 +1,20 @@
+agentDefinitionParser
+ inScope abstractIgnoreParser abstractEventParser abstractAgentAttributeParser behaviorAttributeParser
+ cells keywordCell
+ catchAllParser errorParser
+ compiler
+  stringTemplate 
+ javascript
+  compile() {
+   const root = this.root
+   const name = root.agentKeywordMap[this.firstWord]
+   const normal = super.compile()
+   const behaviors = this.filter(node => node.parserId === "behaviorAttributeParser")
+    .map(behavior => `"${behavior.getLine()}"`)
+    .join(",")
+   return `class ${name} extends Agent {
+      icon = "${this.firstWord}"
+      behaviors = [${behaviors}]
+      ${normal}
+    }`
+  }

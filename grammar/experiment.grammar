@@ -1,0 +1,28 @@
+experimentParser
+ cruxFromId
+ cells keywordCell
+ inScope abstractIgnoreParser abstractSetupParser abstractInjectCommandParser onTickParser onExtinctParser settingDefinitionParser
+ catchAllCellType stringCell
+abstractSetupNumberParser
+ cells keywordCell integerCell
+ extends abstractSetupParser
+ javascript
+  compile() {
+   return ""
+  }
+heightParser
+ description Height of the grid. Default is based on screen size.
+ extends abstractSetupNumberParser
+ crux height
+widthParser
+ description Width of the grid. Default is based on screen size.
+ extends abstractSetupNumberParser
+ crux width
+seedParser
+ description If you'd like reproducible runs set a seed for the random number generator.
+ extends abstractSetupNumberParser
+ cruxFromId
+ticksPerSecondParser
+ description Time in milliseconds of one step.
+ extends abstractSetupNumberParser
+ cruxFromId

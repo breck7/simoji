@@ -1,0 +1,37 @@
+errorParser
+ baseParser errorParser
+abstractSetupParser
+abstractIgnoreParser
+ tags doNotSynthesize
+ javascript
+  compile () {
+    return ""
+  }
+simojiParser
+ extensions simoji
+ description A Tree Language that compiles to a TreeComponentFramework app.
+ root
+ inScope abstractIgnoreParser abstractSetupParser abstractInjectCommandParser onTickParser onExtinctParser behaviorDefinitionParser experimentParser settingDefinitionParser
+ catchAllParser agentDefinitionParser
+ compilesTo javascript
+ example
+  🦋
+   onTick .1
+    turnRandomly
+    move
+   onTick .2
+    turnToward 💡
+    move
+  💡
+  
+  insert 10 🦋
+  insert 2 💡
+ javascript
+  get agentTypes() {
+   return this.filter(node => node.parserId === "agentDefinitionParser")
+  }
+blankLineParser
+ extends abstractIgnoreParser
+ description Blank lines compile do nothing.
+ cells blankCell
+ pattern ^$

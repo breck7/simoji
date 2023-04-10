@@ -72,14 +72,14 @@ yodash.getBestAngle = (targets, position) => {
   let target
   targets.forEach(candidate => {
     const pos = candidate.position
-    const distance = math.distance([pos.down, pos.right], [position.down, position.right])
+    const distance = math.distance([pos.y, pos.x], [position.y, position.x])
     if (distance < closest) {
       closest = distance
       target = candidate
     }
   })
   const heading = target.position
-  return yodash.angle(position.down, position.right, heading.down, heading.right)
+  return yodash.angle(position.y, position.x, heading.y, heading.x)
 }
 
 yodash.angle = (cx, cy, ex, ey) => {
@@ -304,7 +304,7 @@ class Agent extends TreeNode {
 
     if (this.holding) {
       this.holding.forEach(node => {
-        node.setPosition({ right: this.left, down: this.top })
+        node.setPosition({ x: this.left, y: this.top })
       })
     }
   }
@@ -314,27 +314,42 @@ class Agent extends TreeNode {
   }
 
   moveNorth() {
-    this.top--
+    this.top = Math.max(this.top - 1, 0)
   }
 
   moveWest() {
-    this.left--
+    this.left = Math.max(this.left - 1, 0)
   }
 
   moveEast() {
     this.left++
   }
 
+  get shape() {
+    return { width: this.width, height: this.height }
+  }
+
+  get x() {
+    return this.left
+  }
+
+  get y() {
+    return this.top
+  }
+
+  width = 10
+  height = 10
+
   get top() {
-    return this.position.down
+    return this.position.y
   }
 
   set top(value) {
     if (value > this.maxDown) value = this.maxDown
     if (value < 0) value = 0
     this.setPosition({
-      down: value,
-      right: this.left
+      y: value,
+      x: this.left
     })
   }
 
@@ -343,15 +358,10 @@ class Agent extends TreeNode {
   }
 
   setPosition(newPosition) {
-    if (!this.worldMap.canGoHere(this.agentSize, newPosition.right, newPosition.down))
+    if (!this.board.canGoHere(newPosition.x, newPosition.y, this.width, this.height))
       return this.bouncy ? this.bounce() : this
-    const newLine = this.getLine()
-      .split(" ")
-      .map(part =>
-        part.includes("⬇️") ? newPosition.down + "⬇️" : part.includes("➡️") ? newPosition.right + "➡️" : part
-      )
-      .join(" ")
-    return this.setLine(newLine)
+    // Todo: do we need to update the string?
+    return this.setLine([this.firstWord, newPosition.x, newPosition.y].join(" "))
   }
 
   handleNeighbors() {
@@ -375,12 +385,12 @@ class Agent extends TreeNode {
 
   handleTouches() {
     if (!this.stillExists) return
-    const { worldMap } = this
+    const { board } = this
     this.getCommandBlocks(Keywords.onTouch).forEach(touchMap => {
       if (this.skip(touchMap.getWord(1))) return
 
-      for (let target of worldMap.objectsTouching(this)) {
-        const targetId = target.getWord(0)
+      for (let target of board.objectsTouching(this)) {
+        const targetId = target.firstWord
         const commandBlock = touchMap.getNode(targetId)
         if (commandBlock) {
           commandBlock.forEach(command => this._executeCommand(target, command))
@@ -395,26 +405,31 @@ class Agent extends TreeNode {
     this.getCommandBlocks(Keywords.onHit).forEach(hitMap => {
       if (this.skip(hitMap.getWord(1))) return
       targetAgents.forEach(targetAgent => {
+        const targetId = targetAgent.firstWord
         const commandBlock = hitMap.getNode(targetId)
         if (commandBlock) commandBlock.forEach(command => this._executeCommand(targetAgent, command))
       })
     })
   }
 
+  get symbol() {
+    return this.firstWord
+  }
+
   get collidingAgents() {
-    return this.worldMap.objectsCollidingWith(this.right, this.down, this.agentSize).filter(node => node !== this)
+    return this.board.objectsCollidingWith(this.x, this.y, this.width, this.height).filter(node => node !== this)
   }
 
   get neighorCount() {
-    return this.worldMap.getNeighborCount(this)
+    return this.board.getNeighborCount(this)
   }
 
   get maxRight() {
-    return this.board.cols - Math.floor(this.size / this.gridSize)
+    return this.board.width - this.width
   }
 
   get maxDown() {
-    return this.board.rows - Math.floor(this.size / this.gridSize)
+    return this.board.height - this.height
   }
 
   set left(value) {
@@ -422,29 +437,28 @@ class Agent extends TreeNode {
 
     if (value < 0) value = 0
     this.setPosition({
-      down: this.top,
-      right: value
+      y: this.top,
+      x: value
     })
   }
 
   get left() {
-    return this.position.right
+    return this.position.x
   }
 
   get position() {
-    return this.worldMap.parsePosition(this.words)
+    return {
+      x: parseInt(this.words[1]),
+      y: parseInt(this.words[2])
+    }
   }
 
   get positionHash() {
-    return this.worldMap.makePositionHash(this.position)
+    return `${this.words[1]} ${this.words[2]}`
   }
 
   get gridSize() {
-    return this.parent.gridSize
-  }
-
-  get worldMap() {
-    return this.board.worldMap
+    return 1
   }
 
   get agentSize() {
@@ -487,11 +501,11 @@ class Agent extends TreeNode {
   }
 
   get inlineStyle() {
-    const { gridSize, health, agentSize } = this
+    const { health, width, height } = this
     const opacity = health === undefined ? "" : `opacity:${this.health / this.startHealth};`
-    return `top:${this.top * gridSize}px;left:${
-      this.left * gridSize
-    }px;font-size:${agentSize}px;line-height:${agentSize}px;${opacity};${this.style ?? ""}`
+    return `top:${this.top}px;left:${this.left}px;font-size:${height}px;line-height:${height}px;${opacity};${
+      this.style ?? ""
+    }`
   }
 
   toElement() {
@@ -754,15 +768,17 @@ class BoardComponent extends AbstractTreeComponentParser {
   }
 
   get gridSize() {
-    return parseInt(this.getWord(1))
+    return 1
   }
 
-  get rows() {
-    return parseInt(this.getWord(2))
+  get width() {
+    if (this._width === undefined) this._width = parseInt(this.getWord(3))
+    return this._width
   }
 
-  get cols() {
-    return parseInt(this.getWord(3))
+  get height() {
+    if (this._height === undefined) this._height = parseInt(this.getWord(2))
+    return this._height
   }
 
   get populationCsv() {
@@ -801,10 +817,10 @@ class BoardComponent extends AbstractTreeComponentParser {
       )
   }
 
-  insertAgentAtCommand(right, down) {
+  insertAgentAtCommand(x, y) {
     const root = this.root
-    const positionHash = down + " " + right
-    this.resetWorldMap()
+    const positionHash = y + " " + x
+    this.clearCollisionDetector()
     const { agentToInsert } = root
 
     if (!agentToInsert) return
@@ -813,7 +829,7 @@ class BoardComponent extends AbstractTreeComponentParser {
 
     this.prependLine(`${agentToInsert} ${positionHash}`)
     this.renderAndGetRenderReport()
-    this.resetWorldMap()
+    this.clearCollisionDetector()
 
     if (!root.isSnapshotOn) root.snapShotCommand()
 
@@ -821,7 +837,7 @@ class BoardComponent extends AbstractTreeComponentParser {
     let targetNode = root.boards.length === 1 ? allCode : allCode.findNodes("experiment")[this.boardIndex]
 
     if (this.tick) targetNode = targetNode.appendLine(`atTime ${this.tick}`)
-    targetNode.appendLine(`insertAt ${agentToInsert} ${down} ${right}`)
+    targetNode.appendLine(`insertAt ${agentToInsert} ${x} ${y}`)
     root.onSourceCodeChange(allCode)
   }
 
@@ -840,13 +856,12 @@ class BoardComponent extends AbstractTreeComponentParser {
   tick = 0
   boardLoop(render = true) {
     this.runAtTimeEvents()
-
     this.agents.forEach(node => node.onTick())
 
-    this.resetWorldMap()
+    this.clearCollisionDetector()
     this.handleCollisions()
-    this.handleTouches()
-    this.handleNeighbors()
+    //    this.handleTouches()
+    //    this.handleNeighbors()
 
     this.executeBoardCommands(Keywords.onTick)
     this.handleExtinctions()
@@ -918,41 +933,41 @@ class BoardComponent extends AbstractTreeComponentParser {
 
   insertClusterParser(commandNode) {
     this.concat(
-      this.worldMap.insertClusteredRandomAgents(
+      this.insertClusteredRandomAgents(
         parseInt(commandNode.getWord(1)),
         commandNode.getWord(2),
         commandNode.getWord(3),
         commandNode.getWord(4)
       )
     )
-    this.resetWorldMap()
+    this.clearCollisionDetector()
   }
 
   insertAtParser(commandNode) {
     this.appendLine(`${commandNode.getWord(1)} ${commandNode.getWord(3)} ${commandNode.getWord(2)}`)
-    this.resetWorldMap()
+    this.clearCollisionDetector()
   }
 
   rectangleDrawParser(commandNode) {
-    const newLines = this.worldMap.makeRectangle(...yodash.parseInts(commandNode.words.slice(1), 1))
+    const newLines = this.makeRectangle(...yodash.parseInts(commandNode.words.slice(1), 1))
     this.concat(newLines)
-    this.resetWorldMap()
+    this.clearCollisionDetector()
   }
 
   pasteDrawParser(commandNode) {
     const newSpots = new TreeNode(commandNode.childrenToString())
     this.concat(newSpots)
-    this.resetWorldMap()
+    this.clearCollisionDetector()
   }
 
   fillParser(commandNode) {
-    this.concat(this.worldMap.fill(commandNode.getWord(1)))
-    this.resetWorldMap()
+    this.concat(this.fill(commandNode.getWord(1)))
+    this.clearCollisionDetector()
   }
 
   drawParser(commandNode) {
-    this.concat(this.worldMap.draw(commandNode.childrenToString()))
-    this.resetWorldMap()
+    this.concat(this.draw(commandNode.childrenToString()))
+    this.clearCollisionDetector()
   }
 
   get seed() {
@@ -967,18 +982,17 @@ class BoardComponent extends AbstractTreeComponentParser {
   }
 
   insertParser(commandNode) {
-    const { rows, cols, worldMap } = this
+    const { width, height } = this
     const emoji = commandNode.getWord(2)
     let amount = commandNode.getWord(1)
+    amount = amount.includes("%") ? yodash.parsePercent(amount) * (width * height) : parseInt(amount)
 
-    const availableSpots = this.worldMap.getAllAvailableSpots()
-    amount = amount.includes("%") ? yodash.parsePercent(amount) * (rows * cols) : parseInt(amount)
-    const newAgents = yodash
-      .sampleFrom(availableSpots, amount, this.randomNumberGenerator)
-      .map(spot => `${emoji} ${spot.hash}`)
-      .join("\n")
+    const spots = this.collisionDetector.findNonOverlappingSquares(10, 10, amount)
+
+    const newAgents = spots.map(spot => `${emoji} ${spot.x + " " + spot.x}`).join("\n")
+
     this.concat(newAgents)
-    this.resetWorldMap()
+    this.clearCollisionDetector()
   }
 
   handleExtinctions() {
@@ -1015,18 +1029,24 @@ class BoardComponent extends AbstractTreeComponentParser {
     return map
   }
 
-  get worldMap() {
-    if (!this._worldMap) this.resetWorldMap()
-    return this._worldMap
+  clearCollisionDetector() {
+    delete this._collisionDetector
   }
 
-  resetWorldMap() {
-    this._worldMap = new WorldMap(this)
+  _collisionDetector
+  get collisionDetector() {
+    if (!this._collisionDetector) this._collisionDetector = new CollisionDetector(this.agents, this.width, this.height)
+    return this._collisionDetector
   }
 
   // YY
   handleCollisions() {
-    this.worldMap.collidingAgents.forEach(agents => agents.forEach(agent => agent.handleCollisions(agents)))
+    const collisions = this.collisionDetector.detectCollisions()
+    collisions.forEach(collision => {
+      const [agentA, agentB] = collision
+      agentA.handleCollisions([agentB])
+      agentB.handleCollisions([agentA])
+    })
   }
 
   // YY
@@ -1120,7 +1140,7 @@ class BoardComponent extends AbstractTreeComponentParser {
   // Commands available to users:
 
   spawn(command) {
-    this.appendLine(`${command.getWord(1)} ${this.worldMap.getRandomLocationHash()}`)
+    this.appendLine(`${command.getWord(1)} ${this.getRandomLocationHash()}`)
   }
 
   alert(command) {
@@ -1143,6 +1163,156 @@ class BoardComponent extends AbstractTreeComponentParser {
 
   log(command) {
     this.root.log(command.content)
+  }
+
+  isRectOccupied(x, y, width, height) {
+    return !this.collisionDetector.isSpotAvailable(x, y, width, height)
+  }
+
+  objectsCollidingWith(x, y, width, height) {
+    return this.collisionDetector.getCollidingAgents(x, y, width, height)
+  }
+
+  // ZZZ
+  objectsTouching(rect) {
+    const { position, agentSize } = rect
+    const targets = []
+    for (let pos of this.positionsAdjacentToRect(position.right, position.down, agentSize)) {
+      this.objectsCollidingWith(pos.right, pos.down, agentSize).forEach(item => targets.push(item))
+    }
+    return targets
+  }
+
+  // ZZZ
+  canGoHere(x, y, width, height) {
+    const agentsHere = this.objectsCollidingWith(x, y, width, height)
+    if (agentsHere && agentsHere.some(agent => agent.solid)) return false
+
+    return true
+  }
+
+  // ZZZ
+  get collidingAgents() {
+    const agents = this.agents
+    const collidingAgents = []
+    for (let agent of agents) {
+      const { position, agentSize } = agent
+      const agentsHere = this.objectsCollidingWith(position.x, position.y, agentSize).filter(a => a !== agent)
+      if (agentsHere.length) collidingAgents.push(...agentsHere)
+    }
+    return collidingAgents
+  }
+
+  makePositionHash(positionType) {
+    return `${positionType.x + " " + positionType.y}`
+  }
+
+  getRandomLocationHash(size = 1) {
+    const { x, y } = this.getRandomLocation()
+    if (this.isRectOccupied(x, y, size, size)) return this.getRandomLocationHash()
+    return this.makePositionHash({ x, y })
+  }
+
+  // todo: origin
+  insertClusteredRandomAgents(amount, char, y, x) {
+    const width = 10
+    const height = 10
+    const spots = this.collisionDetector.findNonOverlappingSquares(width, height, amount)
+    return spots.map(spot => `${char} ${this.makePositionHash(spot)}`).join("\n")
+  }
+
+  getRandomLocation() {
+    const { randomNumberGenerator, height, width } = this
+    const maxRight = width
+    const maxBottom = height
+    const x = Math.round(randomNumberGenerator() * maxRight)
+    const y = Math.round(randomNumberGenerator() * maxBottom)
+    return { x, y }
+  }
+
+  draw(str) {
+    const lines = str.split("\n")
+    const output = []
+    for (let index = 0; index < lines.length; index++) {
+      const words = lines[index].split(" ")
+      for (let wordIndex = 0; wordIndex < words.length; wordIndex++) {
+        const word = words[wordIndex]
+        if (word !== "") output.push(`${word} ${this.makePositionHash({ y: index, x: wordIndex })}`)
+      }
+    }
+    return output.join("\n")
+  }
+
+  makeRectangle(
+    agentSymbol = "🧱",
+    width = 20,
+    height = 20,
+    startRight = 0,
+    startDown = 0,
+    agentWidth = 1,
+    agentHeight = 1
+  ) {
+    if (width < 1 || height < 1) {
+      return ""
+    }
+    const cells = []
+    let row = 0
+    while (row < height) {
+      let col = 0
+      while (col < width) {
+        const isPerimeter = row === 0 || row === height - 1 || col === 0 || col === width - 1
+        if (isPerimeter)
+          cells.push(
+            `${agentSymbol} ${this.makePositionHash({
+              y: startDown + row * agentHeight,
+              x: startRight + col * agentWidth
+            })}`
+          )
+        col++
+      }
+      row++
+    }
+    return cells.join("\n")
+  }
+
+  fill(emoji, size = 1) {
+    let { width, height } = this
+    const board = []
+    while (height >= 0) {
+      let col = width
+      while (col >= 0) {
+        col--
+        if (this.isRectOccupied(col, height, size, size)) continue
+        const hash = this.makePositionHash({ x: col, y: height })
+        board.push(`${emoji} ${hash}`)
+      }
+      height--
+    }
+    return board.join("\n")
+  }
+
+  getNeighborCount(rect) {
+    const { position, agentSize } = rect
+    const neighborCounts = {}
+    this.positionsAdjacentToRect(position.right, position.down, agentSize).forEach(pos => {
+      const agents = this.objectsCollidingWith(pos.right, pos.down, agentSize)
+      agents.forEach(agent => {
+        if (!neighborCounts[agent.name]) neighborCounts[agent.name] = 0
+        neighborCounts[agent.name]++
+      })
+    })
+    return neighborCounts
+  }
+
+  positionsAdjacentToRect(x, y, size) {
+    const positions = []
+    for (let row = y - size; row <= y + size; row++) {
+      for (let col = x - size; col <= x + size; col++) {
+        if (row === y && col === x) continue
+        positions.push({ right: col, down: row })
+      }
+    }
+    return positions
   }
 }
 
@@ -1184,6 +1354,197 @@ class BottomBarComponent extends AbstractTreeComponentParser {
 }
 
 window.BottomBarComponent = BottomBarComponent
+
+
+class Bounds {
+  constructor(x, y, w, h) {
+    this.x = x
+    this.y = y
+    this.w = w
+    this.h = h
+  }
+
+  contains(agent) {
+    return (
+      agent.x >= this.x &&
+      agent.y >= this.y &&
+      agent.x + agent.shape.width <= this.x + this.w &&
+      agent.y + agent.shape.height <= this.y + this.h
+    )
+  }
+
+  intersects(range) {
+    return !(
+      range.x >= this.x + this.w ||
+      range.y >= this.y + this.h ||
+      range.x + range.w <= this.x ||
+      range.y + range.h <= this.y
+    )
+  }
+}
+
+class Quadtree {
+  constructor(bounds, capacity) {
+    this.bounds = new Bounds(bounds.x, bounds.y, bounds.w, bounds.h)
+    this.capacity = capacity
+    this.agents = []
+    this.divided = false
+  }
+
+  insert(agent) {
+    if (!this.bounds.contains(agent)) return
+
+    if (this.agents.length < this.capacity && !this.divided) {
+      this.agents.push(agent)
+    } else {
+      if (!this.divided) this.subdivide()
+      for (const child of this.children) child.insert(agent)
+    }
+  }
+
+  subdivide() {
+    const { x, y, w, h } = this.bounds
+    const capacity = this.capacity
+
+    this.children = [
+      new Quadtree({ x, y, w: w / 2, h: h / 2 }, capacity),
+      new Quadtree({ x: x + w / 2, y, w: w / 2, h: h / 2 }, capacity),
+      new Quadtree({ x, y: y + h / 2, w: w / 2, h: h / 2 }, capacity),
+      new Quadtree({ x: x + w / 2, y: y + h / 2, w: w / 2, h: h / 2 }, capacity)
+    ]
+
+    this.divided = true
+    for (const agent of this.agents) this.insert(agent)
+    this.agents = []
+  }
+
+  query(range, found = []) {
+    if (!this.bounds.intersects(range)) return found
+
+    if (!this.divided) {
+      for (const agent of this.agents) if (range.contains(agent)) found.push(agent)
+    } else {
+      for (const child of this.children) child.query(range, found)
+    }
+
+    return found
+  }
+}
+
+class CollisionDetector {
+  constructor(agents, worldWidth, worldHeight) {
+    this.agents = agents
+    this.width = worldWidth
+    this.height = worldHeight
+    this.quadtree = new Quadtree({ x: 0, y: 0, w: worldWidth, h: worldHeight }, 4)
+    for (const agent of this.agents) this.addAgent(agent)
+  }
+
+  addAgent(agent) {
+    this.quadtree.insert(agent)
+    return this
+  }
+
+  isSpotAvailable(x, y, width, height) {
+    const searchBounds = new Bounds(x, y, width, height)
+
+    const nearbyAgents = this.quadtree.query(searchBounds)
+
+    for (const agent of nearbyAgents) {
+      if (
+        x < agent.x + agent.shape.width &&
+        x + width > agent.x &&
+        y < agent.y + agent.shape.height &&
+        y + height > agent.y
+      ) {
+        return false
+      }
+    }
+    return true
+  }
+
+  findNonOverlappingSquares(width, height, N) {
+    const nonOverlappingSquares = []
+    const availableCells = []
+
+    // Divide the world into cells
+    for (let x = 0; x < this.width - width; x += width) {
+      for (let y = 0; y < this.height - height; y += height) {
+        if (this.isSpotAvailable(x, y, width, height)) {
+          availableCells.push({ x: x, y: y })
+        }
+      }
+    }
+
+    // Randomly select non-overlapping cells
+    while (nonOverlappingSquares.length < N && availableCells.length > 0) {
+      const randomIndex = Math.floor(Math.random() * availableCells.length)
+      nonOverlappingSquares.push(availableCells[randomIndex])
+      availableCells.splice(randomIndex, 1)
+    }
+
+    return nonOverlappingSquares
+  }
+
+  findClosestAvailableSpot(x, y, width, height, maxDistance = 100, step = 1) {
+    for (let dist = 0; dist <= maxDistance; dist += step) {
+      for (let angle = 0; angle < 360; angle += step) {
+        const newX = x + dist * Math.cos(angle * (Math.PI / 180))
+        const newY = y + dist * Math.sin(angle * (Math.PI / 180))
+
+        if (this.isSpotAvailable(newX, newY, width, height)) {
+          return { x: newX, y: newY }
+        }
+      }
+    }
+    return null
+  }
+
+  getCollidingAgents(x, y, width, height) {
+    const bounds = new Bounds(x, y, width, height)
+    const collidingAgents = []
+    const nearbyAgents = this.quadtree.query(bounds)
+
+    for (const agent of nearbyAgents) {
+      if (
+        bounds.x < agent.x + agent.shape.width &&
+        bounds.x + bounds.w > agent.x &&
+        bounds.y < agent.y + agent.shape.height &&
+        bounds.y + bounds.h > agent.y
+      ) {
+        collidingAgents.push(agent)
+      }
+    }
+
+    return collidingAgents
+  }
+
+  detectCollisions() {
+    let collissions = []
+
+    for (const agentA of this.agents) {
+      const searchBounds = new Bounds(
+        agentA.x - agentA.shape.width,
+        agentA.y - agentA.shape.height,
+        agentA.shape.width * 2,
+        agentA.shape.height * 2
+      )
+      const nearbyAgents = this.quadtree.query(searchBounds)
+      for (const agentB of nearbyAgents) {
+        if (agentA !== agentB && this.checkCollision(agentA, agentB)) collissions.push([agentA, agentB])
+      }
+    }
+    return collissions
+  }
+
+  checkCollision(a, b) {
+    return (
+      a.x < b.x + b.shape.width && a.x + a.shape.width > b.x && a.y < b.y + b.shape.height && a.y + a.shape.height > b.y
+    )
+  }
+}
+
+window.CollisionDetector = CollisionDetector
 
 
 
@@ -1327,8 +1688,8 @@ window.ExampleMenuComponent = ExampleMenuComponent
 
 
 class GridComponent extends AbstractTreeComponentParser {
-  gridClickCommand(right, down) {
-    return this.parent.insertAgentAtCommand(right + "➡️", down + "⬇️")
+  gridClickCommand(x, y) {
+    return this.parent.insertAgentAtCommand(x, y)
   }
 
   evtToRightDown(evt) {
@@ -1338,10 +1699,9 @@ class GridComponent extends AbstractTreeComponentParser {
     const el = jQuery(evt.target)
     const height = el.height()
     const width = el.width()
-    const { cols, rows, gridSize } = this.parent
 
-    const right = Math.round((offsetX / width) * cols)
-    const down = Math.round((offsetY / height) * rows)
+    const right = Math.round(offsetX / width)
+    const down = Math.round(offsetY / height)
 
     return { right, down }
   }
@@ -1693,12 +2053,6 @@ window.SimEditorComponent = SimEditorComponent
 
 
 
-const MIN_GRID_SIZE = 10
-const MAX_GRID_SIZE = 200
-const DEFAULT_GRID_SIZE = 20
-const MIN_GRID_COLUMNS = 10
-const MIN_GRID_ROWS = 10
-
 // prettier-ignore
 
 class githubTriangleComponent extends AbstractTreeComponentParser {
@@ -1757,20 +2111,15 @@ class SimojiApp extends AbstractTreeComponentParser {
   }
 
   makeGrid(simojiProgram, windowWidth, windowHeight) {
-    const setSize = simojiProgram.get(Keywords.size)
-    const gridSize = Math.min(Math.max(setSize ? parseInt(setSize) : DEFAULT_GRID_SIZE, MIN_GRID_SIZE), MAX_GRID_SIZE)
-
     const chromeWidth = this.leftStartPosition + SIZES.RIGHT_BAR_WIDTH + SIZES.BOARD_MARGIN
-    const maxAvailableCols = Math.floor((windowWidth - chromeWidth) / gridSize) - 1
-    const maxAvailableRows = Math.floor((windowHeight - SIZES.CHROME_HEIGHT - SIZES.TITLE_HEIGHT) / gridSize) - 1
+    const width = windowWidth - chromeWidth - 1
+    const height = windowHeight - SIZES.CHROME_HEIGHT - SIZES.TITLE_HEIGHT - 1
 
-    const setCols = simojiProgram.get(Keywords.columns)
-    const cols = Math.max(1, setCols ? parseInt(setCols) : Math.max(MIN_GRID_COLUMNS, maxAvailableCols))
+    const setWidth = simojiProgram.get(Keywords.width)
+    const setHeight = simojiProgram.get(Keywords.height)
+    // todo: use the set values if present
 
-    const setRows = simojiProgram.get(Keywords.rows)
-    const rows = Math.max(1, setRows ? parseInt(setRows) : Math.max(MIN_GRID_ROWS, maxAvailableRows))
-
-    return { gridSize, cols, rows }
+    return { width, height }
   }
 
   verbose = true
@@ -1810,11 +2159,11 @@ class SimojiApp extends AbstractTreeComponentParser {
 
   _appendExperiment(program, index) {
     const { windowWidth, windowHeight } = this
-    const { gridSize, cols, rows } = this.makeGrid(program, windowWidth, windowHeight)
+    const { width, height } = this.makeGrid(program, windowWidth, windowHeight)
 
     const styleNode = program.getNode(Keywords.style) ?? undefined
     const board = this.appendLineAndChildren(
-      `${BoardComponent.name} ${gridSize} ${rows} ${cols} ${index}`,
+      `${BoardComponent.name} 1 ${width} ${height} ${index}`,
       `leftStartPosition ${this.leftStartPosition}
 ${GridComponent.name}
 ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : ""}`.trim()
@@ -2086,18 +2435,17 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
       node._move()
     })
 
-
     this.ensureRender()
   }
 
   deleteSelectionCommand() {
     this.selection.forEach(node => node.nuke())
     this.selection = []
-    this.boards.forEach(board => board.resetAgentPositionMap())
+    // todo: update any state?
   }
 
   get isSnapshotOn() {
-    // technically also needs rows and column settings
+    // technically also needs width and height settings
     return new TreeNode(this.simCode).has(Keywords.seed)
   }
 
@@ -2109,13 +2457,13 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
     // todo: buggy. we should rename the board class to experiment, or rename experiment keyword to board.
     const board = boards[0]
     newCode.set(Keywords.seed, board.seed.toString())
-    newCode.set(Keywords.rows, board.rows.toString())
-    newCode.set(Keywords.columns, board.cols.toString())
+    newCode.set(Keywords.height, board.height.toString())
+    newCode.set(Keywords.width, board.width.toString())
     newCode.findNodes(Keywords.experiment).forEach((experiment, index) => {
       const board = boards[index]
       experiment.set(Keywords.seed, board.seed.toString())
-      experiment.set(Keywords.rows, board.rows.toString())
-      experiment.set(Keywords.columns, board.cols.toString())
+      experiment.set(Keywords.height, board.height.toString())
+      experiment.set(Keywords.width, board.width.toString())
     })
 
     this.editor.setCodeMirrorValue(newCode.toString())
@@ -2281,9 +2629,8 @@ const Keywords = {}
 
 Keywords.experiment = "experiment"
 Keywords.seed = "seed"
-Keywords.size = "size"
-Keywords.rows = "rows"
-Keywords.columns = "columns"
+Keywords.height = "height"
+Keywords.width = "width"
 Keywords.report = "report"
 Keywords.ticksPerSecond = "ticksPerSecond"
 Keywords.style = "style"
@@ -2333,236 +2680,6 @@ window.Directions = Directions
 window.ParserTypes = ParserTypes
 
 
-
-
-const PositionHashType = "10⬇️ 10➡️"
-
-class PositionType {
-  down = 10
-  right = 10
-}
-
-class RectType {
-  positionHash = PositionHashType
-  position = new PositionType()
-  agentSize = 10
-}
-
-class BoardType {
-  agents = [new RectType()]
-  randomNumberGenerator = yodash.getRandomNumberGenerator()
-  rows = 10
-  cols = 10
-}
-
-class WorldMap {
-  board = new BoardType()
-
-  constructor(boardType) {
-    this.board = boardType
-  }
-
-  get rows() {
-    return this.board.rows
-  }
-
-  get cols() {
-    return this.board.cols
-  }
-
-  get randomNumberGenerator() {
-    return this.board.randomNumberGenerator
-  }
-
-  isRectOccupied(right, down, size) {
-    return this.objectsCollidingWith(right, down, size).length > 0
-  }
-
-  objectsCollidingWith(right, down, size) {
-    return this.board.agents.filter(agent => {
-      const { position, agentSize } = agent
-      const { right: agentRight, down: agentDown } = position
-
-      return (
-        agentRight + agentSize > right &&
-        agentDown + agentSize > down &&
-        agentRight < right + size &&
-        agentDown < down + size
-      )
-    })
-  }
-
-  // ZZZ
-  objectsTouching(rect) {
-    const { position, agentSize } = rect
-    const targets = []
-    for (let pos of this.positionsAdjacentToRect(position.right, position.down, agentSize)) {
-      this.objectsCollidingWith(pos.right, pos.down, agentSize).forEach(item => targets.push(item))
-    }
-    return targets
-  }
-
-  // ZZZ
-  canGoHere(size, right, down) {
-    const agentsHere = this.objectsCollidingWith(right, down, size)
-    if (agentsHere && agentsHere.some(agent => agent.solid)) return false
-
-    return true
-  }
-
-  // ZZZ
-  get collidingAgents() {
-    const agents = this.board.agents
-    const collidingAgents = []
-    for (let agent of agents) {
-      const { position, agentSize } = agent
-      const agentsHere = this.objectsCollidingWith(position.right, position.down, agentSize).filter(a => a !== agent)
-      if (agentsHere.length) collidingAgents.push(...agentsHere)
-    }
-    return collidingAgents
-  }
-
-  makePositionHash(positionType) {
-    return `${positionType.down + "⬇️ " + positionType.right + "➡️"}`
-  }
-
-  getRandomLocationHash(size = 1) {
-    const { right, down } = this.getRandomLocation()
-    if (this.isRectOccupied(right, down, size)) return this.getRandomLocationHash()
-    return this.makePositionHash({ right, down })
-  }
-
-  parsePosition(words) {
-    return {
-      down: parseInt(words.find(word => word.includes("⬇️")).slice(0, -1)),
-      right: parseInt(words.find(word => word.includes("➡️")).slice(0, -1))
-    }
-  }
-
-  insertClusteredRandomAgents(amount, char, originRow, originColumn) {
-    const availableSpots = this.getAllAvailableSpots()
-    const spots = yodash.sampleFrom(availableSpots, amount * 10, this.randomNumberGenerator)
-    const origin = originColumn
-      ? { down: parseInt(originRow), right: parseInt(originColumn) }
-      : this.getRandomLocation()
-    const sortedByDistance = lodash.sortBy(spots, spot =>
-      math.distance([origin.down, origin.right], [spot.down, spot.right])
-    )
-
-    return sortedByDistance
-      .slice(0, amount)
-      .map(spot => `${char} ${spot.hash}`)
-      .join("\n")
-  }
-
-  getAllAvailableSpots(size = 1, rowStart = 0, colStart = 0) {
-    const { rows, cols } = this
-    const availablePositions = []
-    let down = rows
-    while (down >= rowStart) {
-      let right = cols
-      while (right >= colStart) {
-        if (!this.isRectOccupied(right, down, size))
-          availablePositions.push({ right, down, hash: this.makePositionHash({ right, down }) })
-        right--
-      }
-      down--
-    }
-    return availablePositions
-  }
-
-  getRandomLocation() {
-    const { randomNumberGenerator, rows, cols } = this
-    const maxRight = cols
-    const maxBottom = rows
-    const right = Math.round(randomNumberGenerator() * maxRight)
-    const down = Math.round(randomNumberGenerator() * maxBottom)
-    return { right, down }
-  }
-
-  draw(str) {
-    const lines = str.split("\n")
-    const output = []
-    for (let index = 0; index < lines.length; index++) {
-      const words = lines[index].split(" ")
-      for (let wordIndex = 0; wordIndex < words.length; wordIndex++) {
-        const word = words[wordIndex]
-        if (word !== "") output.push(`${word} ${this.makePositionHash({ down: index, right: wordIndex })}`)
-      }
-    }
-    return output.join("\n")
-  }
-
-  makeRectangle(character = "🧱", width = 20, height = 20, startRight = 0, startDown = 0) {
-    if (width < 1 || height < 1) {
-      return ""
-    }
-    const cells = []
-    let row = 0
-    while (row < height) {
-      let col = 0
-      while (col < width) {
-        const isPerimeter = row === 0 || row === height - 1 || col === 0 || col === width - 1
-        if (isPerimeter)
-          cells.push(
-            `${character} ${this.makePositionHash({
-              down: startDown + row,
-              right: startRight + col
-            })}`
-          )
-        col++
-      }
-      row++
-    }
-    return cells.join("\n")
-  }
-
-  fill(emoji, size = 1) {
-    let { rows, cols } = this
-    const board = []
-    while (rows >= 0) {
-      let col = cols
-      while (col >= 0) {
-        col--
-        if (this.isRectOccupied(col, rows, size)) continue
-        const hash = this.makePositionHash({ right: col, down: rows })
-        board.push(`${emoji} ${hash}`)
-      }
-      rows--
-    }
-    return board.join("\n")
-  }
-
-  getNeighborCount(rect) {
-    const { position, agentSize } = rect
-    const neighborCounts = {}
-    this.positionsAdjacentToRect(position.right, position.down, agentSize).forEach(pos => {
-      const agents = this.objectsCollidingWith(pos.right, pos.down, agentSize)
-      agents.forEach(agent => {
-        if (!neighborCounts[agent.name]) neighborCounts[agent.name] = 0
-        neighborCounts[agent.name]++
-      })
-    })
-    return neighborCounts
-  }
-
-  positionsAdjacentToRect(x, y, size) {
-    const positions = []
-    for (let row = y - size; row <= y + size; row++) {
-      for (let col = x - size; col <= x + size; col++) {
-        if (row === y && col === x) continue
-        positions.push({ right: col, down: row })
-      }
-    }
-    return positions
-  }
-}
-
-window.WorldMap = WorldMap
-
-window.BoardType = BoardType
-
-
 const DEFAULT_SIM = "fire"
 
 
@@ -2608,7 +2725,7 @@ class BrowserGlue extends AbstractTreeComponentParser {
   }
 
   async fetchSimGrammarAndExamplesAndInit() {
-    const grammar = await fetch("simoji.grammar")
+    const grammar = await fetch("dist/simoji.grammar")
     const grammarCode = await grammar.text()
 
     const result = await fetch("examples")

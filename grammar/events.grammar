@@ -1,0 +1,49 @@
+targetEmojiParser
+ inScope abstractCommandParser
+ cells emojiCell
+abstractEventParser
+ cells keywordCell
+ catchAllCellType probabilityCell
+ javascript
+  compile() {
+   return ``
+  }
+abstractInteractionEventParser
+ extends abstractEventParser
+ catchAllParser targetEmojiParser
+onHitParser
+ extends abstractInteractionEventParser
+ cruxFromId
+ description Define what happens when this agent collides with other agents.
+onTouchParser
+ extends abstractInteractionEventParser
+ cruxFromId
+ description Define what happens when this agent is adjacent to other agents.
+onNeighborsParser
+ description Define what happens when a certain amount of neighbors are nearby.
+ extends abstractInteractionEventParser
+ inScope emojiAndNeighborConditionParser
+ cruxFromId
+onDeathParser
+ extends abstractEventParser
+ cruxFromId
+ inScope abstractCommandParser
+ description Define what happens when this agent runs out of health.
+onTickParser
+ extends abstractEventParser
+ cruxFromId
+ inScope abstractCommandParser
+ description Define what happens each tick.
+emojiAndNeighborConditionParser
+ inScope abstractCommandParser
+ pattern ^.+ (<|>|=|<=|>=)+ .+$
+ cells emojiCell conditionalOperatorCell neighborCountCell
+onExtinctParser
+ cruxFromId
+ inScope abstractCommandParser
+ cells keywordCell emojiCell
+ description Define what happens when a type of agent goes extinct from the board.
+ javascript
+  compile() {
+   return ""
+  }

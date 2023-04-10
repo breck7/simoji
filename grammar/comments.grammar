@@ -1,0 +1,11 @@
+commentLineParser
+ catchAllCellType commentCell
+commentParser
+ extends abstractIgnoreParser
+ catchAllCellType commentCell
+ cruxFromId
+ catchAllParser commentLineParser
+commentAliasParser
+ description Alternate alias for a comment.
+ crux #
+ extends commentParser

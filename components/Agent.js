@@ -430,6 +430,16 @@ class Agent extends TreeNode {
     }
   }
 
+  grow() {
+    this.width++
+    this.height++
+  }
+
+  shrink() {
+    this.width--
+    this.height--
+  }
+
   jitter() {
     this.turnRandomly()
     this.move()

@@ -7,7 +7,7 @@ const { Disk } = require("jtree/products/Disk.node.js")
 const grammarNode = require("jtree/products/grammar.nodejs.js")
 const { SimojiApp } = require("./SimojiApp.js")
 
-const grammarPath = __dirname + "/../simoji.grammar"
+const grammarPath = __dirname + "/../dist/simoji.grammar"
 const examplesPath = __dirname + "/../examples/"
 const simojiParser = GrammarCompiler.compileGrammarFileAtPathAndReturnRootParser(grammarPath)
 const testTree = {}

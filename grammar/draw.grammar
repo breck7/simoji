@@ -1,0 +1,45 @@
+atTimeParser
+ cruxFromId
+ description Run commands at a certain tick.
+ cells keywordCell integerCell
+ extends abstractSetupParser
+ inScope abstractInjectCommandParser
+abstractInjectCommandParser
+fillParser
+ description Fill all blank cells with this agent.
+ extends abstractInjectCommandParser
+ cells keywordCell emojiCell
+ cruxFromId
+drawParser
+ extends abstractInjectCommandParser
+ cells keywordCell
+ cruxFromId
+ catchAllParser drawLineParser
+insertParser
+ extends abstractInjectCommandParser
+ cells keywordCell integerOrPercentCell emojiCell
+ cruxFromId
+insertAtParser
+ extends insertParser
+ description Insert at X Y
+ cells keywordCell emojiCell positionCell positionCell
+ cruxFromId
+insertClusterParser
+ extends insertParser
+ cruxFromId
+ catchAllCellType integerCell
+rectangleDrawParser
+ extends abstractInjectCommandParser
+ cells keywordCell emojiCell integerCell integerCell
+ catchAllCellType integerCell
+ crux rectangle
+pasteDrawParser
+ extends abstractInjectCommandParser
+ cells keywordCell
+ crux paste
+ catchAllParser pasteLineParser
+drawLineParser
+ catchAllCellType emojiCell
+pasteLineParser
+ catchAllCellType anyCell
+ catchAllParser pasteLineParser

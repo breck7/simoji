@@ -43,7 +43,7 @@ class BrowserGlue extends AbstractTreeComponentParser {
   }
 
   async fetchSimGrammarAndExamplesAndInit() {
-    const grammar = await fetch("simoji.grammar")
+    const grammar = await fetch("dist/simoji.grammar")
     const grammarCode = await grammar.text()
 
     const result = await fetch("examples")

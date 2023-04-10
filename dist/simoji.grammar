@@ -1,3 +1,16 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
 anyCell
 booleanCell
 stringCell
@@ -46,151 +59,8 @@ propertyNameCell
 angleCell
  enum North South East West NorthWest NorthEast SouthWest SouthEast
  highlightScope constant.numeric
-errorParser
- baseParser errorParser
-simojiParser
- extensions simoji
- description A Tree Language that compiles to a TreeComponentFramework app.
- root
- inScope abstractIgnoreParser abstractSetupParser abstractInjectCommandParser onTickParser onExtinctParser behaviorDefinitionParser experimentParser settingDefinitionParser
- catchAllParser agentDefinitionParser
- compilesTo javascript
- example
-  🦋
-   onTick .1
-    turnRandomly
-    move
-   onTick .2
-    turnToward 💡
-    move
-  💡
-  
-  insert 10 🦋
-  insert 2 💡
- javascript
-  get agentTypes() {
-   return this.filter(node => node.parserId === "agentDefinitionParser")
-  }
-experimentParser
- cruxFromId
- cells keywordCell
- inScope abstractIgnoreParser abstractSetupParser abstractInjectCommandParser onTickParser onExtinctParser settingDefinitionParser
- catchAllCellType stringCell
-abstractSetupParser
-atTimeParser
- cruxFromId
- description Run commands at a certain tick.
- cells keywordCell integerCell
- extends abstractSetupParser
- inScope abstractInjectCommandParser
-abstractSetupNumberParser
- cells keywordCell integerCell
- extends abstractSetupParser
- javascript
-  compile() {
-   return ""
-  }
-heightParser
- description Height of the grid. Default is based on screen size.
- extends abstractSetupNumberParser
- crux height
-widthParser
- description Width of the grid. Default is based on screen size.
- extends abstractSetupNumberParser
- crux width
-seedParser
- description If you'd like reproducible runs set a seed for the random number generator.
- extends abstractSetupNumberParser
- cruxFromId
-ticksPerSecondParser
- description Time in milliseconds of one step.
- extends abstractSetupNumberParser
- cruxFromId
-reportParser
- cruxFromId
- description Define a custom report template.
- catchAllParser ohayoLineParser
- extends abstractSetupParser
- cells keywordCell
- javascript
-  compile() {
-   return ""
-  }
-styleParser
- description Optional CSS to load in BoardStyleComponent
- extends abstractSetupParser
- cells keywordCell
- cruxFromId
- catchAllParser styleLineParser
- javascript
-  compile() {
-   return ""
-  }
-questionParser
- cruxFromId
- description What are you trying to figure out?
- cells keywordCell
- catchAllCellType stringCell
- extends abstractSetupParser
-abstractInjectCommandParser
-fillParser
- description Fill all blank cells with this agent.
- extends abstractInjectCommandParser
- cells keywordCell emojiCell
- cruxFromId
-drawParser
- extends abstractInjectCommandParser
- cells keywordCell
- cruxFromId
- catchAllParser drawLineParser
-insertParser
- extends abstractInjectCommandParser
- cells keywordCell integerOrPercentCell emojiCell
- cruxFromId
-insertAtParser
- extends insertParser
- description Insert at X Y
- cells keywordCell emojiCell positionCell positionCell
- cruxFromId
-insertClusterParser
- extends insertParser
- cruxFromId
- catchAllCellType integerCell
-rectangleDrawParser
- extends abstractInjectCommandParser
- cells keywordCell emojiCell integerCell integerCell
- catchAllCellType integerCell
- crux rectangle
-pasteDrawParser
- extends abstractInjectCommandParser
- cells keywordCell
- crux paste
- catchAllParser pasteLineParser
-drawLineParser
- catchAllCellType emojiCell
-pasteLineParser
- catchAllCellType anyCell
- catchAllParser pasteLineParser
-agentDefinitionParser
- inScope abstractIgnoreParser abstractEventParser abstractAgentAttributeParser behaviorAttributeParser
- cells keywordCell
- catchAllParser errorParser
- compiler
-  stringTemplate 
- javascript
-  compile() {
-   const root = this.root
-   const name = root.agentKeywordMap[this.firstWord]
-   const normal = super.compile()
-   const behaviors = this.filter(node => node.parserId === "behaviorAttributeParser")
-    .map(behavior => `"${behavior.getLine()}"`)
-    .join(",")
-   return `class ${name} extends Agent {
-      icon = "${this.firstWord}"
-      behaviors = [${behaviors}]
-      ${normal}
-    }`
-  }
+javascriptLineParser
+ catchAllCellType javascriptCell
 abstractCommandParser
  cells keywordCell
 abstractSubjectObjectCommandParser
@@ -280,6 +150,26 @@ unlearnCommandParser
  crux unlearn
  extends abstractCommandParser
  cells keywordCell behaviorNameCell
+agentDefinitionParser
+ inScope abstractIgnoreParser abstractEventParser abstractAgentAttributeParser behaviorAttributeParser
+ cells keywordCell
+ catchAllParser errorParser
+ compiler
+  stringTemplate 
+ javascript
+  compile() {
+   const root = this.root
+   const name = root.agentKeywordMap[this.firstWord]
+   const normal = super.compile()
+   const behaviors = this.filter(node => node.parserId === "behaviorAttributeParser")
+    .map(behavior => `"${behavior.getLine()}"`)
+    .join(",")
+   return `class ${name} extends Agent {
+      icon = "${this.firstWord}"
+      behaviors = [${behaviors}]
+      ${normal}
+    }`
+  }
 abstractAgentAttributeParser
  cells keywordCell
 stringAttributeParser
@@ -349,12 +239,142 @@ settingDefinitionParser
  description Define a configurable input.
  cells keywordCell settingValueCell
  pattern ^\w+Setting .+$
-ohayoLineParser
- description Data visualization code written for Ohayo.
- catchAllCellType ohayoCell
+behaviorAttributeParser
+ cells behaviorNameCell
+ pattern ^.*Behavior$
+ javascript
+  compile() {
+   return ""
+  }
+behaviorDefinitionParser
+ inScope abstractIgnoreParser abstractEventParser
+ cells behaviorNameCell
+ pattern ^.*Behavior$
+ catchAllParser errorParser
+ javascript
+  compile() {
+   return ""
+  }
 styleLineParser
  catchAllCellType cssCell
  catchAllParser styleLineParser
+abstractSetupParser
+styleParser
+ description Optional CSS to load in BoardStyleComponent
+ extends abstractSetupParser
+ cells keywordCell
+ cruxFromId
+ catchAllParser styleLineParser
+ javascript
+  compile() {
+   return ""
+  }
+questionParser
+ cruxFromId
+ description What are you trying to figure out?
+ cells keywordCell
+ catchAllCellType stringCell
+ extends abstractSetupParser
+atTimeParser
+ cruxFromId
+ description Run commands at a certain tick.
+ cells keywordCell integerCell
+ extends abstractSetupParser
+ inScope abstractInjectCommandParser
+abstractSetupNumberParser
+ cells keywordCell integerCell
+ extends abstractSetupParser
+ javascript
+  compile() {
+   return ""
+  }
+heightParser
+ description Height of the grid. Default is based on screen size.
+ extends abstractSetupNumberParser
+ crux height
+widthParser
+ description Width of the grid. Default is based on screen size.
+ extends abstractSetupNumberParser
+ crux width
+seedParser
+ description If you'd like reproducible runs set a seed for the random number generator.
+ extends abstractSetupNumberParser
+ cruxFromId
+ticksPerSecondParser
+ description Time in milliseconds of one step.
+ extends abstractSetupNumberParser
+ cruxFromId
+reportParser
+ cruxFromId
+ description Define a custom report template.
+ catchAllParser ohayoLineParser
+ extends abstractSetupParser
+ cells keywordCell
+ javascript
+  compile() {
+   return ""
+  }
+commentLineParser
+ catchAllCellType commentCell
+abstractIgnoreParser
+ tags doNotSynthesize
+ javascript
+  compile () {
+    return ""
+  }
+commentParser
+ extends abstractIgnoreParser
+ catchAllCellType commentCell
+ cruxFromId
+ catchAllParser commentLineParser
+commentAliasParser
+ description Alternate alias for a comment.
+ crux #
+ extends commentParser
+blankLineParser
+ extends abstractIgnoreParser
+ description Blank lines compile do nothing.
+ cells blankCell
+ pattern ^$
+abstractInjectCommandParser
+fillParser
+ description Fill all blank cells with this agent.
+ extends abstractInjectCommandParser
+ cells keywordCell emojiCell
+ cruxFromId
+drawParser
+ extends abstractInjectCommandParser
+ cells keywordCell
+ cruxFromId
+ catchAllParser drawLineParser
+insertParser
+ extends abstractInjectCommandParser
+ cells keywordCell integerOrPercentCell emojiCell
+ cruxFromId
+insertAtParser
+ extends insertParser
+ description Insert at X Y
+ cells keywordCell emojiCell positionCell positionCell
+ cruxFromId
+insertClusterParser
+ extends insertParser
+ cruxFromId
+ catchAllCellType integerCell
+rectangleDrawParser
+ extends abstractInjectCommandParser
+ cells keywordCell emojiCell integerCell integerCell
+ catchAllCellType integerCell
+ crux rectangle
+pasteDrawParser
+ extends abstractInjectCommandParser
+ cells keywordCell
+ crux paste
+ catchAllParser pasteLineParser
+drawLineParser
+ catchAllCellType emojiCell
+pasteLineParser
+ catchAllCellType anyCell
+ catchAllParser pasteLineParser
 targetEmojiParser
  inScope abstractCommandParser
  cells emojiCell
@@ -404,43 +424,36 @@ onExtinctParser
   compile() {
    return ""
   }
-abstractIgnoreParser
- tags doNotSynthesize
- javascript
-  compile () {
-    return ""
-  }
-commentParser
- extends abstractIgnoreParser
- catchAllCellType commentCell
+experimentParser
  cruxFromId
- catchAllParser commentLineParser
-commentAliasParser
- description Alternate alias for a comment.
- crux #
- extends commentParser
-blankLineParser
- extends abstractIgnoreParser
- description Blank lines compile do nothing.
- cells blankCell
- pattern ^$
-commentLineParser
- catchAllCellType commentCell
-javascriptLineParser
- catchAllCellType javascriptCell
-behaviorAttributeParser
- cells behaviorNameCell
- pattern ^.*Behavior$
+ cells keywordCell
+ inScope abstractIgnoreParser abstractSetupParser abstractInjectCommandParser onTickParser onExtinctParser settingDefinitionParser
+ catchAllCellType stringCell
+ohayoLineParser
+ description Data visualization code written for Ohayo.
+ catchAllCellType ohayoCell
+errorParser
+ baseParser errorParser
+simojiParser
+ extensions simoji
+ description A Tree Language that compiles to a TreeComponentFramework app.
+ root
+ inScope abstractIgnoreParser abstractSetupParser abstractInjectCommandParser onTickParser onExtinctParser behaviorDefinitionParser experimentParser settingDefinitionParser
+ catchAllParser agentDefinitionParser
+ compilesTo javascript
+ example
+  🦋
+   onTick .1
+    turnRandomly
+    move
+   onTick .2
+    turnToward 💡
+    move
+  💡
+  
+  insert 10 🦋
+  insert 2 💡
  javascript
-  compile() {
-   return ""
-  }
-behaviorDefinitionParser
- inScope abstractIgnoreParser abstractEventParser
- cells behaviorNameCell
- pattern ^.*Behavior$
- catchAllParser errorParser
- javascript
-  compile() {
-   return ""
+  get agentTypes() {
+   return this.filter(node => node.parserId === "agentDefinitionParser")
   }

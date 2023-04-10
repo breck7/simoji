@@ -1,0 +1,16 @@
+behaviorAttributeParser
+ cells behaviorNameCell
+ pattern ^.*Behavior$
+ javascript
+  compile() {
+   return ""
+  }
+behaviorDefinitionParser
+ inScope abstractIgnoreParser abstractEventParser
+ cells behaviorNameCell
+ pattern ^.*Behavior$
+ catchAllParser errorParser
+ javascript
+  compile() {
+   return ""
+  }

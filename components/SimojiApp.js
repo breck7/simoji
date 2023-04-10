@@ -23,7 +23,7 @@ const { TitleComponent } = require("./Title.js")
 const { Keywords, LocalStorageKeys, UrlKeys, Directions, ParserTypes } = require("./Types.js")
 
 // prettier-ignore
-/*NODE_JS_ONLY*/ const simojiParser = require("jtree/products/GrammarCompiler.js").GrammarCompiler.compileGrammarFileAtPathAndReturnRootParser(   __dirname + "/../simoji.grammar")
+/*NODE_JS_ONLY*/ const simojiParser = require("jtree/products/GrammarCompiler.js").GrammarCompiler.compileGrammarFileAtPathAndReturnRootParser(   __dirname + "/../dist/simoji.grammar")
 
 class githubTriangleComponent extends AbstractTreeComponentParser {
   githubLink = `https://github.com/breck7/simoji`

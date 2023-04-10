@@ -1,0 +1,13 @@
+ohayoLineParser
+ description Data visualization code written for Ohayo.
+ catchAllCellType ohayoCell
+reportParser
+ cruxFromId
+ description Define a custom report template.
+ catchAllParser ohayoLineParser
+ extends abstractSetupParser
+ cells keywordCell
+ javascript
+  compile() {
+   return ""
+  }
