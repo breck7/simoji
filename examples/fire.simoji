@@ -1,11 +1,15 @@
 question How fast do fires spread?
 
 🌲
+ width 20
+ height 20
  onHit
   ⚡️
+   replaceWith ⬛️
    replaceWith 🔥
- onTouch
+ onHit
   🔥
+   replaceWith ⬛️
    replaceWith 🔥
 
 ⚡️
@@ -16,12 +20,13 @@ question How fast do fires spread?
   remove
 
 🔥
+ width 60
+ height 60
  health 50
  onTick
+  jitter
   decrease health
- onDeath
-  replaceWith ⬛️
-
+  shrink
 
 ⬛️
  comment Burnt forest

@@ -9,7 +9,6 @@ Keywords.ticksPerSecond = "ticksPerSecond"
 Keywords.style = "style"
 
 Keywords.onNeighbors = "onNeighbors"
-Keywords.onTouch = "onTouch"
 Keywords.onHit = "onHit"
 Keywords.onTick = "onTick"
 Keywords.onDeath = "onDeath"

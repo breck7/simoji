@@ -45,7 +45,6 @@ code
 * Events are blocks of commands that execute during the running of the experiments. Probabilities can be assigned so blocks run stochastically.
 - onTick
 - onHit
-- onTouch
 - onDeath
 
 * Some events can also happen on the board level:

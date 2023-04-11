@@ -18,10 +18,12 @@ fireLifetimeSetting 10
 lightningFrequencySetting .1
 
 🌲
+ width 20
+ height 20
  onHit catchFireSetting
   ⚡️
    replaceWith 🔥
- onTouch fireSpreadSetting
+ onHit fireSpreadSetting
   🔥
    replaceWith 🔥
 
@@ -33,9 +35,13 @@ lightningFrequencySetting .1
   remove
 
 🔥
+ width 50
+ height 50
  health fireLifetimeSetting
  onTick
   decrease health
+  jitter
+  shrink
  onDeath
   replaceWith ⬛️
 

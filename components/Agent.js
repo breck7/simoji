@@ -4,6 +4,13 @@ const { Keywords, Directions } = require("./Types.js")
 
 const SelectedClass = "selected"
 
+const classCache = {}
+const getClassCache = (program, words) => {
+  const key = words.join(" ")
+  if (!classCache[key]) classCache[key] = yodash.flatten(yodash.pick(program, words))
+  return classCache[key]
+}
+
 class Agent extends TreeNode {
   get name() {
     return this._name ?? this.icon
@@ -17,8 +24,7 @@ class Agent extends TreeNode {
 
   get definitionWithClasses() {
     if (!this.classes.length) return this.board.simojiProgram.getNode(this.firstWord)
-    const classes = yodash.flatten(yodash.pick(this.board.simojiProgram, [this.firstWord, ...this.classes]))
-    return classes
+    return getClassCache(this.board.simojiProgram, [this.firstWord, ...this.classes])
   }
 
   skip(probability) {
@@ -66,8 +72,7 @@ class Agent extends TreeNode {
   }
 
   _replaceWith(newObject) {
-    this.parent.appendLine(`${newObject} ${this.positionHash}`)
-
+    this.parent.insertInbounds(newObject, this.x, this.y)
     this.remove()
   }
 
@@ -163,23 +168,6 @@ class Agent extends TreeNode {
     })
   }
 
-  handleTouches() {
-    if (!this.stillExists) return
-    const { board } = this
-    this.getCommandBlocks(Keywords.onTouch).forEach(touchMap => {
-      if (this.skip(touchMap.getWord(1))) return
-
-      for (let target of board.objectsTouching(this)) {
-        const targetId = target.firstWord
-        const commandBlock = touchMap.getNode(targetId)
-        if (commandBlock) {
-          commandBlock.forEach(command => this._executeCommand(target, command))
-          if (this.getIndex() === -1) return
-        }
-      }
-    })
-  }
-
   handleCollisions(targetAgents) {
     if (!this.stillExists) return
     this.getCommandBlocks(Keywords.onHit).forEach(hitMap => {
@@ -205,11 +193,11 @@ class Agent extends TreeNode {
   }
 
   get maxRight() {
-    return this.board.width - this.width
+    return this.board.width - this.width - 1
   }
 
   get maxDown() {
-    return this.board.height - this.height
+    return this.board.height - this.height - 1
   }
 
   set left(value) {
@@ -242,10 +230,6 @@ class Agent extends TreeNode {
     }
   }
 
-  get positionHash() {
-    return `${this.words[1]} ${this.words[2]}`
-  }
-
   get gridSize() {
     return 1
   }
@@ -275,7 +259,7 @@ class Agent extends TreeNode {
   // DOM operations
 
   nuke() {
-    this.element.remove()
+    if (this.element) this.element.remove()
     this.destroy()
   }
 
@@ -434,7 +418,7 @@ class Agent extends TreeNode {
   }
 
   spawn(subject, command) {
-    const position = command.getWordsFrom(2).length ? command.getWordsFrom(2).join(" ") : subject.positionHash
+    const position = command.getWordsFrom(2).length ? command.getWordsFrom(2).join(" ") : `${subject.x} ${subject.y}`
     this.board.appendLine(`${command.getWord(1)} ${position}`)
   }
 

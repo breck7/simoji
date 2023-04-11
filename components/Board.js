@@ -151,7 +151,6 @@ class BoardComponent extends AbstractTreeComponentParser {
 
     this.clearCollisionDetector()
     this.handleCollisions()
-    //    this.handleTouches()
     //    this.handleNeighbors()
 
     this.executeBoardCommands(Keywords.onTick)
@@ -227,6 +226,17 @@ class BoardComponent extends AbstractTreeComponentParser {
     return { agentWidth: item.width, agentHeight: item.height }
   }
 
+  insertInbounds(agentSymbol, x, y) {
+    const { agentWidth, agentHeight } = this.getAgentHeightAndWidth(agentSymbol)
+    const xOver = x + agentWidth - this.width
+    const yOver = y + agentHeight - this.height
+    if (xOver > 0) x = x - xOver - 10
+    if (yOver > 0) y = y - yOver - 10
+    if (x < 0) x = 0
+    if (y < 0) y = 0
+    this.appendLine(`${agentSymbol} ${x} ${y}`)
+  }
+
   // todo: origin
   insertClusteredRandomAgents(amount, agentSymbol, x = 0, y = 0) {
     const { agentWidth, agentHeight } = this.getAgentHeightAndWidth(agentSymbol)
@@ -236,7 +246,7 @@ class BoardComponent extends AbstractTreeComponentParser {
       amount,
       x,
       y,
-      amount * agentWidth
+      (amount * agentWidth) / 4
     )
     return spots.map(spot => `${agentSymbol} ${spot.x} ${spot.y}`).join("\n")
   }
@@ -360,11 +370,6 @@ class BoardComponent extends AbstractTreeComponentParser {
       agentA.handleCollisions([agentB])
       agentB.handleCollisions([agentA])
     })
-  }
-
-  // YY
-  handleTouches() {
-    this.agents.forEach(node => node.handleTouches())
   }
 
   // YY

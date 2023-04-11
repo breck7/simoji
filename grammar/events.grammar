@@ -15,10 +15,6 @@ onHitParser
  extends abstractInteractionEventParser
  cruxFromId
  description Define what happens when this agent collides with other agents.
-onTouchParser
- extends abstractInteractionEventParser
- cruxFromId
- description Define what happens when this agent is adjacent to other agents.
 onNeighborsParser
  description Define what happens when a certain amount of neighbors are nearby.
  extends abstractInteractionEventParser

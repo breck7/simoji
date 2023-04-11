@@ -35,10 +35,10 @@ experiment High Vaccination Rate, Low Vaccine Efficacy
  vaxSucceptibilitySetting .75
 
 experiment Lockdown
- freedomOfMovementSetting .3
+ freedomOfMovementSetting .1
 
 experiment High Reinfection Rate
- reinfectionRateSetting .2
+ reinfectionRateSetting .3
 
 
 insert startingInfectedSetting 🧟
@@ -50,7 +50,7 @@ insert ruralPopulationSetting 🙍
 thingClass
  width 20
  height 20
- speed 10
+ speed 5
 
 🧟
  thingClass
@@ -69,7 +69,7 @@ thingClass
  comment Recovered
  onTick
   jitter
- onTouch reinfectionRateSetting
+ onHit reinfectionRateSetting
   🧟
    replaceWith 🧟
 
@@ -87,7 +87,7 @@ vaccineSeekerClass
  thingClass
  aliveClass
  vaccineSeekerClass
- onTouch innateImmunitySetting
+ onHit innateImmunitySetting
   🧟
    replaceWith 🧟
   💉
@@ -101,7 +101,7 @@ vaccineSeekerClass
 🧑🏽‍🚒
  thingClass
  aliveClass
- onTouch vaxSucceptibilitySetting
+ onHit vaxSucceptibilitySetting
   🧟
    replaceWith 🧟
 

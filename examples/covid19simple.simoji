@@ -45,7 +45,7 @@ experiment
 🙍
  onTick
   jitter
- onTouch
+ onHit
   🦠
    replaceWith 🧟
   🧟
