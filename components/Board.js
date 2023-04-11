@@ -243,7 +243,7 @@ class BoardComponent extends AbstractTreeComponentParser {
   }
 
   insertAtParser(commandNode) {
-    this.appendLine(`${commandNode.getWord(1)} ${commandNode.getWord(3)} ${commandNode.getWord(2)}`)
+    this.appendLine(`${commandNode.getWord(1)} ${commandNode.getWord(2)} ${commandNode.getWord(3)}`)
     this.clearCollisionDetector()
   }
 
