@@ -436,17 +436,26 @@ class Agent extends TreeNode {
   grow() {
     this.width++
     this.height++
+    this.markDirty()
   }
 
   shrink() {
     if (!this.width || !this.height) return
     this.width--
     this.height--
+    this.markDirty()
   }
 
   jitter() {
     this.turnRandomly()
     this.move()
+  }
+
+  _lastPulse
+  pulse() {
+    if (this._lastPulse) this.shrink()
+    else this.grow()
+    this._lastPulse = !this._lastPulse
   }
 
   learn(target, command) {
