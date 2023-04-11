@@ -222,12 +222,23 @@ class BoardComponent extends AbstractTreeComponentParser {
     this[command.parserId](command)
   }
 
+  getAgentHeightAndWidth(agentSymbol) {
+    const item = new this.agentMap[agentSymbol]()
+    return { agentWidth: item.width, agentHeight: item.height }
+  }
+
   // todo: origin
-  insertClusteredRandomAgents(amount, char, x = 0, y = 0) {
-    const width = 10
-    const height = 10
-    const spots = this.collisionDetector.findClusteredNonOverlappingSquares(width, height, amount, x, y, amount * width)
-    return spots.map(spot => `${char} ${spot.x} ${spot.y}`).join("\n")
+  insertClusteredRandomAgents(amount, agentSymbol, x = 0, y = 0) {
+    const { agentWidth, agentHeight } = this.getAgentHeightAndWidth(agentSymbol)
+    const spots = this.collisionDetector.findClusteredNonOverlappingSquares(
+      agentWidth,
+      agentHeight,
+      amount,
+      x,
+      y,
+      amount * agentWidth
+    )
+    return spots.map(spot => `${agentSymbol} ${spot.x} ${spot.y}`).join("\n")
   }
 
   insertClusterParser(commandNode) {
@@ -282,16 +293,15 @@ class BoardComponent extends AbstractTreeComponentParser {
 
   insertParser(commandNode) {
     const { width, height } = this
-    const emoji = commandNode.getWord(2)
+    const agentSymbol = commandNode.getWord(2)
     let amount = commandNode.getWord(1)
-    const agentWidth = 10
-    const agentHeight = 10
+    const { agentWidth, agentHeight } = this.getAgentHeightAndWidth(agentSymbol)
     const maxCells = (width * height) / (agentWidth * agentHeight)
     amount = amount.includes("%") ? yodash.parsePercent(amount) * maxCells : parseInt(amount)
 
     const spots = this.collisionDetector.findNonOverlappingSquares(agentWidth, agentHeight, amount)
 
-    const newAgents = spots.map(spot => `${emoji} ${spot.x + " " + spot.y}`).join("\n")
+    const newAgents = spots.map(spot => `${agentSymbol} ${spot.x + " " + spot.y}`).join("\n")
 
     this.concat(newAgents)
     this.clearCollisionDetector()
