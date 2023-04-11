@@ -12,13 +12,13 @@ class Agent extends TreeNode {
   angle = Directions.South
 
   getCommandBlocks(eventName) {
-    return this.definitionWithBehaviors.findNodes(eventName)
+    return this.definitionWithClasses.findNodes(eventName)
   }
 
-  get definitionWithBehaviors() {
-    if (!this.behaviors.length) return this.board.simojiProgram.getNode(this.firstWord)
-    const behaviors = yodash.flatten(yodash.pick(this.board.simojiProgram, [this.firstWord, ...this.behaviors]))
-    return behaviors
+  get definitionWithClasses() {
+    if (!this.classes.length) return this.board.simojiProgram.getNode(this.firstWord)
+    const classes = yodash.flatten(yodash.pick(this.board.simojiProgram, [this.firstWord, ...this.classes]))
+    return classes
   }
 
   skip(probability) {
@@ -226,6 +226,15 @@ class Agent extends TreeNode {
     return this.position.x
   }
 
+  get bounds() {
+    return {
+      x: this.x,
+      y: this.y,
+      w: this.width,
+      h: this.height
+    }
+  }
+
   get position() {
     return {
       x: parseInt(this.words[1]),
@@ -271,7 +280,7 @@ class Agent extends TreeNode {
   }
 
   get element() {
-    return document.getElementById(`agent${this._getUid()}`)
+    return document.getElementById(this.id)
   }
 
   _updateHtml() {
@@ -288,9 +297,17 @@ class Agent extends TreeNode {
     }`
   }
 
+  get id() {
+    return `agent${this.agentNumber}`
+  }
+
+  get agentNumber() {
+    return this._getUid()
+  }
+
   toElement() {
     const elem = document.createElement("div")
-    elem.setAttribute("id", `agent${this._getUid()}`)
+    elem.setAttribute("id", this.id)
     elem.innerHTML = this.html ?? this.icon
     elem.classList.add("Agent")
     if (this.selected) elem.classList.add(SelectedClass)
@@ -449,12 +466,12 @@ class Agent extends TreeNode {
   }
 
   learn(target, command) {
-    this.behaviors.push(command.getWord(1))
+    this.classes.push(command.getWord(1))
   }
 
   unlearn(target, command) {
-    const behaviorName = command.getWord(1)
-    this.behaviors = this.behaviors.filter(name => name !== behaviorName)
+    const className = command.getWord(1)
+    this.classes = this.classes.filter(name => name !== className)
   }
 }
 

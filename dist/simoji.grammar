@@ -11,6 +11,15 @@
 
 
 
+
+
+
+
+
+
+
+
+
 anyCell
 booleanCell
 stringCell
@@ -38,7 +47,7 @@ textCell
  highlightScope string
 integerCell
  highlightScope constant.numeric
-behaviorNameCell
+classNameCell
  highlightScope keyword
 conditionalOperatorCell
  highlightScope keyword
@@ -83,10 +92,6 @@ spawnCommandParser
  extends abstractCommandParser
  cells keywordCell emojiCell
  catchAllCellType positionCell
-moveToEmptySpotCommandParser
- crux moveToEmptySpot
- extends abstractCommandParser
- cells keywordCell
 removeCommandParser
  description Remove this agent from the board.
  crux remove
@@ -123,9 +128,27 @@ increaseCommandParser
  description Increase a property by 1.
  crux increase
  cells keywordCell propertyNameCell
+growCommandParser
+ extends abstractCommandParser
+ crux grow
+shrinkCommandParser
+ extends abstractCommandParser
+ crux shrink
+learnCommandParser
+ crux learn
+ extends abstractCommandParser
+ cells keywordCell classNameCell
+unlearnCommandParser
+ crux unlearn
+ extends abstractCommandParser
+ cells keywordCell classNameCell
 moveCommandParser
  extends abstractCommandParser
  crux move
+moveToEmptySpotCommandParser
+ crux moveToEmptySpot
+ extends abstractCommandParser
+ cells keywordCell
 turnRandomlyCommandParser
  extends abstractCommandParser
  crux turnRandomly
@@ -142,16 +165,8 @@ turnFromCommandParser
  extends abstractCommandParser
  crux turnFrom
  cells keywordCell emojiCell
-learnCommandParser
- crux learn
- extends abstractCommandParser
- cells keywordCell behaviorNameCell
-unlearnCommandParser
- crux unlearn
- extends abstractCommandParser
- cells keywordCell behaviorNameCell
 agentDefinitionParser
- inScope abstractIgnoreParser abstractEventParser abstractAgentAttributeParser behaviorAttributeParser
+ inScope abstractIgnoreParser abstractEventParser abstractAgentAttributeParser belongsToClassParser
  cells keywordCell
  catchAllParser errorParser
  compiler
@@ -161,12 +176,12 @@ agentDefinitionParser
    const root = this.root
    const name = root.agentKeywordMap[this.firstWord]
    const normal = super.compile()
-   const behaviors = this.filter(node => node.parserId === "behaviorAttributeParser")
-    .map(behavior => `"${behavior.getLine()}"`)
-    .join(",")
+   const classIds = this.filter(node => node.parserId === "belongsToClassParser").map(node => node.getLine())
+   const props = classIds.map(id => this.root.getNode(id).properties).join("\n\n")
    return `class ${name} extends Agent {
       icon = "${this.firstWord}"
-      behaviors = [${behaviors}]
+      classes = [${classIds.map(id => `"${id}"`).join(",")}]
+      ${props}
       ${normal}
     }`
   }
@@ -178,7 +193,7 @@ stringAttributeParser
  catchAllCellType stringCell
  javascript
   compile() {
-   return `${this.firstWord} = "${this.getWord(1)}"`
+   return `${this.firstWord} = "${this.content}"`
   }
 angleParser
  extends stringAttributeParser
@@ -235,26 +250,14 @@ agentHeightParser
  extends abstractIntegerAttributeParser
  description Height of the agent.
  crux height
+speedParser
+ extends abstractIntegerAttributeParser
+ description Movement speed. Default is 1
+ crux speed
 settingDefinitionParser
  description Define a configurable input.
  cells keywordCell settingValueCell
  pattern ^\w+Setting .+$
-behaviorAttributeParser
- cells behaviorNameCell
- pattern ^.*Behavior$
- javascript
-  compile() {
-   return ""
-  }
-behaviorDefinitionParser
- inScope abstractIgnoreParser abstractEventParser
- cells behaviorNameCell
- pattern ^.*Behavior$
- catchAllParser errorParser
- javascript
-  compile() {
-   return ""
-  }
 styleLineParser
  catchAllCellType cssCell
  catchAllParser styleLineParser
@@ -313,6 +316,25 @@ reportParser
  javascript
   compile() {
    return ""
+  }
+belongsToClassParser
+ cells classNameCell
+ pattern ^.*Class$
+ javascript
+  compile() {
+   return ""
+  }
+classDefinitionParser
+ inScope abstractIgnoreParser abstractEventParser abstractAgentAttributeParser
+ cells classNameCell
+ pattern ^.*Class$
+ catchAllParser errorParser
+ javascript
+  compile() {
+   return ""
+  }
+  get properties() {
+    return this.filter(node => node.doesExtend("abstractAgentAttributeParser")).map(node => node.compile()).join("\n")
   }
 commentLineParser
  catchAllCellType commentCell
@@ -438,7 +460,7 @@ simojiParser
  extensions simoji
  description A Tree Language that compiles to a TreeComponentFramework app.
  root
- inScope abstractIgnoreParser abstractSetupParser abstractInjectCommandParser onTickParser onExtinctParser behaviorDefinitionParser experimentParser settingDefinitionParser
+ inScope abstractIgnoreParser abstractSetupParser abstractInjectCommandParser onTickParser onExtinctParser classDefinitionParser experimentParser settingDefinitionParser
  catchAllParser agentDefinitionParser
  compilesTo javascript
  example

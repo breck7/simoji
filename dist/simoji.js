@@ -31,14 +31,16 @@ yodash.compare = (left, operator, right) => {
   return false
 }
 
+// Todo: why do we do this? Very confusing. Caught me by surprise.
+// Is it because sometimes the class name is not valid JS?
 yodash.compileAgentClassDeclarationsAndMap = program => {
-  const clone = program.clone()
-  clone.filter(node => node.parserId !== ParserTypes.agentDefinitionParser).forEach(node => node.destroy())
-  clone.agentKeywordMap = {}
-  clone.agentTypes.forEach((node, index) => (clone.agentKeywordMap[node.firstWord] = `simAgent${index}`))
-  const compiled = clone.compile()
-  const agentMap = Object.keys(clone.agentKeywordMap)
-    .map(key => `"${key}":${clone.agentKeywordMap[key]}`)
+  const agentKeywordMap = {}
+  program.agentKeywordMap = agentKeywordMap // confusing
+  const agentDefs = program.filter(node => node.parserId === ParserTypes.agentDefinitionParser)
+  agentDefs.forEach((node, index) => (agentKeywordMap[node.firstWord] = `simAgent${index}`))
+  const compiled = agentDefs.map(node => node.compile()).join("\n")
+  const agentMap = Object.keys(agentKeywordMap)
+    .map(key => `"${key}":${agentKeywordMap[key]}`)
     .join(",")
   return `${compiled}
     const map = {${agentMap}};
@@ -234,13 +236,13 @@ class Agent extends TreeNode {
   angle = Directions.South
 
   getCommandBlocks(eventName) {
-    return this.definitionWithBehaviors.findNodes(eventName)
+    return this.definitionWithClasses.findNodes(eventName)
   }
 
-  get definitionWithBehaviors() {
-    if (!this.behaviors.length) return this.board.simojiProgram.getNode(this.firstWord)
-    const behaviors = yodash.flatten(yodash.pick(this.board.simojiProgram, [this.firstWord, ...this.behaviors]))
-    return behaviors
+  get definitionWithClasses() {
+    if (!this.classes.length) return this.board.simojiProgram.getNode(this.firstWord)
+    const classes = yodash.flatten(yodash.pick(this.board.simojiProgram, [this.firstWord, ...this.classes]))
+    return classes
   }
 
   skip(probability) {
@@ -310,19 +312,21 @@ class Agent extends TreeNode {
   }
 
   moveSouth() {
-    this.top++
+    this.top += this.speed
   }
 
+  speed = 1
+
   moveNorth() {
-    this.top = Math.max(this.top - 1, 0)
+    this.top = Math.max(this.top - this.speed, 0)
   }
 
   moveWest() {
-    this.left = Math.max(this.left - 1, 0)
+    this.left = Math.max(this.left - this.speed, 0)
   }
 
   moveEast() {
-    this.left++
+    this.left += this.speed
   }
 
   get shape() {
@@ -446,6 +450,15 @@ class Agent extends TreeNode {
     return this.position.x
   }
 
+  get bounds() {
+    return {
+      x: this.x,
+      y: this.y,
+      w: this.width,
+      h: this.height
+    }
+  }
+
   get position() {
     return {
       x: parseInt(this.words[1]),
@@ -491,7 +504,7 @@ class Agent extends TreeNode {
   }
 
   get element() {
-    return document.getElementById(`agent${this._getUid()}`)
+    return document.getElementById(this.id)
   }
 
   _updateHtml() {
@@ -508,9 +521,17 @@ class Agent extends TreeNode {
     }`
   }
 
+  get id() {
+    return `agent${this.agentNumber}`
+  }
+
+  get agentNumber() {
+    return this._getUid()
+  }
+
   toElement() {
     const elem = document.createElement("div")
-    elem.setAttribute("id", `agent${this._getUid()}`)
+    elem.setAttribute("id", this.id)
     elem.innerHTML = this.html ?? this.icon
     elem.classList.add("Agent")
     if (this.selected) elem.classList.add(SelectedClass)
@@ -652,18 +673,29 @@ class Agent extends TreeNode {
     }
   }
 
+  grow() {
+    this.width++
+    this.height++
+  }
+
+  shrink() {
+    if (!this.width || !this.height) return
+    this.width--
+    this.height--
+  }
+
   jitter() {
     this.turnRandomly()
     this.move()
   }
 
   learn(target, command) {
-    this.behaviors.push(command.getWord(1))
+    this.classes.push(command.getWord(1))
   }
 
   unlearn(target, command) {
-    const behaviorName = command.getWord(1)
-    this.behaviors = this.behaviors.filter(name => name !== behaviorName)
+    const className = command.getWord(1)
+    this.classes = this.classes.filter(name => name !== className)
   }
 }
 
@@ -772,12 +804,12 @@ class BoardComponent extends AbstractTreeComponentParser {
   }
 
   get width() {
-    if (this._width === undefined) this._width = parseInt(this.getWord(3))
+    if (this._width === undefined) this._width = parseInt(this.getWord(2))
     return this._width
   }
 
   get height() {
-    if (this._height === undefined) this._height = parseInt(this.getWord(2))
+    if (this._height === undefined) this._height = parseInt(this.getWord(3))
     return this._height
   }
 
@@ -819,15 +851,13 @@ class BoardComponent extends AbstractTreeComponentParser {
 
   insertAgentAtCommand(x, y) {
     const root = this.root
-    const positionHash = y + " " + x
-    this.clearCollisionDetector()
     const { agentToInsert } = root
-
     if (!agentToInsert) return
+    this.clearCollisionDetector()
 
     //if (parent.findNodes(agentToInsert).length > MAX_ITEMS) return true
 
-    this.prependLine(`${agentToInsert} ${positionHash}`)
+    this.prependLine(`${agentToInsert} ${x} ${y}`)
     this.renderAndGetRenderReport()
     this.clearCollisionDetector()
 
@@ -931,6 +961,14 @@ class BoardComponent extends AbstractTreeComponentParser {
     this[command.parserId](command)
   }
 
+  // todo: origin
+  insertClusteredRandomAgents(amount, char, x, y) {
+    const width = 10
+    const height = 10
+    const spots = this.collisionDetector.findClusteredNonOverlappingSquares(width, height, amount, x, y, amount * width)
+    return spots.map(spot => `${char} ${spot.x} ${spot.y}`).join("\n")
+  }
+
   insertClusterParser(commandNode) {
     this.concat(
       this.insertClusteredRandomAgents(
@@ -985,11 +1023,14 @@ class BoardComponent extends AbstractTreeComponentParser {
     const { width, height } = this
     const emoji = commandNode.getWord(2)
     let amount = commandNode.getWord(1)
-    amount = amount.includes("%") ? yodash.parsePercent(amount) * (width * height) : parseInt(amount)
+    const agentWidth = 10
+    const agentHeight = 10
+    const maxCells = (width * height) / (agentWidth * agentHeight)
+    amount = amount.includes("%") ? yodash.parsePercent(amount) * maxCells : parseInt(amount)
 
-    const spots = this.collisionDetector.findNonOverlappingSquares(10, 10, amount)
+    const spots = this.collisionDetector.findNonOverlappingSquares(agentWidth, agentHeight, amount)
 
-    const newAgents = spots.map(spot => `${emoji} ${spot.x + " " + spot.x}`).join("\n")
+    const newAgents = spots.map(spot => `${emoji} ${spot.x + " " + spot.y}`).join("\n")
 
     this.concat(newAgents)
     this.clearCollisionDetector()
@@ -1031,6 +1072,7 @@ class BoardComponent extends AbstractTreeComponentParser {
 
   clearCollisionDetector() {
     delete this._collisionDetector
+    delete this._solidCollisionDetector
   }
 
   _collisionDetector
@@ -1183,10 +1225,20 @@ class BoardComponent extends AbstractTreeComponentParser {
     return targets
   }
 
-  // ZZZ
+  _solidCollisionDetector
+  get solidCollisionDetector() {
+    if (!this._solidCollisionDetector)
+      this._solidCollisionDetector = new CollisionDetector(
+        this.agents.filter(agent => agent.solid),
+        this.width,
+        this.height
+      )
+    return this._solidCollisionDetector
+  }
+
   canGoHere(x, y, width, height) {
-    const agentsHere = this.objectsCollidingWith(x, y, width, height)
-    if (agentsHere && agentsHere.some(agent => agent.solid)) return false
+    const blockersHere = this.solidCollisionDetector.getCollidingAgents(x, y, width, height)
+    if (blockersHere.length) return false
 
     return true
   }
@@ -1211,14 +1263,6 @@ class BoardComponent extends AbstractTreeComponentParser {
     const { x, y } = this.getRandomLocation()
     if (this.isRectOccupied(x, y, size, size)) return this.getRandomLocationHash()
     return this.makePositionHash({ x, y })
-  }
-
-  // todo: origin
-  insertClusteredRandomAgents(amount, char, y, x) {
-    const width = 10
-    const height = 10
-    const spots = this.collisionDetector.findNonOverlappingSquares(width, height, amount)
-    return spots.map(spot => `${char} ${this.makePositionHash(spot)}`).join("\n")
   }
 
   getRandomLocation() {
@@ -1402,6 +1446,44 @@ class Quadtree {
     }
   }
 
+  isLeaf() {
+    return !this.divided
+  }
+
+  get northWest() {
+    return this.children[0]
+  }
+
+  get northEast() {
+    return this.children[1]
+  }
+
+  get southWest() {
+    return this.children[2]
+  }
+
+  get southEast() {
+    return this.children[3]
+  }
+
+  prettyPrint(depth = 0) {
+    let output = ""
+
+    if (this.isLeaf()) {
+      output += "-".repeat(depth - 1)
+      output += `[${this.bounds.x}, ${this.bounds.y}, ${this.bounds.w}, ${this.bounds.h}]: `
+      output += this.agents.map(agent => agent.id).join(", ")
+      output += "\n"
+    } else {
+      output += this.northWest.prettyPrint(depth + 1)
+      output += this.northEast.prettyPrint(depth + 1)
+      output += this.southWest.prettyPrint(depth + 1)
+      output += this.southEast.prettyPrint(depth + 1)
+    }
+
+    return output
+  }
+
   subdivide() {
     const { x, y, w, h } = this.bounds
     const capacity = this.capacity
@@ -1422,7 +1504,7 @@ class Quadtree {
     if (!this.bounds.intersects(range)) return found
 
     if (!this.divided) {
-      for (const agent of this.agents) if (range.contains(agent)) found.push(agent)
+      for (const agent of this.agents) if (range.intersects(agent)) found.push(agent)
     } else {
       for (const child of this.children) child.query(range, found)
     }
@@ -1470,7 +1552,31 @@ class CollisionDetector {
     // Divide the world into cells
     for (let x = 0; x < this.width - width; x += width) {
       for (let y = 0; y < this.height - height; y += height) {
-        if (this.isSpotAvailable(x, y, width, height)) {
+        if (this.isSpotAvailable(x, y, width, height)) availableCells.push({ x, y })
+      }
+    }
+
+    // Randomly select non-overlapping cells
+    while (nonOverlappingSquares.length < N && availableCells.length) {
+      const randomIndex = Math.floor(Math.random() * availableCells.length)
+      nonOverlappingSquares.push(availableCells[randomIndex])
+      availableCells.splice(randomIndex, 1)
+    }
+    return nonOverlappingSquares
+  }
+
+  findClusteredNonOverlappingSquares(width, height, N, centerX, centerY, clusterRadius) {
+    const nonOverlappingSquares = []
+    const availableCells = []
+
+    // Divide the world into cells and filter by clusterRadius
+    for (let x = 0; x < this.width - width; x += width) {
+      for (let y = 0; y < this.height - height; y += height) {
+        const dx = x - centerX
+        const dy = y - centerY
+        const distance = Math.sqrt(dx * dx + dy * dy)
+
+        if (distance <= clusterRadius && this.isSpotAvailable(x, y, width, height)) {
           availableCells.push({ x: x, y: y })
         }
       }
@@ -1486,31 +1592,17 @@ class CollisionDetector {
     return nonOverlappingSquares
   }
 
-  findClosestAvailableSpot(x, y, width, height, maxDistance = 100, step = 1) {
-    for (let dist = 0; dist <= maxDistance; dist += step) {
-      for (let angle = 0; angle < 360; angle += step) {
-        const newX = x + dist * Math.cos(angle * (Math.PI / 180))
-        const newY = y + dist * Math.sin(angle * (Math.PI / 180))
-
-        if (this.isSpotAvailable(newX, newY, width, height)) {
-          return { x: newX, y: newY }
-        }
-      }
-    }
-    return null
-  }
-
   getCollidingAgents(x, y, width, height) {
-    const bounds = new Bounds(x, y, width, height)
     const collidingAgents = []
-    const nearbyAgents = this.quadtree.query(bounds)
+    const queryBounds = new Bounds(x, y, width, height)
+    const nearbyAgents = this.quadtree.query(queryBounds)
 
     for (const agent of nearbyAgents) {
       if (
-        bounds.x < agent.x + agent.shape.width &&
-        bounds.x + bounds.w > agent.x &&
-        bounds.y < agent.y + agent.shape.height &&
-        bounds.y + bounds.h > agent.y
+        queryBounds.x < agent.x + agent.shape.width &&
+        queryBounds.x + queryBounds.w > agent.x &&
+        queryBounds.y < agent.y + agent.shape.height &&
+        queryBounds.y + queryBounds.h > agent.y
       ) {
         collidingAgents.push(agent)
       }
@@ -1692,27 +1784,15 @@ class GridComponent extends AbstractTreeComponentParser {
     return this.parent.insertAgentAtCommand(x, y)
   }
 
-  evtToRightDown(evt) {
-    if (this.isNodeJs()) return { right: 1, down: 1 }
-
-    const { offsetX, offsetY } = evt
-    const el = jQuery(evt.target)
-    const height = el.height()
-    const width = el.width()
-
-    const right = Math.round(offsetX / width)
-    const down = Math.round(offsetY / height)
-
-    return { right, down }
-  }
-
   treeComponentDidMount() {
     const that = this
     if (this.isNodeJs()) return super.treeComponentDidMount()
 
     jQuery(`.${GridComponent.name}`).on("click", function (evt) {
-      const { right, down } = that.evtToRightDown(evt)
-      that.gridClickCommand(right, down)
+      const { offsetX, offsetY } = evt
+      const x = offsetX
+      const y = offsetY
+      that.gridClickCommand(x, y)
     })
   }
 

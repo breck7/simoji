@@ -1,5 +1,5 @@
 agentDefinitionParser
- inScope abstractIgnoreParser abstractEventParser abstractAgentAttributeParser behaviorAttributeParser
+ inScope abstractIgnoreParser abstractEventParser abstractAgentAttributeParser belongsToClassParser
  cells keywordCell
  catchAllParser errorParser
  compiler
@@ -9,12 +9,12 @@ agentDefinitionParser
    const root = this.root
    const name = root.agentKeywordMap[this.firstWord]
    const normal = super.compile()
-   const behaviors = this.filter(node => node.parserId === "behaviorAttributeParser")
-    .map(behavior => `"${behavior.getLine()}"`)
-    .join(",")
+   const classIds = this.filter(node => node.parserId === "belongsToClassParser").map(node => node.getLine())
+   const props = classIds.map(id => this.root.getNode(id).properties).join("\n\n")
    return `class ${name} extends Agent {
       icon = "${this.firstWord}"
-      behaviors = [${behaviors}]
+      classes = [${classIds.map(id => `"${id}"`).join(",")}]
+      ${props}
       ${normal}
     }`
   }

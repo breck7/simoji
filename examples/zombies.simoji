@@ -1,6 +1,12 @@
 question Can you protect the family from the zombies?
 
+bigClass
+ width 40
+ height 40
+
 🧟‍♂️
+ bigClass
+ speed 10
  noPalette
  onTick
   jitter
@@ -14,30 +20,39 @@ question Can you protect the family from the zombies?
    alert TheyGotYou!
 
 🧱
+ bigClass
  solid
 
 🔫
+ bigClass
  onTick .1
   spawn 🪃
 
 🪃
+ speed 50
+ bigClass
+ width 50
+ height 50
  noPalette
  angle West
  onTick
   move
 
 💣
+ bigClass
 
 🪦
+ bigClass
  noPalette
  comment Dead zombie
 
 👨‍👩‍👧‍👦
+ bigClass
  noPalette
 
 ticksPerSecond 10
 
 insertCluster 30 🧟‍♂️ 1 1
 paste
- 👨‍👩‍👧‍👦 11 12
+ 👨‍👩‍👧‍👦 400 400
 

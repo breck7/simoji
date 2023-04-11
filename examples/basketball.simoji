@@ -26,23 +26,23 @@ experiment Shoot right away
    remove
 
 
-moveEastToBlankSpotBehavior
+moveEastToBlankSpotClass
  onTick
   moveToEmptySpot
-  unlearn moveEastToBlankSpotBehavior
+  unlearn moveEastToBlankSpotClass
 
 
 🔵
  angle East
- moveEastToBlankSpotBehavior
+ moveEastToBlankSpotClass
 🔴
  angle East
- moveEastToBlankSpotBehavior
+ moveEastToBlankSpotClass
 
 
 ticksPerSecond 30
 
-hasBallBehavior
+hasBallClass
  comment Sprint toward net
  onTick .5
   turnToward net
@@ -53,17 +53,17 @@ hasBallBehavior
   turnToward net
   shoot
   narrate shoots!
-  learn noBallBehavior
-  unlearn hasBallBehavior
+  learn noBallClass
+  unlearn hasBallClass
  comment Pass
  onTick .02
   turnToward team
   shoot
   narrate passes the ball!
-  learn noBallBehavior
-  unlearn hasBallBehavior
+  learn noBallClass
+  unlearn hasBallClass
 
-noBallBehavior
+noBallClass
  onTick .3
   turnToward 🏀
   move
@@ -71,8 +71,8 @@ noBallBehavior
   🏀
    pickItUp
    narrate has the ball
-   learn hasBallBehavior
-   unlearn noBallBehavior
+   learn hasBallClass
+   unlearn noBallClass
  onTick .05
   turnFrom opponent
   move
@@ -85,14 +85,14 @@ noBallBehavior
  net 🥅⛹️‍♂️
  team ⛹️‍♂️
  opponent ⛹️‍♀️
- noBallBehavior
+ noBallClass
 
 # Red Team
 ⛹️‍♀️
  net 🥅⛹️‍♀️
  team ⛹️‍♀️
  opponent ⛹️‍♂️
- noBallBehavior
+ noBallClass
 
 # Baskets
 🥅⛹️‍♂️

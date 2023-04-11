@@ -66,19 +66,19 @@ insert ruralPopulationSetting 🙍
   🧟
    replaceWith 🧟
 
-lifeBehavior
+aliveClass
  onTick freedomOfMovementSetting
   jitter
 
-seekVaccineBehavior
+vaccineSeekerClass
  onTick vaccinationDesirabilitySetting
   turnToward 💉
   move
 
 
 🙍
- lifeBehavior
- seekVaccineBehavior
+ aliveClass
+ vaccineSeekerClass
  onTouch innateImmunitySetting
   🧟
    replaceWith 🧟
@@ -90,7 +90,7 @@ seekVaccineBehavior
 
 
 🧑🏽‍🚒
- lifeBehavior
+ aliveClass
  onTouch vaxSucceptibilitySetting
   🧟
    replaceWith 🧟

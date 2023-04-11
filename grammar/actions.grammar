@@ -73,8 +73,8 @@ shrinkCommandParser
 learnCommandParser
  crux learn
  extends abstractCommandParser
- cells keywordCell behaviorNameCell
+ cells keywordCell classNameCell
 unlearnCommandParser
  crux unlearn
  extends abstractCommandParser
- cells keywordCell behaviorNameCell
+ cells keywordCell classNameCell

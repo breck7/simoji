@@ -44,6 +44,44 @@ class Quadtree {
     }
   }
 
+  isLeaf() {
+    return !this.divided
+  }
+
+  get northWest() {
+    return this.children[0]
+  }
+
+  get northEast() {
+    return this.children[1]
+  }
+
+  get southWest() {
+    return this.children[2]
+  }
+
+  get southEast() {
+    return this.children[3]
+  }
+
+  prettyPrint(depth = 0) {
+    let output = ""
+
+    if (this.isLeaf()) {
+      output += "-".repeat(depth - 1)
+      output += `[${this.bounds.x}, ${this.bounds.y}, ${this.bounds.w}, ${this.bounds.h}]: `
+      output += this.agents.map(agent => agent.id).join(", ")
+      output += "\n"
+    } else {
+      output += this.northWest.prettyPrint(depth + 1)
+      output += this.northEast.prettyPrint(depth + 1)
+      output += this.southWest.prettyPrint(depth + 1)
+      output += this.southEast.prettyPrint(depth + 1)
+    }
+
+    return output
+  }
+
   subdivide() {
     const { x, y, w, h } = this.bounds
     const capacity = this.capacity
@@ -64,7 +102,7 @@ class Quadtree {
     if (!this.bounds.intersects(range)) return found
 
     if (!this.divided) {
-      for (const agent of this.agents) if (range.contains(agent)) found.push(agent)
+      for (const agent of this.agents) if (range.intersects(agent)) found.push(agent)
     } else {
       for (const child of this.children) child.query(range, found)
     }
@@ -153,19 +191,12 @@ class CollisionDetector {
   }
 
   getCollidingAgents(x, y, width, height) {
-    const bounds = new Bounds(x, y, width, height)
     const collidingAgents = []
-    const nearbyAgents = this.quadtree.query(bounds)
+    const queryBounds = new Bounds(x, y, width, height)
+    const nearbyAgents = this.quadtree.query(queryBounds)
 
     for (const agent of nearbyAgents) {
-      if (
-        bounds.x < agent.x + agent.shape.width &&
-        bounds.x + bounds.w > agent.x &&
-        bounds.y < agent.y + agent.shape.height &&
-        bounds.y + bounds.h > agent.y
-      ) {
-        collidingAgents.push(agent)
-      }
+      if (queryBounds.intersects(agent)) collidingAgents.push(agent)
     }
 
     return collidingAgents

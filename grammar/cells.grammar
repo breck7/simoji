@@ -26,7 +26,7 @@ textCell
 integerCell
  highlightScope constant.numeric
 
-behaviorNameCell
+classNameCell
  highlightScope keyword
 conditionalOperatorCell
  highlightScope keyword

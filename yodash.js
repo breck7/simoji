@@ -31,14 +31,16 @@ yodash.compare = (left, operator, right) => {
   return false
 }
 
+// Todo: why do we do this? Very confusing. Caught me by surprise.
+// Is it because sometimes the class name is not valid JS?
 yodash.compileAgentClassDeclarationsAndMap = program => {
-  const clone = program.clone()
-  clone.filter(node => node.parserId !== ParserTypes.agentDefinitionParser).forEach(node => node.destroy())
-  clone.agentKeywordMap = {}
-  clone.agentTypes.forEach((node, index) => (clone.agentKeywordMap[node.firstWord] = `simAgent${index}`))
-  const compiled = clone.compile()
-  const agentMap = Object.keys(clone.agentKeywordMap)
-    .map(key => `"${key}":${clone.agentKeywordMap[key]}`)
+  const agentKeywordMap = {}
+  program.agentKeywordMap = agentKeywordMap // confusing
+  const agentDefs = program.filter(node => node.parserId === ParserTypes.agentDefinitionParser)
+  agentDefs.forEach((node, index) => (agentKeywordMap[node.firstWord] = `simAgent${index}`))
+  const compiled = agentDefs.map(node => node.compile()).join("\n")
+  const agentMap = Object.keys(agentKeywordMap)
+    .map(key => `"${key}":${agentKeywordMap[key]}`)
     .join(",")
   return `${compiled}
     const map = {${agentMap}};

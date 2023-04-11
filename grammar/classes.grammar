@@ -1,0 +1,19 @@
+belongsToClassParser
+ cells classNameCell
+ pattern ^.*Class$
+ javascript
+  compile() {
+   return ""
+  }
+classDefinitionParser
+ inScope abstractIgnoreParser abstractEventParser abstractAgentAttributeParser
+ cells classNameCell
+ pattern ^.*Class$
+ catchAllParser errorParser
+ javascript
+  compile() {
+   return ""
+  }
+  get properties() {
+    return this.filter(node => node.doesExtend("abstractAgentAttributeParser")).map(node => node.compile()).join("\n")
+  }

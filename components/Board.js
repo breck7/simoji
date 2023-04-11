@@ -333,6 +333,7 @@ class BoardComponent extends AbstractTreeComponentParser {
 
   clearCollisionDetector() {
     delete this._collisionDetector
+    delete this._solidCollisionDetector
   }
 
   _collisionDetector
@@ -485,10 +486,20 @@ class BoardComponent extends AbstractTreeComponentParser {
     return targets
   }
 
-  // ZZZ
+  _solidCollisionDetector
+  get solidCollisionDetector() {
+    if (!this._solidCollisionDetector)
+      this._solidCollisionDetector = new CollisionDetector(
+        this.agents.filter(agent => agent.solid),
+        this.width,
+        this.height
+      )
+    return this._solidCollisionDetector
+  }
+
   canGoHere(x, y, width, height) {
-    const agentsHere = this.objectsCollidingWith(x, y, width, height)
-    if (agentsHere && agentsHere.some(agent => agent.solid)) return false
+    const blockersHere = this.solidCollisionDetector.getCollidingAgents(x, y, width, height)
+    if (blockersHere.length) return false
 
     return true
   }
