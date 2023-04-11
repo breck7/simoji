@@ -563,18 +563,11 @@ class BoardComponent extends AbstractTreeComponentParser {
     return output.join("\n")
   }
 
-  makeRectangle(
-    agentSymbol = "🧱",
-    width = 20,
-    height = 20,
-    startRight = 0,
-    startDown = 0,
-    agentWidth = 1,
-    agentHeight = 1
-  ) {
+  makeRectangle(agentSymbol = "🧱", width = 20, height = 20, startRight = 0, startDown = 0) {
     if (width < 1 || height < 1) {
       return ""
     }
+    const { agentWidth, agentHeight } = this.getAgentHeightAndWidth(agentSymbol)
     const cells = []
     let row = 0
     while (row < height) {

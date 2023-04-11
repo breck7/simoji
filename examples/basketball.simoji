@@ -12,7 +12,19 @@ experiment
 experiment Shoot right away
  shotProbabilitySetting .8
 
+thingClass
+ width 30
+ height 30
+
+personClass
+ width 40
+ height 40
+ speed 20
+
 🏀
+ width 20
+ height 20
+ speed 30
  onHit
   🥅⛹️‍♂️
    narrate Blue scores!
@@ -82,6 +94,7 @@ noBallClass
 
 # Blue Team
 ⛹️‍♂️
+ personClass
  net 🥅⛹️‍♂️
  team ⛹️‍♂️
  opponent ⛹️‍♀️
@@ -89,6 +102,7 @@ noBallClass
 
 # Red Team
 ⛹️‍♀️
+ personClass
  net 🥅⛹️‍♀️
  team ⛹️‍♀️
  opponent ⛹️‍♂️
@@ -96,31 +110,31 @@ noBallClass
 
 # Baskets
 🥅⛹️‍♂️
+ thingClass
  html 🥅
 🥅⛹️‍♀️
+ thingClass
  html 🥅
+
 paste
- 🥅⛹️‍♂️ 2 8
- 🥅⛹️‍♀️ 29 8
- 🏀 15 9
+ 🥅⛹️‍♂️ 50 180
+ 🥅⛹️‍♀️ 800 180
+ 🏀 425 180
 
 # Court
 🪵
+ thingClass
  solid
 rectangle 🪵 30 15 1 1
 
-# Red Team
-paste
- ⛹️‍♀️ 6 9
- ⛹️‍♀️ 6 5
- ⛹️‍♀️ 11 11
- ⛹️‍♀️ 11 8
- ⛹️‍♀️ 11 5
 
-# Blue Team
-paste
- ⛹️‍♂️ 25 8
- ⛹️‍♂️ 25 6
- ⛹️‍♂️ 20 11
- ⛹️‍♂️ 20 7
- ⛹️‍♂️ 20 4
+insertAt ⛹️‍♂️ 719 140
+insertAt ⛹️‍♂️ 733 242
+insertAt ⛹️‍♂️ 727 341
+insertAt ⛹️‍♂️ 645 172
+insertAt ⛹️‍♂️ 626 271
+insertAt ⛹️‍♀️ 167 142
+insertAt ⛹️‍♀️ 154 286
+insertAt ⛹️‍♀️ 307 139
+insertAt ⛹️‍♀️ 309 227
+insertAt ⛹️‍♀️ 320 341
