@@ -1,4 +1,5 @@
 🦠
+ thingClass
 
 question How long will the pandemic last?
 
@@ -46,8 +47,13 @@ insert vaccineCentersSetting 💉
 insertCluster urbanPopulationSetting 🙍
 insert ruralPopulationSetting 🙍
 
+thingClass
+ width 20
+ height 20
+ speed 10
 
 🧟
+ thingClass
  health 100
  onTick .03
   log recovered
@@ -59,6 +65,7 @@ insert ruralPopulationSetting 🙍
   replaceWith 🪦
 
 🦸‍♂️
+ thingClass
  comment Recovered
  onTick
   jitter
@@ -77,6 +84,7 @@ vaccineSeekerClass
 
 
 🙍
+ thingClass
  aliveClass
  vaccineSeekerClass
  onTouch innateImmunitySetting
@@ -87,9 +95,11 @@ vaccineSeekerClass
 
 
 💉
+ thingClass
 
 
 🧑🏽‍🚒
+ thingClass
  aliveClass
  onTouch vaxSucceptibilitySetting
   🧟
@@ -104,6 +114,7 @@ onExtinct 🧟
 
 
 🪦
+ thingClass
 
 
 ticksPerSecond 10

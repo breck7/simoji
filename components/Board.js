@@ -223,7 +223,7 @@ class BoardComponent extends AbstractTreeComponentParser {
   }
 
   // todo: origin
-  insertClusteredRandomAgents(amount, char, x, y) {
+  insertClusteredRandomAgents(amount, char, x = 0, y = 0) {
     const width = 10
     const height = 10
     const spots = this.collisionDetector.findClusteredNonOverlappingSquares(width, height, amount, x, y, amount * width)
