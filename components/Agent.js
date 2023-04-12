@@ -1,6 +1,6 @@
 const { yodash } = require("../yodash.js")
 const { TreeNode } = require("jtree/products/TreeNode.js")
-const { Keywords, Directions } = require("./Types.js")
+const { Keywords } = require("./Types.js")
 
 const SelectedClass = "selected"
 
@@ -16,7 +16,29 @@ class Agent extends TreeNode {
     return this._name ?? this.icon
   }
 
-  angle = Directions.South
+  _direction = { x: 0, y: 1 }
+
+  get direction() {
+    if (this.angle) {
+      const vectors = {
+        North: [0, -1],
+        East: [1, 0],
+        South: [0, 1],
+        West: [-1, 0],
+        Northeast: [Math.cos(Math.PI / 4), Math.sin((Math.PI * 3) / 4)],
+        Southeast: [Math.cos((Math.PI * 3) / 4), Math.sin(Math.PI / 4)],
+        Southwest: [-Math.cos((Math.PI * 3) / 4), Math.sin(Math.PI * (5 / 8))],
+        Northwest: [-Math.cos(Math.PI * (5 / 8)), Math.sin((Math.PI * -3) / 4)]
+      }
+      this._direction = vectors[this.angle]
+      this.angle = ""
+    }
+    return this._direction
+  }
+
+  set direction(newDirection) {
+    this._direction = newDirection
+  }
 
   getCommandBlocks(eventName) {
     return this.definitionWithClasses.findNodes(eventName)
@@ -79,11 +101,10 @@ class Agent extends TreeNode {
   _move() {
     if (this.owner) return this
 
-    const { angle } = this
-    if (angle.includes(Directions.North)) this.moveNorth()
-    else if (angle.includes(Directions.South)) this.moveSouth()
-    if (angle.includes(Directions.East)) this.moveEast()
-    else if (angle.includes(Directions.West)) this.moveWest()
+    const { direction, speed } = this
+
+    this.top = Math.max(this.top + direction.y * speed, 0)
+    this.left = Math.max(this.left + direction.x * speed, 0)
 
     if (this.holding) {
       this.holding.forEach(node => {
@@ -92,23 +113,7 @@ class Agent extends TreeNode {
     }
   }
 
-  moveSouth() {
-    this.top += this.speed
-  }
-
   speed = 1
-
-  moveNorth() {
-    this.top = Math.max(this.top - this.speed, 0)
-  }
-
-  moveWest() {
-    this.left = Math.max(this.left - this.speed, 0)
-  }
-
-  moveEast() {
-    this.left += this.speed
-  }
 
   get x() {
     return this.left
@@ -339,7 +344,7 @@ class Agent extends TreeNode {
   }
 
   kickIt(target) {
-    target.angle = this.angle
+    target.direction = this.direction
     target.tickStack = new TreeNode(`1
  move
  move
@@ -384,7 +389,8 @@ class Agent extends TreeNode {
     })
   }
   bounce() {
-    this.angle = yodash.flipAngle(this.angle)
+    const { x, y } = this.direction
+    this.direction = { x: -x, y: -y }
   }
 
   decrease(target, command) {
@@ -400,7 +406,8 @@ class Agent extends TreeNode {
   }
 
   turnRandomly() {
-    this.angle = yodash.getRandomAngle(this.board.randomNumberGenerator)
+    const rng = this.board.randomNumberGenerator
+    this.direction = { x: 2 * rng() - 1, y: 2 * rng() - 1 }
     return this
   }
 
@@ -408,7 +415,7 @@ class Agent extends TreeNode {
     const targetId = instruction.getWord(1)
     const kind = this[targetId] ?? targetId // can define a custom target
     const targets = this.board.agentTypeMap.get(kind)
-    if (targets) this.angle = yodash.getBestAngle(targets, this)
+    if (targets) this.direction = yodash.getBestUnitVector(targets, this)
     return this
   }
 
@@ -416,7 +423,8 @@ class Agent extends TreeNode {
     const targetId = instruction.getWord(1)
     const kind = this[targetId] ?? targetId // can define a custom target
     const targets = this.board.agentTypeMap.get(kind)
-    if (targets) this.angle = yodash.flipAngle(yodash.getBestAngle(targets, this))
+    const bestUnitVector = yodash.getBestUnitVector(targets, this)
+    if (targets) this.direction = { x: -bestUnitVector.x, y: -bestUnitVector.y }
     return this
   }
 
@@ -432,7 +440,7 @@ class Agent extends TreeNode {
   emit(subject, command) {
     const position = command.getWordsFrom(2).length ? command.getWordsFrom(2).join(" ") : `${subject.x} ${subject.y}`
     const agent = this.board.appendLine(`${command.getWord(1)} ${position}`)
-    agent.angle = this.angle
+    agent.direction = this.direction
   }
 
   move() {

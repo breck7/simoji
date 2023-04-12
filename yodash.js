@@ -1,25 +1,9 @@
 const yodash = {}
 const math = require("mathjs")
 const { Utils } = require("jtree/products/Utils.js")
-const { Directions, ParserTypes } = require("./components/Types.js")
+const { ParserTypes } = require("./components/Types.js")
 
 yodash.parseInts = (arr, start) => arr.map((item, index) => (index >= start ? parseInt(item) : item))
-
-yodash.getRandomAngle = randomNumberGenerator => {
-  const r1 = randomNumberGenerator()
-  const r2 = randomNumberGenerator()
-  if (r1 > 0.5) return r2 > 0.5 ? Directions.North : Directions.South
-  return r2 > 0.5 ? Directions.West : Directions.East
-}
-
-yodash.flipAngle = angle => {
-  let newAngle = ""
-  if (angle.includes(Directions.North)) newAngle += Directions.South
-  else if (angle.includes(Directions.South)) newAngle += Directions.North
-  if (angle.includes(Directions.East)) newAngle += Directions.West
-  else if (angle.includes(Directions.West)) newAngle += Directions.East
-  return newAngle
-}
 
 yodash.compare = (left, operator, right) => {
   if (operator === "=") return left == right
@@ -69,7 +53,7 @@ yodash.patchExperimentAndReplaceSymbols = (program, experiment) => {
   return withVarsReplaced
 }
 
-yodash.getBestAngle = (targets, subject) => {
+yodash.getBestUnitVector = (targets, subject) => {
   let closest = Infinity
   let target
   targets.forEach(agent => {
@@ -80,22 +64,24 @@ yodash.getBestAngle = (targets, subject) => {
       target = agent
     }
   })
-  return yodash.angle(subject.y, subject.x, target.y, target.x)
+  return yodash.unitVector(subject, target)
 }
 
-yodash.angle = (cx, cy, ex, ey) => {
-  const dy = ey - cy
-  const dx = ex - cx
-  let theta = Math.atan2(dy, dx) // range (-PI, PI]
-  theta *= 180 / Math.PI // rads to degs, range (-180, 180]
-  //if (theta < 0) theta = 360 + theta; // range [0, 360)
-  let angle = ""
+yodash.unitVector = (objA, objB) => {
+  // calculate direction vector (delta)
+  const delta = {
+    x: objB.x - objA.x,
+    y: objB.y - objA.y
+  }
 
-  if (Math.abs(theta) > 90) angle += Directions.North
-  else angle += Directions.South
-  if (theta < 0) angle += Directions.West
-  else angle += Directions.East
-  return angle
+  // calculate magnitude of delta (distance between two points)
+  const magDelta = Math.sqrt(delta.x * delta.x + delta.y * delta.y)
+
+  // calculate unit vector (normalize direction vector by dividing by magnitude)
+  return {
+    x: delta.x / magDelta,
+    y: delta.y / magDelta
+  }
 }
 
 yodash.parsePercent = str => parseFloat(str.replace("%", "")) / 100

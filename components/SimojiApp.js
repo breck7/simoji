@@ -20,7 +20,7 @@ const { BottomBarComponent } = require("./BottomBar.js")
 const { RightBarComponent } = require("./RightBar.js")
 const { EditorHandleComponent } = require("./EditorHandle.js")
 const { TitleComponent } = require("./Title.js")
-const { Keywords, LocalStorageKeys, UrlKeys, Directions, ParserTypes } = require("./Types.js")
+const { Keywords, LocalStorageKeys, UrlKeys, ParserTypes } = require("./Types.js")
 
 // prettier-ignore
 /*NODE_JS_ONLY*/ const simojiParser = require("jtree/products/GrammarCompiler.js").GrammarCompiler.compileGrammarFileAtPathAndReturnRootParser(   __dirname + "/../dist/simoji.grammar")
@@ -396,11 +396,11 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
 
   selection = []
 
-  moveSelection(direction) {
+  moveSelection(x, y) {
     const { selection } = this
     if (!selection.length) return this
     selection.forEach(node => {
-      node.angle = direction
+      node.direction = { x, y }
       node._move()
     })
 
@@ -468,10 +468,10 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
       o: () => this.openReportInOhayoCommand(),
       r: () => this.resetAllCommand(),
       s: () => this.snapShotCommand(),
-      up: () => this.moveSelection(Directions.North),
-      down: () => this.moveSelection(Directions.South),
-      right: () => this.moveSelection(Directions.East),
-      left: () => this.moveSelection(Directions.West),
+      up: () => this.moveSelection(0, -1),
+      down: () => this.moveSelection(0, 1),
+      right: () => this.moveSelection(1, 0),
+      left: () => this.moveSelection(-1, 0),
       escape: () => this.clearSelectionCommand(),
       "command+a": () => this.selectAllCommand(),
       "?": () => this.toggleHelpCommand(),

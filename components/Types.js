@@ -27,13 +27,6 @@ UrlKeys.simoji = "simoji"
 UrlKeys.example = "example"
 UrlKeys.url = "url"
 
-const Directions = {}
-
-Directions.North = "North"
-Directions.East = "East"
-Directions.South = "South"
-Directions.West = "West"
-
 const ParserTypes = {}
 
 ParserTypes.agentDefinitionParser = "agentDefinitionParser"
@@ -41,4 +34,4 @@ ParserTypes.experimentParser = "experimentParser"
 ParserTypes.settingDefinitionParser = "settingDefinitionParser"
 ParserTypes.abstractInjectCommandParser = "abstractInjectCommandParser"
 
-module.exports = { Keywords, LocalStorageKeys, UrlKeys, Directions, ParserTypes }
+module.exports = { Keywords, LocalStorageKeys, UrlKeys, ParserTypes }
