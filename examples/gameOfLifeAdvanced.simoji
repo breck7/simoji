@@ -1,5 +1,9 @@
 # Conway's Game of Life
 
+squareClass
+ width 50
+ height 50
+
 experiment
  neighborSetting 2
 
@@ -13,6 +17,7 @@ experiment
  neighborSetting 5
 
 ⬛️
+ squareClass
  onNeighbors
   ⬛️ < 2
    replaceWith ◻️
@@ -20,6 +25,7 @@ experiment
    replaceWith ◻️
 
 ◻️
+ squareClass
  onNeighbors
   ⬛️ = 3
    replaceWith ⬛️

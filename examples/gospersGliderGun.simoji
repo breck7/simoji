@@ -1,4 +1,9 @@
+squareClass
+ width 50
+ height 50
+
 ⬛️
+ squareClass
  onNeighbors
   ⬛️ < 2
    replaceWith ◻️
@@ -6,6 +11,7 @@
    replaceWith ◻️
 
 ◻️
+ squareClass
  onNeighbors
   ⬛️ = 3
    replaceWith ⬛️
