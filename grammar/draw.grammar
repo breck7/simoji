@@ -5,16 +5,7 @@ atTimeParser
  extends abstractSetupParser
  inScope abstractInjectCommandParser
 abstractInjectCommandParser
-fillParser
- description Fill all blank cells with this agent.
- extends abstractInjectCommandParser
- cells keywordCell emojiCell
- cruxFromId
-drawParser
- extends abstractInjectCommandParser
- cells keywordCell
- cruxFromId
- catchAllParser drawLineParser
+
 insertParser
  extends abstractInjectCommandParser
  cells keywordCell integerOrPercentCell emojiCell
@@ -28,18 +19,34 @@ insertClusterParser
  extends insertParser
  cruxFromId
  catchAllCellType integerCell
+
+fillParser
+ description Fill all blank cells with this agent.
+ extends abstractInjectCommandParser
+ cells keywordCell emojiCell
+ cruxFromId
+
+drawLineParser
+ catchAllCellType emojiCell
+drawParser
+ extends abstractInjectCommandParser
+ cells keywordCell
+ cruxFromId
+ catchAllParser drawLineParser
+
 rectangleDrawParser
  extends abstractInjectCommandParser
+ example
+  rectangle 🙂 width height x y 🙂
  cells keywordCell emojiCell integerCell integerCell
  catchAllCellType integerCell
  crux rectangle
+
+pasteLineParser
+ catchAllCellType anyCell
+ catchAllParser pasteLineParser
 pasteDrawParser
  extends abstractInjectCommandParser
  cells keywordCell
  crux paste
- catchAllParser pasteLineParser
-drawLineParser
- catchAllCellType emojiCell
-pasteLineParser
- catchAllCellType anyCell
  catchAllParser pasteLineParser

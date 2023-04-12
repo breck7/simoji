@@ -272,7 +272,18 @@ class BoardComponent extends AbstractTreeComponentParser {
   }
 
   rectangleDrawParser(commandNode) {
-    const newLines = this.makeRectangle(...yodash.parseInts(commandNode.words.slice(1), 1))
+    // todo: need a typed words method in jtree
+    // rectangle 🙂 width height x y 🙂
+    const [command, symbol, width, height, x, y, fillSymbol, spacing] = commandNode.words
+    const newLines = this.makeRectangle(
+      symbol,
+      parseInt(width),
+      parseInt(height),
+      parseInt(x),
+      parseInt(y),
+      fillSymbol,
+      spacing ? parseInt(spacing) : 0
+    )
     this.concat(newLines)
     this.clearCollisionDetector()
   }
@@ -563,10 +574,12 @@ class BoardComponent extends AbstractTreeComponentParser {
     return output.join("\n")
   }
 
-  makeRectangle(agentSymbol = "🧱", width = 20, height = 20, startRight = 0, startDown = 0) {
-    if (width < 1 || height < 1) {
-      return ""
-    }
+  makeRectangle(agentSymbol = "🧱", width = 20, height = 20, x = 0, y = 0, fillSymbol = false, spacing = 0) {
+    if (width < 1 || height < 1) return ""
+
+    if (isNaN(x)) x = 20
+    if (isNaN(y)) y = 20
+
     const { agentWidth, agentHeight } = this.getAgentHeightAndWidth(agentSymbol)
     const cells = []
     let row = 0
@@ -574,13 +587,16 @@ class BoardComponent extends AbstractTreeComponentParser {
       let col = 0
       while (col < width) {
         const isPerimeter = row === 0 || row === height - 1 || col === 0 || col === width - 1
-        if (isPerimeter)
-          cells.push(
-            `${agentSymbol} ${this.makePositionHash({
-              y: startDown + row * agentHeight,
-              x: startRight + col * agentWidth
-            })}`
-          )
+        if (!fillSymbol && !isPerimeter) {
+          col++
+          continue
+        }
+
+        cells.push(
+          `${isPerimeter ? agentSymbol : fillSymbol} ${x + col * (agentWidth + spacing)} ${
+            y + row * (agentHeight + spacing)
+          }`
+        )
         col++
       }
       row++

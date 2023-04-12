@@ -3,8 +3,6 @@ const math = require("mathjs")
 const { Utils } = require("jtree/products/Utils.js")
 const { ParserTypes } = require("./components/Types.js")
 
-yodash.parseInts = (arr, start) => arr.map((item, index) => (index >= start ? parseInt(item) : item))
-
 yodash.compare = (left, operator, right) => {
   if (operator === "=") return left == right
   if (operator === "<") return left < right

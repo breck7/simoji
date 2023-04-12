@@ -9,11 +9,17 @@
 💬
  health 10
  speed 10
+ onHit
+  🙂
+   decrease health
+   decrease health
+   decrease health
+   decrease health
+   decrease health
+   decrease health
  onTick
   move
   decrease health
 
 
-insertAt 🙂 275 204
-insertAt 🙂 563 180
-insertAt 🙂 629 173
+rectangle 🙂 5 5 20 20 🙂 10
