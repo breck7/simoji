@@ -408,7 +408,7 @@ class Agent extends TreeNode {
     const targetId = instruction.getWord(1)
     const kind = this[targetId] ?? targetId // can define a custom target
     const targets = this.board.agentTypeMap.get(kind)
-    if (targets) this.angle = yodash.getBestAngle(targets, this.position)
+    if (targets) this.angle = yodash.getBestAngle(targets, this)
     return this
   }
 
@@ -416,7 +416,7 @@ class Agent extends TreeNode {
     const targetId = instruction.getWord(1)
     const kind = this[targetId] ?? targetId // can define a custom target
     const targets = this.board.agentTypeMap.get(kind)
-    if (targets) this.angle = yodash.flipAngle(yodash.getBestAngle(targets, this.position))
+    if (targets) this.angle = yodash.flipAngle(yodash.getBestAngle(targets, this))
     return this
   }
 
@@ -427,6 +427,12 @@ class Agent extends TreeNode {
   spawn(subject, command) {
     const position = command.getWordsFrom(2).length ? command.getWordsFrom(2).join(" ") : `${subject.x} ${subject.y}`
     this.board.appendLine(`${command.getWord(1)} ${position}`)
+  }
+
+  emit(subject, command) {
+    const position = command.getWordsFrom(2).length ? command.getWordsFrom(2).join(" ") : `${subject.x} ${subject.y}`
+    const agent = this.board.appendLine(`${command.getWord(1)} ${position}`)
+    agent.angle = this.angle
   }
 
   move() {

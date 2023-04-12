@@ -1,0 +1,19 @@
+🙂
+ width 30
+ height 30
+ onTick .1
+  turnToward 🙂
+  emit 💬
+
+
+💬
+ health 10
+ speed 10
+ onTick
+  move
+  decrease health
+
+
+insertAt 🙂 275 204
+insertAt 🙂 563 180
+insertAt 🙂 629 173

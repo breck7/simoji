@@ -24,6 +24,10 @@ spawnCommandParser
  extends abstractCommandParser
  cells keywordCell emojiCell
  catchAllCellType positionCell
+emitCommandParser
+ crux emit
+ extends abstractCommandParser
+ cells keywordCell emojiCell
 removeCommandParser
  description Remove this agent from the board.
  crux remove

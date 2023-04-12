@@ -69,19 +69,18 @@ yodash.patchExperimentAndReplaceSymbols = (program, experiment) => {
   return withVarsReplaced
 }
 
-yodash.getBestAngle = (targets, position) => {
+yodash.getBestAngle = (targets, subject) => {
   let closest = Infinity
   let target
-  targets.forEach(candidate => {
-    const pos = candidate.position
-    const distance = math.distance([pos.y, pos.x], [position.y, position.x])
+  targets.forEach(agent => {
+    if (agent === subject) return
+    const distance = math.distance([agent.y, agent.x], [subject.y, subject.x])
     if (distance < closest) {
       closest = distance
-      target = candidate
+      target = agent
     }
   })
-  const heading = target.position
-  return yodash.angle(position.y, position.x, heading.y, heading.x)
+  return yodash.angle(subject.y, subject.x, target.y, target.x)
 }
 
 yodash.angle = (cx, cy, ex, ey) => {
