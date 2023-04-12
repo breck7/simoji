@@ -17,9 +17,10 @@ class Bounds {
 }
 
 class Quadtree {
-  constructor(bounds, capacity) {
+  constructor(bounds, capacity, maxDepth = 10) {
     this.bounds = new Bounds(bounds.x, bounds.y, bounds.w, bounds.h)
     this.capacity = capacity
+    this.maxDepth = maxDepth
     this.agents = []
   }
 
@@ -37,16 +38,16 @@ class Quadtree {
     return count
   }
 
-  insert(agent) {
+  insert(agent, depth = 0) {
     if (!this.bounds.intersects(agent)) return false
 
-    if (!this.divided && this.agents.length < this.capacity) {
+    if (!this.divided && (this.agents.length < this.capacity || depth >= this.maxDepth)) {
       this.agents.push(agent)
       return true
     } else {
       if (!this.divided) this.divide()
       for (const child of this.children) {
-        if (child.insert(agent)) return true
+        if (child.insert(agent, depth + 1)) return true
       }
     }
     return false

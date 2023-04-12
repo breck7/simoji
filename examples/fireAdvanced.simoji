@@ -35,8 +35,8 @@ lightningFrequencySetting .1
   remove
 
 🔥
- width 50
- height 50
+ width 40
+ height 40
  health fireLifetimeSetting
  onTick
   decrease health
