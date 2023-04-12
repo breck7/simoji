@@ -441,8 +441,13 @@ class Agent extends TreeNode {
     this.board.appendLine(`${command.getWord(1)} ${position}`)
   }
 
+  get midpoint() {
+    return { x: this.x + this.width / 2, y: this.y + this.height / 2 }
+  }
+
   emit(subject, command) {
-    const position = command.getWordsFrom(2).length ? command.getWordsFrom(2).join(" ") : `${subject.x} ${subject.y}`
+    const { midpoint } = this
+    const position = command.getWordsFrom(2).length ? command.getWordsFrom(2).join(" ") : `${midpoint.x} ${midpoint.y}`
     const agent = this.board.appendLine(`${command.getWord(1)} ${position}`)
     agent.direction = this.direction
   }
