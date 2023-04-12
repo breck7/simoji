@@ -1,14 +1,36 @@
+bigClass
+ width 20
+ height 20
+
 🚶🏻
+ bigClass
+ speed 10
  onTick
   move
- angle North
+ onTick .4
+  turnRandomly
+  move
+ onTick .5
+  turnToward 🛒
+ onHit
+  🛒
+   pickItUp
+ angle South
 🛒
+ bigClass
 🚪
+ bigClass
  onTick .1
   spawn 🚶🏻
 🪵
+ bigClass
  solid
 
-rectangle 🪵 30 15 3 3
+rectangle 🪵 30 15 30 30
 paste
- 🚪 17 16
+ 🚪 170 120
+
+
+
+insertAt 🛒 432 95
+insertAt 🛒 435 212
