@@ -51,7 +51,7 @@ yodash.patchExperimentAndReplaceSymbols = (program, experiment) => {
   return withVarsReplaced
 }
 
-yodash.getBestUnitVector = (targets, subject) => {
+yodash.getClosest = (targets, subject) => {
   let closest = Infinity
   let target
   targets.forEach(agent => {
@@ -62,7 +62,7 @@ yodash.getBestUnitVector = (targets, subject) => {
       target = agent
     }
   })
-  return yodash.unitVector(subject, target)
+  return target
 }
 
 yodash.unitVector = (objA, objB) => {

@@ -415,7 +415,9 @@ class Agent extends TreeNode {
     const targetId = instruction.getWord(1)
     const kind = this[targetId] ?? targetId // can define a custom target
     const targets = this.board.agentTypeMap.get(kind)
-    if (targets) this.direction = yodash.getBestUnitVector(targets, this)
+    if (!targets) return this
+    this.target = yodash.getClosest(targets, this)
+    this.direction = yodash.unitVector(this, this.target)
     return this
   }
 
@@ -423,8 +425,10 @@ class Agent extends TreeNode {
     const targetId = instruction.getWord(1)
     const kind = this[targetId] ?? targetId // can define a custom target
     const targets = this.board.agentTypeMap.get(kind)
-    const bestUnitVector = yodash.getBestUnitVector(targets, this)
-    if (targets) this.direction = { x: -bestUnitVector.x, y: -bestUnitVector.y }
+    if (!targets) return this
+    this.target = yodash.getClosest(targets, this)
+    const bestUnitVector = yodash.unitVector(this, this.target)
+    this.direction = { x: -bestUnitVector.x, y: -bestUnitVector.y }
     return this
   }
 
