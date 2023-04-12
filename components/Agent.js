@@ -87,7 +87,7 @@ class Agent extends TreeNode {
 
     if (this.holding) {
       this.holding.forEach(node => {
-        node.setPosition({ x: this.left, y: this.top })
+        node.setPosition({ x: this.x, y: this.y })
       })
     }
   }
@@ -110,10 +110,6 @@ class Agent extends TreeNode {
     this.left += this.speed
   }
 
-  get shape() {
-    return { width: this.width, height: this.height }
-  }
-
   get x() {
     return this.left
   }
@@ -122,11 +118,19 @@ class Agent extends TreeNode {
     return this.top
   }
 
+  get w() {
+    return this.width
+  }
+
+  get h() {
+    return this.height
+  }
+
   width = 10
   height = 10
 
   get top() {
-    return this.position.y
+    return this._y ?? this.position.y
   }
 
   set top(value) {
@@ -145,6 +149,9 @@ class Agent extends TreeNode {
   setPosition(newPosition) {
     if (!this.board.canGoHere(newPosition.x, newPosition.y, this.width, this.height))
       return this.bouncy ? this.bounce() : this
+
+    this._x = newPosition.x
+    this._y = newPosition.y
     // Todo: do we need to update the string?
     return this.setLine([this.firstWord, newPosition.x, newPosition.y].join(" "))
   }
@@ -211,7 +218,7 @@ class Agent extends TreeNode {
   }
 
   get left() {
-    return this.position.x
+    return this._x ?? this.position.x
   }
 
   get bounds() {

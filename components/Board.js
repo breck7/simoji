@@ -599,9 +599,12 @@ class BoardComponent extends AbstractTreeComponentParser {
     while (y < height - agentHeight) {
       let x = 0
       while (x < width - agentWidth) {
-        x += agentWidth
-        if (this.isRectOccupied(x, y, agentWidth, agentHeight)) continue
+        if (this.isRectOccupied(x, y, agentWidth, agentHeight)) {
+          x += agentWidth
+          continue
+        }
         board.push(`${agentSymbol} ${x} ${y}`)
+        x += agentWidth
       }
       y += agentHeight
     }

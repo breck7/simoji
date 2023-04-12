@@ -6,15 +6,6 @@ class Bounds {
     this.h = h
   }
 
-  contains(agent) {
-    return (
-      agent.x >= this.x &&
-      agent.y >= this.y &&
-      agent.x + agent.shape.width <= this.x + this.w &&
-      agent.y + agent.shape.height <= this.y + this.h
-    )
-  }
-
   intersects(range) {
     return !(
       range.x >= this.x + this.w ||
@@ -30,18 +21,35 @@ class Quadtree {
     this.bounds = new Bounds(bounds.x, bounds.y, bounds.w, bounds.h)
     this.capacity = capacity
     this.agents = []
-    this.divided = false
+  }
+
+  get agentCount() {
+    let count = 0
+
+    if (this.isLeaf()) {
+      count += this.agents.length
+    } else {
+      for (const child of this.children) {
+        count += child.agentCount
+      }
+    }
+
+    return count
   }
 
   insert(agent) {
-    if (!this.bounds.contains(agent)) return
+    if (!this.bounds.intersects(agent)) return false
 
-    if (this.agents.length < this.capacity && !this.divided) {
+    if (!this.divided && this.agents.length < this.capacity) {
       this.agents.push(agent)
+      return true
     } else {
-      if (!this.divided) this.subdivide()
-      for (const child of this.children) child.insert(agent)
+      if (!this.divided) this.divide()
+      for (const child of this.children) {
+        if (child.insert(agent)) return true
+      }
     }
+    return false
   }
 
   isLeaf() {
@@ -82,20 +90,25 @@ class Quadtree {
     return output
   }
 
-  subdivide() {
-    const { x, y, w, h } = this.bounds
-    const capacity = this.capacity
+  get divided() {
+    return !!this.children
+  }
+
+  divide() {
+    const { x, y } = this.bounds
+    const { bounds, capacity } = this
+    const w = bounds.w / 2
+    const h = bounds.h / 2
 
     this.children = [
-      new Quadtree({ x, y, w: w / 2, h: h / 2 }, capacity),
-      new Quadtree({ x: x + w / 2, y, w: w / 2, h: h / 2 }, capacity),
-      new Quadtree({ x, y: y + h / 2, w: w / 2, h: h / 2 }, capacity),
-      new Quadtree({ x: x + w / 2, y: y + h / 2, w: w / 2, h: h / 2 }, capacity)
+      new Quadtree({ x, y, w, h }, capacity),
+      new Quadtree({ x: x + w, y, w, h }, capacity),
+      new Quadtree({ x, y: y + h, w, h }, capacity),
+      new Quadtree({ x: x + w, y: y + h, w, h }, capacity)
     ]
 
-    this.divided = true
     for (const agent of this.agents) this.insert(agent)
-    this.agents = []
+    delete this.agents
   }
 
   query(range, found = []) {
@@ -131,12 +144,7 @@ class CollisionDetector {
     const nearbyAgents = this.quadtree.query(searchBounds)
 
     for (const agent of nearbyAgents) {
-      if (
-        x < agent.x + agent.shape.width &&
-        x + width > agent.x &&
-        y < agent.y + agent.shape.height &&
-        y + height > agent.y
-      ) {
+      if (x < agent.x + agent.width && x + width > agent.x && y < agent.y + agent.height && y + height > agent.y) {
         return false
       }
     }
@@ -207,10 +215,10 @@ class CollisionDetector {
 
     for (const agentA of this.agents) {
       const searchBounds = new Bounds(
-        agentA.x - agentA.shape.width,
-        agentA.y - agentA.shape.height,
-        agentA.shape.width * 2,
-        agentA.shape.height * 2
+        agentA.x - agentA.width,
+        agentA.y - agentA.height,
+        agentA.width * 2,
+        agentA.height * 2
       )
       const nearbyAgents = this.quadtree.query(searchBounds)
       for (const agentB of nearbyAgents) {
@@ -221,9 +229,7 @@ class CollisionDetector {
   }
 
   checkCollision(a, b) {
-    return (
-      a.x < b.x + b.shape.width && a.x + a.shape.width > b.x && a.y < b.y + b.shape.height && a.y + a.shape.height > b.y
-    )
+    return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y
   }
 }
 

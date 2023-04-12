@@ -23,7 +23,8 @@ class MockAgent {
 		this.id = id
 		this.x = position.x
 		this.y = position.y
-		this.shape = { width: position.width, height: position.height }
+		this.width = position.width
+		this.height = position.height
 	}
 }
 
