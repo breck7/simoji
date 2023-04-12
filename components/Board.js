@@ -591,18 +591,19 @@ class BoardComponent extends AbstractTreeComponentParser {
     return cells.join("\n")
   }
 
-  fill(emoji, size = 1) {
+  fill(agentSymbol) {
     let { width, height } = this
+    const { agentWidth, agentHeight } = this.getAgentHeightAndWidth(agentSymbol)
     const board = []
-    while (height >= 0) {
-      let col = width
-      while (col >= 0) {
-        col--
-        if (this.isRectOccupied(col, height, size, size)) continue
-        const hash = this.makePositionHash({ x: col, y: height })
-        board.push(`${emoji} ${hash}`)
+    let y = 0
+    while (y < height - agentHeight) {
+      let x = 0
+      while (x < width - agentWidth) {
+        x += agentWidth
+        if (this.isRectOccupied(x, y, agentWidth, agentHeight)) continue
+        board.push(`${agentSymbol} ${x} ${y}`)
       }
-      height--
+      y += agentHeight
     }
     return board.join("\n")
   }

@@ -1,6 +1,8 @@
 question Can simple rules produce complex effects?
 
 ⬛️
+ width 50
+ height 50
  onNeighbors
   ⬛️ < 2
    replaceWith ◻️
@@ -8,6 +10,8 @@ question Can simple rules produce complex effects?
    replaceWith ◻️
 
 ◻️
+ width 50
+ height 50
  onNeighbors
   ⬛️ = 3
    replaceWith ⬛️
