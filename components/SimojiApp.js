@@ -240,7 +240,6 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
     const previousTick = maxTick - 2
     this.pauseAllCommand()
     if (previousTick < 0) return
-    if (!this.isSnapshotOn) this.snapShotCommand()
     this.loadNewSim(this.simCode)
     this.boards.forEach(board => board.skipToThisManyTicksIfNotPaused(previousTick))
     console.log(`Running to tick ${previousTick} from ${maxTick}`)

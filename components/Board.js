@@ -122,8 +122,6 @@ class BoardComponent extends AbstractTreeComponentParser {
     this.renderAndGetRenderReport()
     this.clearCollisionDetector()
 
-    if (!root.isSnapshotOn) root.snapShotCommand()
-
     const allCode = new TreeNode(root.simCode)
     let targetNode = root.boards.length === 1 ? allCode : allCode.findNodes("experiment")[this.boardIndex]
 
