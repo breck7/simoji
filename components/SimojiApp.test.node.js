@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 
 const { TreeNode } = require("jtree/products/TreeNode.js")
+const { TestRacer } = require("jtree/products/TestRacer.js")
 const { GrammarCompiler } = require("jtree/products/GrammarCompiler.js")
 const { Disk } = require("jtree/products/Disk.node.js")
 const grammarNode = require("jtree/products/grammar.nodejs.js")
 const { SimojiApp } = require("./SimojiApp.js")
 
-const grammarPath = __dirname + "/../simoji.grammar"
+const grammarPath = __dirname + "/../dist/simoji.grammar"
 const examplesPath = __dirname + "/../examples/"
 const simojiParser = GrammarCompiler.compileGrammarFileAtPathAndReturnRootParser(grammarPath)
 const testTree = {}
@@ -67,11 +68,5 @@ insert 10 😃
   areEqual(app.simojiPrograms[0].getAllErrors().length, 2, "invalid programs dont crash")
 }
 
+if (!module.parent) TestRacer.testSingleFile(__filename, testTree)
 module.exports = { testTree }
-const runTree = testTree => {
-  const tap = require("tap")
-  Object.keys(testTree).forEach(key => {
-    testTree[key](tap.equal)
-  })
-}
-if (module && !module.parent) runTree(testTree)

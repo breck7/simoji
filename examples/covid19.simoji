@@ -1,4 +1,5 @@
 🦠
+ thingClass
 
 question How long will the pandemic last?
 
@@ -34,10 +35,10 @@ experiment High Vaccination Rate, Low Vaccine Efficacy
  vaxSucceptibilitySetting .75
 
 experiment Lockdown
- freedomOfMovementSetting .3
+ freedomOfMovementSetting .1
 
 experiment High Reinfection Rate
- reinfectionRateSetting .2
+ reinfectionRateSetting .3
 
 
 insert startingInfectedSetting 🧟
@@ -46,8 +47,13 @@ insert vaccineCentersSetting 💉
 insertCluster urbanPopulationSetting 🙍
 insert ruralPopulationSetting 🙍
 
+thingClass
+ width 20
+ height 20
+ speed 5
 
 🧟
+ thingClass
  health 100
  onTick .03
   log recovered
@@ -59,27 +65,29 @@ insert ruralPopulationSetting 🙍
   replaceWith 🪦
 
 🦸‍♂️
+ thingClass
  comment Recovered
  onTick
   jitter
- onTouch reinfectionRateSetting
+ onHit reinfectionRateSetting
   🧟
    replaceWith 🧟
 
-lifeBehavior
+aliveClass
  onTick freedomOfMovementSetting
   jitter
 
-seekVaccineBehavior
+vaccineSeekerClass
  onTick vaccinationDesirabilitySetting
   turnToward 💉
   move
 
 
 🙍
- lifeBehavior
- seekVaccineBehavior
- onTouch innateImmunitySetting
+ thingClass
+ aliveClass
+ vaccineSeekerClass
+ onHit innateImmunitySetting
   🧟
    replaceWith 🧟
   💉
@@ -87,11 +95,13 @@ seekVaccineBehavior
 
 
 💉
+ thingClass
 
 
 🧑🏽‍🚒
- lifeBehavior
- onTouch vaxSucceptibilitySetting
+ thingClass
+ aliveClass
+ onHit vaxSucceptibilitySetting
   🧟
    replaceWith 🧟
 
@@ -104,8 +114,9 @@ onExtinct 🧟
 
 
 🪦
+ thingClass
 
-size 15
+
 ticksPerSecond 10
 
 report

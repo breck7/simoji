@@ -1,17 +1,27 @@
 question What is the effect of ideas vs ideas with revenue?
 
+personClass
+ width 25
+ height 25
+ speed 10
+
 👨‍💼🔖
  comment person with an idea
+ personClass
  onTick
   jitter
 
 👨‍💼💰
+ width 50
+ height 50
  comment peron with an idea
   that is making money
+ personClass
  onTick
   jitter
 
 👨‍
+ personClass
  onTick .1
   jitter
  onTick .1
@@ -19,7 +29,6 @@ question What is the effect of ideas vs ideas with revenue?
   move
 
 
-size 10
 insert 200 👨‍
 insert 30 👨‍💼🔖
 insert 3 👨‍💼💰

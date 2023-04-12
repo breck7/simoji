@@ -12,37 +12,49 @@ experiment
 experiment Shoot right away
  shotProbabilitySetting .8
 
+thingClass
+ width 30
+ height 30
+
+personClass
+ width 40
+ height 40
+ speed 20
+
 🏀
+ width 20
+ height 20
+ speed 30
  onHit
   🥅⛹️‍♂️
    narrate Blue scores!
-   spawn 🏀 9⬇️ 15➡️
-   spawn 🔵 18⬇️ 1➡️
+   spawn 🏀 15 9
+   spawn 🔵 1 18
    remove
   🥅⛹️‍♀️
    narrate Red scores!
-   spawn 🏀 9⬇️ 15➡️
-   spawn 🔴 17⬇️ 1➡️
+   spawn 🏀 15 9
+   spawn 🔴 1 17
    remove
 
 
-moveEastToBlankSpotBehavior
+moveEastToBlankSpotClass
  onTick
   moveToEmptySpot
-  unlearn moveEastToBlankSpotBehavior
+  unlearn moveEastToBlankSpotClass
 
 
 🔵
  angle East
- moveEastToBlankSpotBehavior
+ moveEastToBlankSpotClass
 🔴
  angle East
- moveEastToBlankSpotBehavior
+ moveEastToBlankSpotClass
 
 
 ticksPerSecond 30
 
-hasBallBehavior
+hasBallClass
  comment Sprint toward net
  onTick .5
   turnToward net
@@ -53,17 +65,17 @@ hasBallBehavior
   turnToward net
   shoot
   narrate shoots!
-  learn noBallBehavior
-  unlearn hasBallBehavior
+  learn noBallClass
+  unlearn hasBallClass
  comment Pass
  onTick .02
   turnToward team
   shoot
   narrate passes the ball!
-  learn noBallBehavior
-  unlearn hasBallBehavior
+  learn noBallClass
+  unlearn hasBallClass
 
-noBallBehavior
+noBallClass
  onTick .3
   turnToward 🏀
   move
@@ -71,8 +83,8 @@ noBallBehavior
   🏀
    pickItUp
    narrate has the ball
-   learn hasBallBehavior
-   unlearn noBallBehavior
+   learn hasBallClass
+   unlearn noBallClass
  onTick .05
   turnFrom opponent
   move
@@ -82,47 +94,47 @@ noBallBehavior
 
 # Blue Team
 ⛹️‍♂️
+ personClass
  net 🥅⛹️‍♂️
  team ⛹️‍♂️
  opponent ⛹️‍♀️
- noBallBehavior
+ noBallClass
 
 # Red Team
 ⛹️‍♀️
+ personClass
  net 🥅⛹️‍♀️
  team ⛹️‍♀️
  opponent ⛹️‍♂️
- noBallBehavior
+ noBallClass
 
 # Baskets
 🥅⛹️‍♂️
+ thingClass
  html 🥅
 🥅⛹️‍♀️
+ thingClass
  html 🥅
+
 paste
- 🥅⛹️‍♂️ 8⬇️ 2➡️
- 🥅⛹️‍♀️ 8⬇️ 29➡️
- 🏀 9⬇️ 15➡️
+ 🥅⛹️‍♂️ 50 180
+ 🥅⛹️‍♀️ 800 180
+ 🏀 425 180
 
 # Court
 🪵
+ thingClass
  solid
 rectangle 🪵 30 15 1 1
 
-size 30
 
-# Red Team
-paste
- ⛹️‍♀️ 9⬇️ 6➡️
- ⛹️‍♀️ 5⬇️ 6➡️
- ⛹️‍♀️ 11⬇️ 11➡️
- ⛹️‍♀️ 8⬇️ 11➡️
- ⛹️‍♀️ 5⬇️ 11➡️
-
-# Blue Team
-paste
- ⛹️‍♂️ 8⬇️ 25➡️
- ⛹️‍♂️ 6⬇️ 25➡️
- ⛹️‍♂️ 11⬇️ 20➡️
- ⛹️‍♂️ 7⬇️ 20➡️
- ⛹️‍♂️ 4⬇️ 20➡️
+insertAt ⛹️‍♂️ 719 140
+insertAt ⛹️‍♂️ 733 242
+insertAt ⛹️‍♂️ 727 341
+insertAt ⛹️‍♂️ 645 172
+insertAt ⛹️‍♂️ 626 271
+insertAt ⛹️‍♀️ 167 142
+insertAt ⛹️‍♀️ 154 286
+insertAt ⛹️‍♀️ 307 139
+insertAt ⛹️‍♀️ 309 227
+insertAt ⛹️‍♀️ 320 341

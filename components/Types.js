@@ -2,15 +2,12 @@ const Keywords = {}
 
 Keywords.experiment = "experiment"
 Keywords.seed = "seed"
-Keywords.size = "size"
-Keywords.rows = "rows"
-Keywords.columns = "columns"
+Keywords.height = "height"
+Keywords.width = "width"
 Keywords.report = "report"
 Keywords.ticksPerSecond = "ticksPerSecond"
 Keywords.style = "style"
 
-Keywords.onNeighbors = "onNeighbors"
-Keywords.onTouch = "onTouch"
 Keywords.onHit = "onHit"
 Keywords.onTick = "onTick"
 Keywords.onDeath = "onDeath"
@@ -29,13 +26,6 @@ UrlKeys.simoji = "simoji"
 UrlKeys.example = "example"
 UrlKeys.url = "url"
 
-const Directions = {}
-
-Directions.North = "North"
-Directions.East = "East"
-Directions.South = "South"
-Directions.West = "West"
-
 const ParserTypes = {}
 
 ParserTypes.agentDefinitionParser = "agentDefinitionParser"
@@ -43,4 +33,4 @@ ParserTypes.experimentParser = "experimentParser"
 ParserTypes.settingDefinitionParser = "settingDefinitionParser"
 ParserTypes.abstractInjectCommandParser = "abstractInjectCommandParser"
 
-module.exports = { Keywords, LocalStorageKeys, UrlKeys, Directions, ParserTypes }
+module.exports = { Keywords, LocalStorageKeys, UrlKeys, ParserTypes }

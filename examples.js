@@ -1,4 +1,3 @@
-const stamp = require("jtree/products/stamp.nodejs.js")
 const { Disk } = require("jtree/products/Disk.node.js")
 
 const getExamples = () =>

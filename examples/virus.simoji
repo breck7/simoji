@@ -1,6 +1,12 @@
 question What might the spread of a simple virus look like?
 
+thingClass
+ width 20
+ height 20
+ speed 20
+
 🧟
+ thingClass
  health 100
  onTick .9
   decrease health
@@ -12,13 +18,16 @@ question What might the spread of a simple virus look like?
   replaceWith 🪦
 
 🙍
+ thingClass
  onTick
   jitter
- onTouch
+ onHit
   🧟
    replaceWith 🧟
 
 🦸‍♂️
+ # Recovered
+ thingClass
  onTick
   jitter
 
@@ -26,6 +35,7 @@ insert 10% 🙍
 insert 1 🧟
 
 🪦
+ thingClass
 
 onExtinct 🧟
  log No more cases.

@@ -17,10 +17,6 @@ const Categories = new TreeNode(`🦠 Epidemiology
  basketball
 💰 Business
  startupIdeas
-👾 Game of Life
- gameOfLife
- gospersGliderGun
- gameOfLifeAdvanced
 🦋 Biology
  moths
 🕹 Games

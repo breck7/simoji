@@ -1,0 +1,37 @@
+🙂
+ width 30
+ height 30
+ onTick .1
+  turnToward 🙂
+  emit 💬
+
+
+💬
+ health 5
+ speed 10
+ onHit
+  🙂
+   decrease health
+   decrease health
+   decrease health
+   decrease health
+   decrease health
+   decrease health
+ onTick
+  move
+  decrease health
+ onDeath
+  remove
+
+
+rectangle 🙂 5 5 100 100 🙂 20
+
+textClass
+ width 20
+ height 20
+
+1
+ html Imagine a world with 25 people
+ textClass
+
+insertAt 1 70 60

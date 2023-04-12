@@ -1,0 +1,487 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+anyCell
+booleanCell
+stringCell
+ highlightScope string
+settingValueCell
+ highlightScope constant.numeric
+cssCell
+ highlightScope string
+javascriptCell
+ highlightScope string
+htmlCell
+ highlightScope string
+emojiCell
+ highlightScope string
+ohayoCell
+ highlightScope string
+blankCell
+codeCell
+ highlightScope comment
+commentCell
+ highlightScope comment
+keywordCell
+ highlightScope keyword
+textCell
+ highlightScope string
+integerCell
+ highlightScope constant.numeric
+classNameCell
+ highlightScope keyword
+conditionalOperatorCell
+ highlightScope keyword
+ enum < > = <= >=
+positionCell
+ highlightScope constant.numeric
+neighborCountCell
+ extends integerCell
+ min 0
+ max 8
+integerOrPercentCell
+ highlightScope constant.numeric
+probabilityCell
+ description A number between 0 and 1
+ highlightScope constant.numeric
+propertyNameCell
+ highlightScope keyword
+angleCell
+ enum North South East West NorthWest NorthEast SouthWest SouthEast
+ highlightScope constant.numeric
+javascriptLineParser
+ catchAllCellType javascriptCell
+abstractCommandParser
+ cells keywordCell
+abstractSubjectObjectCommandParser
+ extends abstractCommandParser
+replaceWithCommandParser
+ extends abstractSubjectObjectCommandParser
+ crux replaceWith
+ cells keywordCell emojiCell
+kickItCommandParser
+ extends abstractSubjectObjectCommandParser
+ crux kickIt
+shootCommandParser
+ extends abstractSubjectObjectCommandParser
+ crux shoot
+pickItUpCommandParser
+ extends abstractSubjectObjectCommandParser
+ crux pickItUp
+spawnCommandParser
+ crux spawn
+ extends abstractCommandParser
+ cells keywordCell emojiCell
+ catchAllCellType positionCell
+emitCommandParser
+ crux emit
+ extends abstractCommandParser
+ cells keywordCell emojiCell
+removeCommandParser
+ description Remove this agent from the board.
+ crux remove
+ extends abstractCommandParser
+ cells keywordCell
+javascriptCommandParser
+ description An escape hatch so you can write custom javascript in a pinch.
+ extends abstractCommandParser
+ crux javascript
+ catchAllParser javascriptLineParser
+ cells keywordCell
+alertCommandParser
+ extends abstractCommandParser
+ crux alert
+ catchAllCellType stringCell
+logCommandParser
+ extends abstractCommandParser
+ crux log
+ catchAllCellType stringCell
+narrateCommandParser
+ extends abstractCommandParser
+ crux narrate
+ catchAllCellType stringCell
+pauseCommandParser
+ extends abstractCommandParser
+ crux pause
+decreaseCommandParser
+ extends abstractCommandParser
+ description Decrease a property by 1.
+ crux decrease
+ cells keywordCell propertyNameCell
+increaseCommandParser
+ extends abstractCommandParser
+ description Increase a property by 1.
+ crux increase
+ cells keywordCell propertyNameCell
+growCommandParser
+ extends abstractCommandParser
+ crux grow
+shrinkCommandParser
+ extends abstractCommandParser
+ crux shrink
+pulseCommandParser
+ extends abstractCommandParser
+ crux pulse
+learnCommandParser
+ crux learn
+ extends abstractCommandParser
+ cells keywordCell classNameCell
+unlearnCommandParser
+ crux unlearn
+ extends abstractCommandParser
+ cells keywordCell classNameCell
+moveCommandParser
+ extends abstractCommandParser
+ crux move
+moveToEmptySpotCommandParser
+ crux moveToEmptySpot
+ extends abstractCommandParser
+ cells keywordCell
+turnRandomlyCommandParser
+ extends abstractCommandParser
+ crux turnRandomly
+jitterCommandParser
+ extends abstractCommandParser
+ crux jitter
+turnTowardCommandParser
+ description Turn to the closest agent of a certain type.
+ extends abstractCommandParser
+ crux turnToward
+ cells keywordCell emojiCell
+turnFromCommandParser
+ description Turn away from the closest agent of a certain type.
+ extends abstractCommandParser
+ crux turnFrom
+ cells keywordCell emojiCell
+agentDefinitionParser
+ inScope abstractIgnoreParser abstractEventParser abstractAgentAttributeParser belongsToClassParser
+ cells keywordCell
+ catchAllParser errorParser
+ compiler
+  stringTemplate 
+ javascript
+  compile() {
+   const root = this.root
+   const name = root.agentKeywordMap[this.firstWord]
+   const normal = super.compile()
+   const classIds = this.filter(node => node.parserId === "belongsToClassParser").map(node => node.getLine())
+   const props = classIds.map(id => this.root.getNode(id).properties).join("\n\n")
+   return `class ${name} extends Agent {
+      icon = "${this.firstWord}"
+      classes = [${classIds.map(id => `"${id}"`).join(",")}]
+      ${props}
+      ${normal}
+    }`
+  }
+abstractAgentAttributeParser
+ cells keywordCell
+stringAttributeParser
+ extends abstractAgentAttributeParser
+ pattern ^\w+ .+$
+ catchAllCellType stringCell
+ javascript
+  compile() {
+   return `${this.firstWord} = "${this.content}"`
+  }
+angleParser
+ extends stringAttributeParser
+ cells keywordCell angleCell
+ cruxFromId
+agentStyleParser
+ description Provide custom CSS for an agent type.
+ extends stringAttributeParser
+ cells keywordCell cssCell
+ crux style
+agentHtmlParser
+ description Provide custom HTML for each rendered agent.
+ extends stringAttributeParser
+ cells keywordCell htmlCell
+ crux html
+abstractBooleanAttributeParser
+ description A boolean attribute.
+ extends abstractAgentAttributeParser
+ javascript
+  compile() {
+   return `${this.firstWord} = true`
+  }
+noPaletteParser
+ extends abstractBooleanAttributeParser
+ cruxFromId
+ description Don't show this agent in the palette.
+solidTraitParser
+ description If set other agents won't pass through these.
+ extends abstractBooleanAttributeParser
+ crux solid
+bouncyTraitParser
+ description If set other agents will bounce off this after a collision.
+ extends abstractBooleanAttributeParser
+ crux bouncy
+abstractIntegerAttributeParser
+ extends abstractAgentAttributeParser
+ description An integer attribute.
+ cells keywordCell integerCell
+ javascript
+  compile() {
+   return `${this.firstWord} = ${this.getWord(1)}`
+  }
+customIntegerAttributeParser
+ pattern ^\w+ \d+$
+ extends abstractIntegerAttributeParser
+healthParser
+ extends abstractIntegerAttributeParser
+ cruxFromId
+agentWidthParser
+ extends abstractIntegerAttributeParser
+ description Width of the agent.
+ crux width
+agentHeightParser
+ extends abstractIntegerAttributeParser
+ description Height of the agent.
+ crux height
+speedParser
+ extends abstractIntegerAttributeParser
+ description Movement speed. Default is 1
+ crux speed
+settingDefinitionParser
+ description Define a configurable input.
+ cells keywordCell settingValueCell
+ pattern ^\w+Setting .+$
+styleLineParser
+ catchAllCellType cssCell
+ catchAllParser styleLineParser
+abstractSetupParser
+styleParser
+ description Optional CSS to load in BoardStyleComponent
+ extends abstractSetupParser
+ cells keywordCell
+ cruxFromId
+ catchAllParser styleLineParser
+ javascript
+  compile() {
+   return ""
+  }
+questionParser
+ cruxFromId
+ description What are you trying to figure out?
+ cells keywordCell
+ catchAllCellType stringCell
+ extends abstractSetupParser
+atTimeParser
+ cruxFromId
+ description Run commands at a certain tick.
+ cells keywordCell integerCell
+ extends abstractSetupParser
+ inScope abstractInjectCommandParser
+abstractSetupNumberParser
+ cells keywordCell integerCell
+ extends abstractSetupParser
+ javascript
+  compile() {
+   return ""
+  }
+heightParser
+ description Height of the grid. Default is based on screen size.
+ extends abstractSetupNumberParser
+ crux height
+widthParser
+ description Width of the grid. Default is based on screen size.
+ extends abstractSetupNumberParser
+ crux width
+seedParser
+ description If you'd like reproducible runs set a seed for the random number generator.
+ extends abstractSetupNumberParser
+ cruxFromId
+ticksPerSecondParser
+ description Time in milliseconds of one step.
+ extends abstractSetupNumberParser
+ cruxFromId
+reportParser
+ cruxFromId
+ description Define a custom report template.
+ catchAllParser ohayoLineParser
+ extends abstractSetupParser
+ cells keywordCell
+ javascript
+  compile() {
+   return ""
+  }
+belongsToClassParser
+ cells classNameCell
+ pattern ^.*Class$
+ javascript
+  compile() {
+   return ""
+  }
+classDefinitionParser
+ inScope abstractIgnoreParser abstractEventParser abstractAgentAttributeParser
+ cells classNameCell
+ pattern ^.*Class$
+ catchAllParser errorParser
+ javascript
+  compile() {
+   return ""
+  }
+  get properties() {
+    return this.filter(node => node.doesExtend("abstractAgentAttributeParser")).map(node => node.compile()).join("\n")
+  }
+commentLineParser
+ catchAllCellType commentCell
+abstractIgnoreParser
+ tags doNotSynthesize
+ javascript
+  compile () {
+    return ""
+  }
+commentParser
+ extends abstractIgnoreParser
+ catchAllCellType commentCell
+ cruxFromId
+ catchAllParser commentLineParser
+commentAliasParser
+ description Alternate alias for a comment.
+ crux #
+ extends commentParser
+blankLineParser
+ extends abstractIgnoreParser
+ description Blank lines compile do nothing.
+ cells blankCell
+ pattern ^$
+abstractInjectCommandParser
+insertParser
+ extends abstractInjectCommandParser
+ cells keywordCell integerOrPercentCell emojiCell
+ cruxFromId
+insertAtParser
+ extends insertParser
+ description Insert at X Y
+ cells keywordCell emojiCell positionCell positionCell
+ cruxFromId
+insertClusterParser
+ extends insertParser
+ cruxFromId
+ catchAllCellType integerCell
+fillParser
+ description Fill all blank cells with this agent.
+ extends abstractInjectCommandParser
+ cells keywordCell emojiCell
+ cruxFromId
+drawParser
+ extends abstractInjectCommandParser
+ cells keywordCell
+ cruxFromId
+ catchAllParser drawLineParser
+rectangleDrawParser
+ extends abstractInjectCommandParser
+ example
+  rectangle 🙂 width height x y 🙂
+ cells keywordCell emojiCell integerCell integerCell
+ catchAllCellType integerCell
+ crux rectangle
+pasteDrawParser
+ extends abstractInjectCommandParser
+ cells keywordCell
+ crux paste
+ catchAllParser pasteLineParser
+drawLineParser
+ catchAllCellType emojiCell
+pasteLineParser
+ catchAllCellType anyCell
+ catchAllParser pasteLineParser
+targetEmojiParser
+ inScope abstractCommandParser
+ cells emojiCell
+abstractEventParser
+ cells keywordCell
+ catchAllCellType probabilityCell
+ javascript
+  compile() {
+   return ``
+  }
+abstractInteractionEventParser
+ extends abstractEventParser
+ catchAllParser targetEmojiParser
+onHitParser
+ extends abstractInteractionEventParser
+ cruxFromId
+ description Define what happens when this agent collides with other agents.
+onDeathParser
+ extends abstractEventParser
+ cruxFromId
+ inScope abstractCommandParser
+ description Define what happens when this agent runs out of health.
+onTickParser
+ extends abstractEventParser
+ cruxFromId
+ inScope abstractCommandParser
+ description Define what happens each tick.
+emojiAndNeighborConditionParser
+ inScope abstractCommandParser
+ pattern ^.+ (<|>|=|<=|>=)+ .+$
+ cells emojiCell conditionalOperatorCell neighborCountCell
+onExtinctParser
+ cruxFromId
+ inScope abstractCommandParser
+ cells keywordCell emojiCell
+ description Define what happens when a type of agent goes extinct from the board.
+ javascript
+  compile() {
+   return ""
+  }
+experimentParser
+ cruxFromId
+ cells keywordCell
+ inScope abstractIgnoreParser abstractSetupParser abstractInjectCommandParser onTickParser onExtinctParser settingDefinitionParser
+ catchAllCellType stringCell
+ohayoLineParser
+ description Data visualization code written for Ohayo.
+ catchAllCellType ohayoCell
+errorParser
+ baseParser errorParser
+simojiParser
+ extensions simoji
+ description A Tree Language that compiles to a TreeComponentFramework app.
+ root
+ inScope abstractIgnoreParser abstractSetupParser abstractInjectCommandParser onTickParser onExtinctParser classDefinitionParser experimentParser settingDefinitionParser
+ catchAllParser agentDefinitionParser
+ compilesTo javascript
+ example
+  🦋
+   onTick .1
+    turnRandomly
+    move
+   onTick .2
+    turnToward 💡
+    move
+  💡
+  
+  insert 10 🦋
+  insert 2 💡
+ javascript
+  get agentTypes() {
+   return this.filter(node => node.parserId === "agentDefinitionParser")
+  }

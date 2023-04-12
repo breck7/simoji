@@ -2,7 +2,7 @@ const { TreeNode } = require("jtree/products/TreeNode.js")
 const { AbstractTreeComponentParser } = require("jtree/products/TreeComponentFramework.node.js")
 
 // prettier-ignore
-/*NODE_JS_ONLY*/ const simojiParser = require("jtree/products/GrammarCompiler.js").GrammarCompiler.compileGrammarFileAtPathAndReturnRootParser(   __dirname + "/../simoji.grammar")
+/*NODE_JS_ONLY*/ const simojiParser = require("jtree/products/GrammarCompiler.js").GrammarCompiler.compileGrammarFileAtPathAndReturnRootParser(   __dirname + "/../dist/simoji.grammar")
 
 class CodeMirrorShim {
   setSize() {}

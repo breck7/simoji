@@ -1,0 +1,73 @@
+abstractAgentAttributeParser
+ cells keywordCell
+stringAttributeParser
+ extends abstractAgentAttributeParser
+ pattern ^\w+ .+$
+ catchAllCellType stringCell
+ javascript
+  compile() {
+   return `${this.firstWord} = "${this.content}"`
+  }
+angleParser
+ extends stringAttributeParser
+ cells keywordCell angleCell
+ cruxFromId
+agentStyleParser
+ description Provide custom CSS for an agent type.
+ extends stringAttributeParser
+ cells keywordCell cssCell
+ crux style
+agentHtmlParser
+ description Provide custom HTML for each rendered agent.
+ extends stringAttributeParser
+ cells keywordCell htmlCell
+ crux html
+abstractBooleanAttributeParser
+ description A boolean attribute.
+ extends abstractAgentAttributeParser
+ javascript
+  compile() {
+   return `${this.firstWord} = true`
+  }
+noPaletteParser
+ extends abstractBooleanAttributeParser
+ cruxFromId
+ description Don't show this agent in the palette.
+solidTraitParser
+ description If set other agents won't pass through these.
+ extends abstractBooleanAttributeParser
+ crux solid
+bouncyTraitParser
+ description If set other agents will bounce off this after a collision.
+ extends abstractBooleanAttributeParser
+ crux bouncy
+abstractIntegerAttributeParser
+ extends abstractAgentAttributeParser
+ description An integer attribute.
+ cells keywordCell integerCell
+ javascript
+  compile() {
+   return `${this.firstWord} = ${this.getWord(1)}`
+  }
+customIntegerAttributeParser
+ pattern ^\w+ \d+$
+ extends abstractIntegerAttributeParser
+healthParser
+ extends abstractIntegerAttributeParser
+ cruxFromId
+agentWidthParser
+ extends abstractIntegerAttributeParser
+ description Width of the agent.
+ crux width
+agentHeightParser
+ extends abstractIntegerAttributeParser
+ description Height of the agent.
+ crux height
+speedParser
+ extends abstractIntegerAttributeParser
+ description Movement speed. Default is 1
+ crux speed
+settingDefinitionParser
+ description Define a configurable input.
+ cells keywordCell settingValueCell
+ pattern ^\w+Setting .+$

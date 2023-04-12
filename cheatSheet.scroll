@@ -45,7 +45,6 @@ code
 * Events are blocks of commands that execute during the running of the experiments. Probabilities can be assigned so blocks run stochastically.
 - onTick
 - onHit
-- onTouch
 - onDeath
 
 * Some events can also happen on the board level:
@@ -96,7 +95,7 @@ code
 # Tree Notation
 * Simoji the language is a Tree Language. There are no visible syntax characters. Indentation is used for parent/child relationships. Here is the grammar.
  https://treenotation.org Tree Language
- https://jtree.treenotation.org/designer#url%20https%3A%2F%2Fsimoji.pub%2Fsimoji.grammar grammar
+ https://jtree.treenotation.org/designer#url%20https%3A%2F%2Fsimoji.pub%2Fdist%2Fsimoji.grammar grammar
 
 # Keyboard shortcuts
 pipeTable

@@ -1,16 +1,21 @@
 
-
 🏐
  bouncy
+ speed 20
  onTick
   move
  angle West
 🏓
+ width 30
+ height 30
  angle East
  onHit
   🏐
    kickIt
+
 🏸
+ width 30
+ height 30
  angle West
  onHit
   🏐
@@ -18,12 +23,11 @@
 🪵
  solid
 
-size 20
 ticksPerSecond 10
 
-rectangle 🪵 30 15 5 5
-paste
- 🏓 13⬇️ 6➡️
- 🏸 13⬇️ 33➡️
- 🏐 13⬇️ 19➡️
+rectangle 🪵 50 15 50 50
 
+
+insertAt 🏐 273 125
+insertAt 🏓 90 120
+insertAt 🏸 510 121

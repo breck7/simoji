@@ -13,9 +13,8 @@
  onTick .1
   move
 
-size 20
 ticksPerSecond 30
 
 paste
- 🚓 1⬇️ 1➡️
- 🚗 15⬇️ 5➡️
+ 🚓 1 1
+ 🚗 5 15

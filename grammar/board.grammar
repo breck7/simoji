@@ -1,0 +1,19 @@
+styleLineParser
+ catchAllCellType cssCell
+ catchAllParser styleLineParser
+styleParser
+ description Optional CSS to load in BoardStyleComponent
+ extends abstractSetupParser
+ cells keywordCell
+ cruxFromId
+ catchAllParser styleLineParser
+ javascript
+  compile() {
+   return ""
+  }
+questionParser
+ cruxFromId
+ description What are you trying to figure out?
+ cells keywordCell
+ catchAllCellType stringCell
+ extends abstractSetupParser

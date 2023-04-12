@@ -1,0 +1,49 @@
+anyCell
+booleanCell
+stringCell
+ highlightScope string
+settingValueCell
+ highlightScope constant.numeric
+cssCell
+ highlightScope string
+javascriptCell
+ highlightScope string
+htmlCell
+ highlightScope string
+emojiCell
+ highlightScope string
+ohayoCell
+ highlightScope string
+blankCell
+codeCell
+ highlightScope comment
+commentCell
+ highlightScope comment
+keywordCell
+ highlightScope keyword
+textCell
+ highlightScope string
+integerCell
+ highlightScope constant.numeric
+
+classNameCell
+ highlightScope keyword
+conditionalOperatorCell
+ highlightScope keyword
+ enum < > = <= >=
+positionCell
+ highlightScope constant.numeric
+neighborCountCell
+ extends integerCell
+ min 0
+ max 8
+integerOrPercentCell
+ highlightScope constant.numeric
+probabilityCell
+ description A number between 0 and 1
+ highlightScope constant.numeric
+propertyNameCell
+ highlightScope keyword
+angleCell
+ enum North South East West NorthWest NorthEast SouthWest SouthEast
+ highlightScope constant.numeric

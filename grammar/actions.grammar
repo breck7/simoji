@@ -1,0 +1,87 @@
+javascriptLineParser
+ catchAllCellType javascriptCell
+abstractCommandParser
+ cells keywordCell
+
+abstractSubjectObjectCommandParser
+ extends abstractCommandParser
+replaceWithCommandParser
+ extends abstractSubjectObjectCommandParser
+ crux replaceWith
+ cells keywordCell emojiCell
+kickItCommandParser
+ extends abstractSubjectObjectCommandParser
+ crux kickIt
+shootCommandParser
+ extends abstractSubjectObjectCommandParser
+ crux shoot
+pickItUpCommandParser
+ extends abstractSubjectObjectCommandParser
+ crux pickItUp
+
+spawnCommandParser
+ crux spawn
+ extends abstractCommandParser
+ cells keywordCell emojiCell
+ catchAllCellType positionCell
+emitCommandParser
+ crux emit
+ extends abstractCommandParser
+ cells keywordCell emojiCell
+removeCommandParser
+ description Remove this agent from the board.
+ crux remove
+ extends abstractCommandParser
+ cells keywordCell
+javascriptCommandParser
+ description An escape hatch so you can write custom javascript in a pinch.
+ extends abstractCommandParser
+ crux javascript
+ catchAllParser javascriptLineParser
+ cells keywordCell
+
+alertCommandParser
+ extends abstractCommandParser
+ crux alert
+ catchAllCellType stringCell
+logCommandParser
+ extends abstractCommandParser
+ crux log
+ catchAllCellType stringCell
+narrateCommandParser
+ extends abstractCommandParser
+ crux narrate
+ catchAllCellType stringCell
+pauseCommandParser
+ extends abstractCommandParser
+ crux pause
+
+decreaseCommandParser
+ extends abstractCommandParser
+ description Decrease a property by 1.
+ crux decrease
+ cells keywordCell propertyNameCell
+increaseCommandParser
+ extends abstractCommandParser
+ description Increase a property by 1.
+ crux increase
+ cells keywordCell propertyNameCell
+
+growCommandParser
+ extends abstractCommandParser
+ crux grow
+shrinkCommandParser
+ extends abstractCommandParser
+ crux shrink
+pulseCommandParser
+ extends abstractCommandParser
+ crux pulse
+
+learnCommandParser
+ crux learn
+ extends abstractCommandParser
+ cells keywordCell classNameCell
+unlearnCommandParser
+ crux unlearn
+ extends abstractCommandParser
+ cells keywordCell classNameCell

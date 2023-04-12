@@ -1,9 +1,13 @@
 #!/usr/bin/env node
 
+const path = require("path")
 const { readFile } = require("fs")
 const { Disk } = require("jtree/products/Disk.node.js")
 const { TypeScriptRewriter } = require("jtree/products/TypeScriptRewriter.js")
 const { getExamples } = require("./examples")
+const { Server } = require("./server.js")
+
+const distFolder = path.join(__dirname, "dist")
 
 const libPaths = `node_modules/jtree/treeComponentFramework/sweepercraft/lib/mousetrap.min.js
 node_modules/mathjs/lib/browser/math.js
@@ -21,13 +25,14 @@ node_modules/jtree/products/stump.browser.js
 node_modules/jtree/products/hakon.browser.js
 node_modules/jtree/products/TreeComponentFramework.browser.js`.split("\n")
 
-const libCode = libPaths.map(path => Disk.read(__dirname + "/" + path)).join("\n\n")
+const libCode = libPaths.map(libPath => Disk.read(path.join(__dirname, libPath))).join("\n\n")
 
-Disk.write(__dirname + "/dist/libs.js", libCode)
+Disk.write(path.join(distFolder, "simoji.grammar"), new Server().grammar)
+Disk.write(path.join(distFolder, "libs.js"), libCode)
 
-const ourPaths = Disk.getFiles(__dirname + "/components").filter(path => !path.includes(".test"))
-ourPaths.unshift(__dirname + "/yodash.js")
-ourPaths.push(__dirname + "/BrowserGlue.js")
+const ourPaths = Disk.getFiles(path.join(__dirname, "components")).filter(path => !path.includes(".test"))
+ourPaths.unshift(path.join(__dirname, "yodash.js"))
+ourPaths.push(path.join(__dirname, "BrowserGlue.js"))
 
 const simCode = ourPaths
   .map(path => {
@@ -41,11 +46,11 @@ const simCode = ourPaths
   })
   .join("\n\n")
 
-Disk.write(__dirname + "/dist/simoji.js", simCode)
+Disk.write(path.join(distFolder, "simoji.js"), simCode)
 
 const SimConstants = {
-  grammar: Disk.read(__dirname + "/simoji.grammar"),
+  grammar: Disk.read(path.join(distFolder, "simoji.grammar")),
   examples: getExamples()
 }
 
-Disk.write(__dirname + "/dist/constants.js", `const SimConstants = ` + JSON.stringify(SimConstants))
+Disk.write(path.join(distFolder, "constants.js"), `const SimConstants = ` + JSON.stringify(SimConstants))

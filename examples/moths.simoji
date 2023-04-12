@@ -1,7 +1,10 @@
 question Can you move the moths from one light to the other?
 
 🦋
- onTick .1
+ speed 10
+ height 30
+ width 30
+ onTick .5
   jitter
   move
  onTick .2
@@ -9,9 +12,10 @@ question Can you move the moths from one light to the other?
   move
   move
 💡
+ height 100
+ width 100
 
 ticksPerSecond 10
-size 20
 style
  .BoardComponent {background:black;}
 

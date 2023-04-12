@@ -3,7 +3,6 @@
   move
  angle South
 
-size 25
 ticksPerSecond 5
 
 rectangle 🌊 100 1 0

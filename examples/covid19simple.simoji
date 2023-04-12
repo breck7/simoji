@@ -45,7 +45,7 @@ experiment
 🙍
  onTick
   jitter
- onTouch
+ onHit
   🦠
    replaceWith 🧟
   🧟
@@ -60,7 +60,6 @@ onExtinct 🧟
 
 🪦
 
-size 15
 ticksPerSecond 10
 
 report
