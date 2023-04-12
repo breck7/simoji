@@ -3,24 +3,6 @@ const yodash = {}
 
 
 
-yodash.parseInts = (arr, start) => arr.map((item, index) => (index >= start ? parseInt(item) : item))
-
-yodash.getRandomAngle = randomNumberGenerator => {
-  const r1 = randomNumberGenerator()
-  const r2 = randomNumberGenerator()
-  if (r1 > 0.5) return r2 > 0.5 ? Directions.North : Directions.South
-  return r2 > 0.5 ? Directions.West : Directions.East
-}
-
-yodash.flipAngle = angle => {
-  let newAngle = ""
-  if (angle.includes(Directions.North)) newAngle += Directions.South
-  else if (angle.includes(Directions.South)) newAngle += Directions.North
-  if (angle.includes(Directions.East)) newAngle += Directions.West
-  else if (angle.includes(Directions.West)) newAngle += Directions.East
-  return newAngle
-}
-
 yodash.compare = (left, operator, right) => {
   if (operator === "=") return left == right
   if (operator === "<") return left < right
@@ -69,34 +51,35 @@ yodash.patchExperimentAndReplaceSymbols = (program, experiment) => {
   return withVarsReplaced
 }
 
-yodash.getBestAngle = (targets, position) => {
+yodash.getClosest = (targets, subject) => {
   let closest = Infinity
   let target
-  targets.forEach(candidate => {
-    const pos = candidate.position
-    const distance = math.distance([pos.y, pos.x], [position.y, position.x])
+  targets.forEach(agent => {
+    if (agent === subject) return
+    const distance = math.distance([agent.y, agent.x], [subject.y, subject.x])
     if (distance < closest) {
       closest = distance
-      target = candidate
+      target = agent
     }
   })
-  const heading = target.position
-  return yodash.angle(position.y, position.x, heading.y, heading.x)
+  return target
 }
 
-yodash.angle = (cx, cy, ex, ey) => {
-  const dy = ey - cy
-  const dx = ex - cx
-  let theta = Math.atan2(dy, dx) // range (-PI, PI]
-  theta *= 180 / Math.PI // rads to degs, range (-180, 180]
-  //if (theta < 0) theta = 360 + theta; // range [0, 360)
-  let angle = ""
+yodash.unitVector = (objA, objB) => {
+  // calculate direction vector (delta)
+  const delta = {
+    x: objB.x - objA.x,
+    y: objB.y - objA.y
+  }
 
-  if (Math.abs(theta) > 90) angle += Directions.North
-  else angle += Directions.South
-  if (theta < 0) angle += Directions.West
-  else angle += Directions.East
-  return angle
+  // calculate magnitude of delta (distance between two points)
+  const magDelta = Math.sqrt(delta.x * delta.x + delta.y * delta.y)
+
+  // calculate unit vector (normalize direction vector by dividing by magnitude)
+  return {
+    x: delta.x / magDelta,
+    y: delta.y / magDelta
+  }
 }
 
 yodash.parsePercent = str => parseFloat(str.replace("%", "")) / 100
@@ -228,12 +211,41 @@ window.AbstractContextMenuComponent = AbstractContextMenuComponent
 
 const SelectedClass = "selected"
 
+const classCache = {}
+const getClassCache = (program, words) => {
+  const key = words.join(" ")
+  if (!classCache[key]) classCache[key] = yodash.flatten(yodash.pick(program, words))
+  return classCache[key]
+}
+
 class Agent extends TreeNode {
   get name() {
     return this._name ?? this.icon
   }
 
-  angle = Directions.South
+  _direction = { x: 0, y: 1 }
+
+  get direction() {
+    if (this.angle) {
+      const vectors = {
+        North: [0, -1],
+        East: [1, 0],
+        South: [0, 1],
+        West: [-1, 0],
+        Northeast: [Math.cos(Math.PI / 4), Math.sin((Math.PI * 3) / 4)],
+        Southeast: [Math.cos((Math.PI * 3) / 4), Math.sin(Math.PI / 4)],
+        Southwest: [-Math.cos((Math.PI * 3) / 4), Math.sin(Math.PI * (5 / 8))],
+        Northwest: [-Math.cos(Math.PI * (5 / 8)), Math.sin((Math.PI * -3) / 4)]
+      }
+      this._direction = vectors[this.angle]
+      this.angle = ""
+    }
+    return this._direction
+  }
+
+  set direction(newDirection) {
+    this._direction = newDirection
+  }
 
   getCommandBlocks(eventName) {
     return this.definitionWithClasses.findNodes(eventName)
@@ -241,8 +253,7 @@ class Agent extends TreeNode {
 
   get definitionWithClasses() {
     if (!this.classes.length) return this.board.simojiProgram.getNode(this.firstWord)
-    const classes = yodash.flatten(yodash.pick(this.board.simojiProgram, [this.firstWord, ...this.classes]))
-    return classes
+    return getClassCache(this.board.simojiProgram, [this.firstWord, ...this.classes])
   }
 
   skip(probability) {
@@ -290,48 +301,26 @@ class Agent extends TreeNode {
   }
 
   _replaceWith(newObject) {
-    this.parent.appendLine(`${newObject} ${this.positionHash}`)
-
+    this.parent.insertInbounds(newObject, this.x, this.y)
     this.remove()
   }
 
   _move() {
     if (this.owner) return this
 
-    const { angle } = this
-    if (angle.includes(Directions.North)) this.moveNorth()
-    else if (angle.includes(Directions.South)) this.moveSouth()
-    if (angle.includes(Directions.East)) this.moveEast()
-    else if (angle.includes(Directions.West)) this.moveWest()
+    const { direction, speed } = this
+
+    this.top = Math.max(this.top + direction.y * speed, 0)
+    this.left = Math.max(this.left + direction.x * speed, 0)
 
     if (this.holding) {
       this.holding.forEach(node => {
-        node.setPosition({ x: this.left, y: this.top })
+        node.setPosition({ x: this.x, y: this.y })
       })
     }
   }
 
-  moveSouth() {
-    this.top += this.speed
-  }
-
   speed = 1
-
-  moveNorth() {
-    this.top = Math.max(this.top - this.speed, 0)
-  }
-
-  moveWest() {
-    this.left = Math.max(this.left - this.speed, 0)
-  }
-
-  moveEast() {
-    this.left += this.speed
-  }
-
-  get shape() {
-    return { width: this.width, height: this.height }
-  }
 
   get x() {
     return this.left
@@ -341,11 +330,19 @@ class Agent extends TreeNode {
     return this.top
   }
 
+  get w() {
+    return this.width
+  }
+
+  get h() {
+    return this.height
+  }
+
   width = 10
   height = 10
 
   get top() {
-    return this.position.y
+    return this._y ?? this.position.y
   }
 
   set top(value) {
@@ -364,44 +361,11 @@ class Agent extends TreeNode {
   setPosition(newPosition) {
     if (!this.board.canGoHere(newPosition.x, newPosition.y, this.width, this.height))
       return this.bouncy ? this.bounce() : this
+
+    this._x = newPosition.x
+    this._y = newPosition.y
     // Todo: do we need to update the string?
     return this.setLine([this.firstWord, newPosition.x, newPosition.y].join(" "))
-  }
-
-  handleNeighbors() {
-    if (!this.stillExists) return
-
-    this.getCommandBlocks(Keywords.onNeighbors).forEach(neighborConditions => {
-      if (this.skip(neighborConditions.getWord(1))) return
-
-      const { neighorCount } = this
-
-      neighborConditions.forEach(conditionAndCommandsBlock => {
-        const [emoji, operator, count] = conditionAndCommandsBlock.words
-        const actual = neighorCount[emoji]
-        if (!yodash.compare(actual ?? 0, operator, count)) return
-        conditionAndCommandsBlock.forEach(command => this._executeCommand(this, command))
-
-        if (this.getIndex() === -1) return {}
-      })
-    })
-  }
-
-  handleTouches() {
-    if (!this.stillExists) return
-    const { board } = this
-    this.getCommandBlocks(Keywords.onTouch).forEach(touchMap => {
-      if (this.skip(touchMap.getWord(1))) return
-
-      for (let target of board.objectsTouching(this)) {
-        const targetId = target.firstWord
-        const commandBlock = touchMap.getNode(targetId)
-        if (commandBlock) {
-          commandBlock.forEach(command => this._executeCommand(target, command))
-          if (this.getIndex() === -1) return
-        }
-      }
-    })
   }
 
   handleCollisions(targetAgents) {
@@ -429,11 +393,11 @@ class Agent extends TreeNode {
   }
 
   get maxRight() {
-    return this.board.width - this.width
+    return this.board.width - this.width - 1
   }
 
   get maxDown() {
-    return this.board.height - this.height
+    return this.board.height - this.height - 1
   }
 
   set left(value) {
@@ -447,7 +411,7 @@ class Agent extends TreeNode {
   }
 
   get left() {
-    return this.position.x
+    return this._x ?? this.position.x
   }
 
   get bounds() {
@@ -464,10 +428,6 @@ class Agent extends TreeNode {
       x: parseInt(this.words[1]),
       y: parseInt(this.words[2])
     }
-  }
-
-  get positionHash() {
-    return `${this.words[1]} ${this.words[2]}`
   }
 
   get gridSize() {
@@ -499,7 +459,7 @@ class Agent extends TreeNode {
   // DOM operations
 
   nuke() {
-    this.element.remove()
+    if (this.element) this.element.remove()
     this.destroy()
   }
 
@@ -572,7 +532,7 @@ class Agent extends TreeNode {
   }
 
   kickIt(target) {
-    target.angle = this.angle
+    target.direction = this.direction
     target.tickStack = new TreeNode(`1
  move
  move
@@ -617,7 +577,8 @@ class Agent extends TreeNode {
     })
   }
   bounce() {
-    this.angle = yodash.flipAngle(this.angle)
+    const { x, y } = this.direction
+    this.direction = { x: -x, y: -y }
   }
 
   decrease(target, command) {
@@ -633,7 +594,8 @@ class Agent extends TreeNode {
   }
 
   turnRandomly() {
-    this.angle = yodash.getRandomAngle(this.board.randomNumberGenerator)
+    const rng = this.board.randomNumberGenerator
+    this.direction = { x: 2 * rng() - 1, y: 2 * rng() - 1 }
     return this
   }
 
@@ -641,7 +603,9 @@ class Agent extends TreeNode {
     const targetId = instruction.getWord(1)
     const kind = this[targetId] ?? targetId // can define a custom target
     const targets = this.board.agentTypeMap.get(kind)
-    if (targets) this.angle = yodash.getBestAngle(targets, this.position)
+    if (!targets) return this
+    this.target = yodash.getClosest(targets, this)
+    this.direction = yodash.unitVector(this, this.target)
     return this
   }
 
@@ -649,7 +613,10 @@ class Agent extends TreeNode {
     const targetId = instruction.getWord(1)
     const kind = this[targetId] ?? targetId // can define a custom target
     const targets = this.board.agentTypeMap.get(kind)
-    if (targets) this.angle = yodash.flipAngle(yodash.getBestAngle(targets, this.position))
+    if (!targets) return this
+    this.target = yodash.getClosest(targets, this)
+    const bestUnitVector = yodash.unitVector(this, this.target)
+    this.direction = { x: -bestUnitVector.x, y: -bestUnitVector.y }
     return this
   }
 
@@ -658,8 +625,19 @@ class Agent extends TreeNode {
   }
 
   spawn(subject, command) {
-    const position = command.getWordsFrom(2).length ? command.getWordsFrom(2).join(" ") : subject.positionHash
+    const position = command.getWordsFrom(2).length ? command.getWordsFrom(2).join(" ") : `${subject.x} ${subject.y}`
     this.board.appendLine(`${command.getWord(1)} ${position}`)
+  }
+
+  get midpoint() {
+    return { x: this.x + this.width / 2, y: this.y + this.height / 2 }
+  }
+
+  emit(subject, command) {
+    const { midpoint } = this
+    const position = command.getWordsFrom(2).length ? command.getWordsFrom(2).join(" ") : `${midpoint.x} ${midpoint.y}`
+    const agent = this.board.appendLine(`${command.getWord(1)} ${position}`)
+    agent.direction = this.direction
   }
 
   move() {
@@ -676,17 +654,26 @@ class Agent extends TreeNode {
   grow() {
     this.width++
     this.height++
+    this.markDirty()
   }
 
   shrink() {
     if (!this.width || !this.height) return
     this.width--
     this.height--
+    this.markDirty()
   }
 
   jitter() {
     this.turnRandomly()
     this.move()
+  }
+
+  _lastPulse
+  pulse() {
+    if (this._lastPulse) this.shrink()
+    else this.grow()
+    this._lastPulse = !this._lastPulse
   }
 
   learn(target, command) {
@@ -849,19 +836,22 @@ class BoardComponent extends AbstractTreeComponentParser {
       )
   }
 
-  insertAgentAtCommand(x, y) {
+  insertAgentAtCommand(xCenter, yCenter) {
     const root = this.root
     const { agentToInsert } = root
     if (!agentToInsert) return
     this.clearCollisionDetector()
+
+    const { agentWidth, agentHeight } = this.getAgentHeightAndWidth(agentToInsert)
+
+    const x = xCenter - Math.floor(agentWidth / 2)
+    const y = yCenter - Math.floor(agentHeight / 2)
 
     //if (parent.findNodes(agentToInsert).length > MAX_ITEMS) return true
 
     this.prependLine(`${agentToInsert} ${x} ${y}`)
     this.renderAndGetRenderReport()
     this.clearCollisionDetector()
-
-    if (!root.isSnapshotOn) root.snapShotCommand()
 
     const allCode = new TreeNode(root.simCode)
     let targetNode = root.boards.length === 1 ? allCode : allCode.findNodes("experiment")[this.boardIndex]
@@ -890,9 +880,6 @@ class BoardComponent extends AbstractTreeComponentParser {
 
     this.clearCollisionDetector()
     this.handleCollisions()
-    //    this.handleTouches()
-    //    this.handleNeighbors()
-
     this.executeBoardCommands(Keywords.onTick)
     this.handleExtinctions()
 
@@ -961,12 +948,34 @@ class BoardComponent extends AbstractTreeComponentParser {
     this[command.parserId](command)
   }
 
+  getAgentHeightAndWidth(agentSymbol) {
+    const item = new this.agentMap[agentSymbol]()
+    return { agentWidth: item.width, agentHeight: item.height }
+  }
+
+  insertInbounds(agentSymbol, x, y) {
+    const { agentWidth, agentHeight } = this.getAgentHeightAndWidth(agentSymbol)
+    const xOver = x + agentWidth - this.width
+    const yOver = y + agentHeight - this.height
+    if (xOver > 0) x = x - xOver - 10
+    if (yOver > 0) y = y - yOver - 10
+    if (x < 0) x = 0
+    if (y < 0) y = 0
+    this.appendLine(`${agentSymbol} ${x} ${y}`)
+  }
+
   // todo: origin
-  insertClusteredRandomAgents(amount, char, x, y) {
-    const width = 10
-    const height = 10
-    const spots = this.collisionDetector.findClusteredNonOverlappingSquares(width, height, amount, x, y, amount * width)
-    return spots.map(spot => `${char} ${spot.x} ${spot.y}`).join("\n")
+  insertClusteredRandomAgents(amount, agentSymbol, x = 0, y = 0) {
+    const { agentWidth, agentHeight } = this.getAgentHeightAndWidth(agentSymbol)
+    const spots = this.collisionDetector.findClusteredNonOverlappingSquares(
+      agentWidth,
+      agentHeight,
+      amount,
+      x,
+      y,
+      (amount * agentWidth) / 4
+    )
+    return spots.map(spot => `${agentSymbol} ${spot.x} ${spot.y}`).join("\n")
   }
 
   insertClusterParser(commandNode) {
@@ -982,12 +991,23 @@ class BoardComponent extends AbstractTreeComponentParser {
   }
 
   insertAtParser(commandNode) {
-    this.appendLine(`${commandNode.getWord(1)} ${commandNode.getWord(3)} ${commandNode.getWord(2)}`)
+    this.appendLine(`${commandNode.getWord(1)} ${commandNode.getWord(2)} ${commandNode.getWord(3)}`)
     this.clearCollisionDetector()
   }
 
   rectangleDrawParser(commandNode) {
-    const newLines = this.makeRectangle(...yodash.parseInts(commandNode.words.slice(1), 1))
+    // todo: need a typed words method in jtree
+    // rectangle 🙂 width height x y 🙂
+    const [command, symbol, width, height, x, y, fillSymbol, spacing] = commandNode.words
+    const newLines = this.makeRectangle(
+      symbol,
+      parseInt(width),
+      parseInt(height),
+      parseInt(x),
+      parseInt(y),
+      fillSymbol,
+      spacing ? parseInt(spacing) : 0
+    )
     this.concat(newLines)
     this.clearCollisionDetector()
   }
@@ -1021,16 +1041,15 @@ class BoardComponent extends AbstractTreeComponentParser {
 
   insertParser(commandNode) {
     const { width, height } = this
-    const emoji = commandNode.getWord(2)
+    const agentSymbol = commandNode.getWord(2)
     let amount = commandNode.getWord(1)
-    const agentWidth = 10
-    const agentHeight = 10
+    const { agentWidth, agentHeight } = this.getAgentHeightAndWidth(agentSymbol)
     const maxCells = (width * height) / (agentWidth * agentHeight)
     amount = amount.includes("%") ? yodash.parsePercent(amount) * maxCells : parseInt(amount)
 
     const spots = this.collisionDetector.findNonOverlappingSquares(agentWidth, agentHeight, amount)
 
-    const newAgents = spots.map(spot => `${emoji} ${spot.x + " " + spot.y}`).join("\n")
+    const newAgents = spots.map(spot => `${agentSymbol} ${spot.x + " " + spot.y}`).join("\n")
 
     this.concat(newAgents)
     this.clearCollisionDetector()
@@ -1081,7 +1100,6 @@ class BoardComponent extends AbstractTreeComponentParser {
     return this._collisionDetector
   }
 
-  // YY
   handleCollisions() {
     const collisions = this.collisionDetector.detectCollisions()
     collisions.forEach(collision => {
@@ -1089,16 +1107,6 @@ class BoardComponent extends AbstractTreeComponentParser {
       agentA.handleCollisions([agentB])
       agentB.handleCollisions([agentA])
     })
-  }
-
-  // YY
-  handleTouches() {
-    this.agents.forEach(node => node.handleTouches())
-  }
-
-  // YY
-  handleNeighbors() {
-    this.agents.forEach(node => node.handleNeighbors())
   }
 
   get boardIndex() {
@@ -1215,16 +1223,6 @@ class BoardComponent extends AbstractTreeComponentParser {
     return this.collisionDetector.getCollidingAgents(x, y, width, height)
   }
 
-  // ZZZ
-  objectsTouching(rect) {
-    const { position, agentSize } = rect
-    const targets = []
-    for (let pos of this.positionsAdjacentToRect(position.right, position.down, agentSize)) {
-      this.objectsCollidingWith(pos.right, pos.down, agentSize).forEach(item => targets.push(item))
-    }
-    return targets
-  }
-
   _solidCollisionDetector
   get solidCollisionDetector() {
     if (!this._solidCollisionDetector)
@@ -1243,7 +1241,6 @@ class BoardComponent extends AbstractTreeComponentParser {
     return true
   }
 
-  // ZZZ
   get collidingAgents() {
     const agents = this.agents
     const collidingAgents = []
@@ -1277,41 +1274,48 @@ class BoardComponent extends AbstractTreeComponentParser {
   draw(str) {
     const lines = str.split("\n")
     const output = []
+    let agentWidth
+    let agentHeight
     for (let index = 0; index < lines.length; index++) {
       const words = lines[index].split(" ")
       for (let wordIndex = 0; wordIndex < words.length; wordIndex++) {
-        const word = words[wordIndex]
-        if (word !== "") output.push(`${word} ${this.makePositionHash({ y: index, x: wordIndex })}`)
+        const agentSymbol = words[wordIndex]
+        if (agentSymbol && !agentWidth) {
+          // Draw assumes everything being drawn is a square with sides N.
+          agentWidth = this.getAgentHeightAndWidth(agentSymbol).agentWidth
+          agentHeight = agentWidth
+        }
+
+        if (agentSymbol !== "")
+          output.push(`${agentSymbol} ${this.makePositionHash({ y: index * agentHeight, x: wordIndex * agentHeight })}`)
       }
     }
     return output.join("\n")
   }
 
-  makeRectangle(
-    agentSymbol = "🧱",
-    width = 20,
-    height = 20,
-    startRight = 0,
-    startDown = 0,
-    agentWidth = 1,
-    agentHeight = 1
-  ) {
-    if (width < 1 || height < 1) {
-      return ""
-    }
+  makeRectangle(agentSymbol = "🧱", width = 20, height = 20, x = 0, y = 0, fillSymbol = false, spacing = 0) {
+    if (width < 1 || height < 1) return ""
+
+    if (isNaN(x)) x = 20
+    if (isNaN(y)) y = 20
+
+    const { agentWidth, agentHeight } = this.getAgentHeightAndWidth(agentSymbol)
     const cells = []
     let row = 0
     while (row < height) {
       let col = 0
       while (col < width) {
         const isPerimeter = row === 0 || row === height - 1 || col === 0 || col === width - 1
-        if (isPerimeter)
-          cells.push(
-            `${agentSymbol} ${this.makePositionHash({
-              y: startDown + row * agentHeight,
-              x: startRight + col * agentWidth
-            })}`
-          )
+        if (!fillSymbol && !isPerimeter) {
+          col++
+          continue
+        }
+
+        cells.push(
+          `${isPerimeter ? agentSymbol : fillSymbol} ${x + col * (agentWidth + spacing)} ${
+            y + row * (agentHeight + spacing)
+          }`
+        )
         col++
       }
       row++
@@ -1319,18 +1323,22 @@ class BoardComponent extends AbstractTreeComponentParser {
     return cells.join("\n")
   }
 
-  fill(emoji, size = 1) {
+  fill(agentSymbol) {
     let { width, height } = this
+    const { agentWidth, agentHeight } = this.getAgentHeightAndWidth(agentSymbol)
     const board = []
-    while (height >= 0) {
-      let col = width
-      while (col >= 0) {
-        col--
-        if (this.isRectOccupied(col, height, size, size)) continue
-        const hash = this.makePositionHash({ x: col, y: height })
-        board.push(`${emoji} ${hash}`)
+    let y = 0
+    while (y < height - agentHeight) {
+      let x = 0
+      while (x < width - agentWidth) {
+        if (this.isRectOccupied(x, y, agentWidth, agentHeight)) {
+          x += agentWidth
+          continue
+        }
+        board.push(`${agentSymbol} ${x} ${y}`)
+        x += agentWidth
       }
-      height--
+      y += agentHeight
     }
     return board.join("\n")
   }
@@ -1408,15 +1416,6 @@ class Bounds {
     this.h = h
   }
 
-  contains(agent) {
-    return (
-      agent.x >= this.x &&
-      agent.y >= this.y &&
-      agent.x + agent.shape.width <= this.x + this.w &&
-      agent.y + agent.shape.height <= this.y + this.h
-    )
-  }
-
   intersects(range) {
     return !(
       range.x >= this.x + this.w ||
@@ -1428,22 +1427,40 @@ class Bounds {
 }
 
 class Quadtree {
-  constructor(bounds, capacity) {
+  constructor(bounds, capacity, maxDepth = 10) {
     this.bounds = new Bounds(bounds.x, bounds.y, bounds.w, bounds.h)
     this.capacity = capacity
+    this.maxDepth = maxDepth
     this.agents = []
-    this.divided = false
   }
 
-  insert(agent) {
-    if (!this.bounds.contains(agent)) return
+  get agentCount() {
+    let count = 0
 
-    if (this.agents.length < this.capacity && !this.divided) {
-      this.agents.push(agent)
+    if (this.isLeaf()) {
+      count += this.agents.length
     } else {
-      if (!this.divided) this.subdivide()
-      for (const child of this.children) child.insert(agent)
+      for (const child of this.children) {
+        count += child.agentCount
+      }
     }
+
+    return count
+  }
+
+  insert(agent, depth = 0) {
+    if (!this.bounds.intersects(agent)) return false
+
+    if (!this.divided && (this.agents.length < this.capacity || depth >= this.maxDepth)) {
+      this.agents.push(agent)
+      return true
+    } else {
+      if (!this.divided) this.divide()
+      for (const child of this.children) {
+        if (child.insert(agent, depth + 1)) return true
+      }
+    }
+    return false
   }
 
   isLeaf() {
@@ -1484,20 +1501,25 @@ class Quadtree {
     return output
   }
 
-  subdivide() {
-    const { x, y, w, h } = this.bounds
-    const capacity = this.capacity
+  get divided() {
+    return !!this.children
+  }
+
+  divide() {
+    const { x, y } = this.bounds
+    const { bounds, capacity } = this
+    const w = bounds.w / 2
+    const h = bounds.h / 2
 
     this.children = [
-      new Quadtree({ x, y, w: w / 2, h: h / 2 }, capacity),
-      new Quadtree({ x: x + w / 2, y, w: w / 2, h: h / 2 }, capacity),
-      new Quadtree({ x, y: y + h / 2, w: w / 2, h: h / 2 }, capacity),
-      new Quadtree({ x: x + w / 2, y: y + h / 2, w: w / 2, h: h / 2 }, capacity)
+      new Quadtree({ x, y, w, h }, capacity),
+      new Quadtree({ x: x + w, y, w, h }, capacity),
+      new Quadtree({ x, y: y + h, w, h }, capacity),
+      new Quadtree({ x: x + w, y: y + h, w, h }, capacity)
     ]
 
-    this.divided = true
     for (const agent of this.agents) this.insert(agent)
-    this.agents = []
+    delete this.agents
   }
 
   query(range, found = []) {
@@ -1533,12 +1555,7 @@ class CollisionDetector {
     const nearbyAgents = this.quadtree.query(searchBounds)
 
     for (const agent of nearbyAgents) {
-      if (
-        x < agent.x + agent.shape.width &&
-        x + width > agent.x &&
-        y < agent.y + agent.shape.height &&
-        y + height > agent.y
-      ) {
+      if (x < agent.x + agent.width && x + width > agent.x && y < agent.y + agent.height && y + height > agent.y) {
         return false
       }
     }
@@ -1598,14 +1615,7 @@ class CollisionDetector {
     const nearbyAgents = this.quadtree.query(queryBounds)
 
     for (const agent of nearbyAgents) {
-      if (
-        queryBounds.x < agent.x + agent.shape.width &&
-        queryBounds.x + queryBounds.w > agent.x &&
-        queryBounds.y < agent.y + agent.shape.height &&
-        queryBounds.y + queryBounds.h > agent.y
-      ) {
-        collidingAgents.push(agent)
-      }
+      if (queryBounds.intersects(agent)) collidingAgents.push(agent)
     }
 
     return collidingAgents
@@ -1616,10 +1626,10 @@ class CollisionDetector {
 
     for (const agentA of this.agents) {
       const searchBounds = new Bounds(
-        agentA.x - agentA.shape.width,
-        agentA.y - agentA.shape.height,
-        agentA.shape.width * 2,
-        agentA.shape.height * 2
+        agentA.x - agentA.width,
+        agentA.y - agentA.height,
+        agentA.width * 2,
+        agentA.height * 2
       )
       const nearbyAgents = this.quadtree.query(searchBounds)
       for (const agentB of nearbyAgents) {
@@ -1630,9 +1640,7 @@ class CollisionDetector {
   }
 
   checkCollision(a, b) {
-    return (
-      a.x < b.x + b.shape.width && a.x + a.shape.width > b.x && a.y < b.y + b.shape.height && a.y + a.shape.height > b.y
-    )
+    return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y
   }
 }
 
@@ -1713,10 +1721,6 @@ const Categories = new TreeNode(`🦠 Epidemiology
  basketball
 💰 Business
  startupIdeas
-👾 Game of Life
- gameOfLife
- gospersGliderGun
- gameOfLifeAdvanced
 🦋 Biology
  moths
 🕹 Games
@@ -2350,7 +2354,6 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
     const previousTick = maxTick - 2
     this.pauseAllCommand()
     if (previousTick < 0) return
-    if (!this.isSnapshotOn) this.snapShotCommand()
     this.loadNewSim(this.simCode)
     this.boards.forEach(board => board.skipToThisManyTicksIfNotPaused(previousTick))
     console.log(`Running to tick ${previousTick} from ${maxTick}`)
@@ -2507,11 +2510,11 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
 
   selection = []
 
-  moveSelection(direction) {
+  moveSelection(x, y) {
     const { selection } = this
     if (!selection.length) return this
     selection.forEach(node => {
-      node.angle = direction
+      node.direction = { x, y }
       node._move()
     })
 
@@ -2579,10 +2582,10 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
       o: () => this.openReportInOhayoCommand(),
       r: () => this.resetAllCommand(),
       s: () => this.snapShotCommand(),
-      up: () => this.moveSelection(Directions.North),
-      down: () => this.moveSelection(Directions.South),
-      right: () => this.moveSelection(Directions.East),
-      left: () => this.moveSelection(Directions.West),
+      up: () => this.moveSelection(0, -1),
+      down: () => this.moveSelection(0, 1),
+      right: () => this.moveSelection(1, 0),
+      left: () => this.moveSelection(-1, 0),
       escape: () => this.clearSelectionCommand(),
       "command+a": () => this.selectAllCommand(),
       "?": () => this.toggleHelpCommand(),
@@ -2715,8 +2718,6 @@ Keywords.report = "report"
 Keywords.ticksPerSecond = "ticksPerSecond"
 Keywords.style = "style"
 
-Keywords.onNeighbors = "onNeighbors"
-Keywords.onTouch = "onTouch"
 Keywords.onHit = "onHit"
 Keywords.onTick = "onTick"
 Keywords.onDeath = "onDeath"
@@ -2735,13 +2736,6 @@ UrlKeys.simoji = "simoji"
 UrlKeys.example = "example"
 UrlKeys.url = "url"
 
-const Directions = {}
-
-Directions.North = "North"
-Directions.East = "East"
-Directions.South = "South"
-Directions.West = "West"
-
 const ParserTypes = {}
 
 ParserTypes.agentDefinitionParser = "agentDefinitionParser"
@@ -2754,8 +2748,6 @@ window.Keywords = Keywords
 window.LocalStorageKeys = LocalStorageKeys
 
 window.UrlKeys = UrlKeys
-
-window.Directions = Directions
 
 window.ParserTypes = ParserTypes
 

@@ -5,12 +5,6 @@ const { TestRacer } = require("jtree/products/TestRacer.js")
 
 const testTree = {}
 
-// Slow is smooth and smooth is fast.
-// Todo:
-// - Write every test case imaginable.
-// - Have this handle neighbors, collissions, and touching
-// - Keep in mind that in the future it may not
-// - Consider a linear algebra, layer approach?
 class MockWorld {
 	constructor(width, height) {
 		this.width = width
@@ -25,6 +19,14 @@ class MockAgent {
 		this.y = position.y
 		this.width = position.width
 		this.height = position.height
+	}
+
+	get w() {
+		return this.width
+	}
+
+	get h() {
+		return this.height
 	}
 }
 
@@ -98,7 +100,7 @@ testTree.big = areEqual => {
 	]
 	const collisionDetector = new CollisionDetector(agents, world.width, world.height)
 	const collidingAgents = collisionDetector.getCollidingAgents(45, 45, 30, 30)
-	areEqual(collidingAgents.length, 3) // Should return an array containing the agents 1 and 2, as they collide with the specified rectangle
+	areEqual(collidingAgents.length, 2) // Should return an array containing the agents 1 and 2, as they collide with the specified rectangle
 }
 
 if (!module.parent) TestRacer.testSingleFile(__filename, testTree)

@@ -20,6 +20,12 @@
 
 
 
+
+
+
+
+
+
 anyCell
 booleanCell
 stringCell
@@ -92,6 +98,10 @@ spawnCommandParser
  extends abstractCommandParser
  cells keywordCell emojiCell
  catchAllCellType positionCell
+emitCommandParser
+ crux emit
+ extends abstractCommandParser
+ cells keywordCell emojiCell
 removeCommandParser
  description Remove this agent from the board.
  crux remove
@@ -134,6 +144,9 @@ growCommandParser
 shrinkCommandParser
  extends abstractCommandParser
  crux shrink
+pulseCommandParser
+ extends abstractCommandParser
+ crux pulse
 learnCommandParser
  crux learn
  extends abstractCommandParser
@@ -359,16 +372,6 @@ blankLineParser
  cells blankCell
  pattern ^$
 abstractInjectCommandParser
-fillParser
- description Fill all blank cells with this agent.
- extends abstractInjectCommandParser
- cells keywordCell emojiCell
- cruxFromId
-drawParser
- extends abstractInjectCommandParser
- cells keywordCell
- cruxFromId
- catchAllParser drawLineParser
 insertParser
  extends abstractInjectCommandParser
  cells keywordCell integerOrPercentCell emojiCell
@@ -382,8 +385,20 @@ insertClusterParser
  extends insertParser
  cruxFromId
  catchAllCellType integerCell
+fillParser
+ description Fill all blank cells with this agent.
+ extends abstractInjectCommandParser
+ cells keywordCell emojiCell
+ cruxFromId
+drawParser
+ extends abstractInjectCommandParser
+ cells keywordCell
+ cruxFromId
+ catchAllParser drawLineParser
 rectangleDrawParser
  extends abstractInjectCommandParser
+ example
+  rectangle 🙂 width height x y 🙂
  cells keywordCell emojiCell integerCell integerCell
  catchAllCellType integerCell
  crux rectangle
@@ -414,15 +429,6 @@ onHitParser
  extends abstractInteractionEventParser
  cruxFromId
  description Define what happens when this agent collides with other agents.
-onTouchParser
- extends abstractInteractionEventParser
- cruxFromId
- description Define what happens when this agent is adjacent to other agents.
-onNeighborsParser
- description Define what happens when a certain amount of neighbors are nearby.
- extends abstractInteractionEventParser
- inScope emojiAndNeighborConditionParser
- cruxFromId
 onDeathParser
  extends abstractEventParser
  cruxFromId

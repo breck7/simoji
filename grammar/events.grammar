@@ -15,11 +15,6 @@ onHitParser
  extends abstractInteractionEventParser
  cruxFromId
  description Define what happens when this agent collides with other agents.
-onNeighborsParser
- description Define what happens when a certain amount of neighbors are nearby.
- extends abstractInteractionEventParser
- inScope emojiAndNeighborConditionParser
- cruxFromId
 onDeathParser
  extends abstractEventParser
  cruxFromId

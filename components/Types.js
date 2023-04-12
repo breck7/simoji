@@ -8,7 +8,6 @@ Keywords.report = "report"
 Keywords.ticksPerSecond = "ticksPerSecond"
 Keywords.style = "style"
 
-Keywords.onNeighbors = "onNeighbors"
 Keywords.onHit = "onHit"
 Keywords.onTick = "onTick"
 Keywords.onDeath = "onDeath"

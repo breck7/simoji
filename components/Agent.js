@@ -161,25 +161,6 @@ class Agent extends TreeNode {
     return this.setLine([this.firstWord, newPosition.x, newPosition.y].join(" "))
   }
 
-  handleNeighbors() {
-    if (!this.stillExists) return
-
-    this.getCommandBlocks(Keywords.onNeighbors).forEach(neighborConditions => {
-      if (this.skip(neighborConditions.getWord(1))) return
-
-      const { neighorCount } = this
-
-      neighborConditions.forEach(conditionAndCommandsBlock => {
-        const [emoji, operator, count] = conditionAndCommandsBlock.words
-        const actual = neighorCount[emoji]
-        if (!yodash.compare(actual ?? 0, operator, count)) return
-        conditionAndCommandsBlock.forEach(command => this._executeCommand(this, command))
-
-        if (this.getIndex() === -1) return {}
-      })
-    })
-  }
-
   handleCollisions(targetAgents) {
     if (!this.stillExists) return
     this.getCommandBlocks(Keywords.onHit).forEach(hitMap => {

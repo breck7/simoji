@@ -154,8 +154,6 @@ class BoardComponent extends AbstractTreeComponentParser {
 
     this.clearCollisionDetector()
     this.handleCollisions()
-    //    this.handleNeighbors()
-
     this.executeBoardCommands(Keywords.onTick)
     this.handleExtinctions()
 
@@ -274,16 +272,23 @@ class BoardComponent extends AbstractTreeComponentParser {
   rectangleDrawParser(commandNode) {
     // todo: need a typed words method in jtree
     // rectangle 🙂 width height x y 🙂
-    const [command, symbol, width, height, x, y, fillSymbol, spacing] = commandNode.words
-    const newLines = this.makeRectangle(
-      symbol,
-      parseInt(width),
-      parseInt(height),
-      parseInt(x),
-      parseInt(y),
+    const [command, agentSymbol, width, height, x, y, fillSymbol, spacing] = commandNode.words
+
+    const { agentWidth, agentHeight } = this.getAgentHeightAndWidth(agentSymbol)
+
+    const options = {
+      agentSymbol,
+      width: parseInt(width),
+      height: parseInt(height),
+      x: x ? parseInt(x) : 0,
+      y: y ? parseInt(y) : 0,
       fillSymbol,
-      spacing ? parseInt(spacing) : 0
-    )
+      spacing,
+      agentHeight,
+      agentWidth
+    }
+
+    const newLines = this.makeRectangle(options)
     this.concat(newLines)
     this.clearCollisionDetector()
   }
@@ -383,11 +388,6 @@ class BoardComponent extends AbstractTreeComponentParser {
       agentA.handleCollisions([agentB])
       agentB.handleCollisions([agentA])
     })
-  }
-
-  // YY
-  handleNeighbors() {
-    this.agents.forEach(node => node.handleNeighbors())
   }
 
   get boardIndex() {
@@ -574,13 +574,14 @@ class BoardComponent extends AbstractTreeComponentParser {
     return output.join("\n")
   }
 
-  makeRectangle(agentSymbol = "🧱", width = 20, height = 20, x = 0, y = 0, fillSymbol = false, spacing = 0) {
+  makeRectangle(options) {
+    const { width, height, agentSymbol, x, y, fillSymbol, spacing, agentHeight, agentWidth } = options
+
     if (width < 1 || height < 1) return ""
 
     if (isNaN(x)) x = 20
     if (isNaN(y)) y = 20
 
-    const { agentWidth, agentHeight } = this.getAgentHeightAndWidth(agentSymbol)
     const cells = []
     let row = 0
     while (row < height) {
