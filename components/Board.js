@@ -365,7 +365,6 @@ class BoardComponent extends AbstractTreeComponentParser {
     return this._collisionDetector
   }
 
-  // YY
   handleCollisions() {
     const collisions = this.collisionDetector.detectCollisions()
     collisions.forEach(collision => {
@@ -494,16 +493,6 @@ class BoardComponent extends AbstractTreeComponentParser {
     return this.collisionDetector.getCollidingAgents(x, y, width, height)
   }
 
-  // ZZZ
-  objectsTouching(rect) {
-    const { position, agentSize } = rect
-    const targets = []
-    for (let pos of this.positionsAdjacentToRect(position.right, position.down, agentSize)) {
-      this.objectsCollidingWith(pos.right, pos.down, agentSize).forEach(item => targets.push(item))
-    }
-    return targets
-  }
-
   _solidCollisionDetector
   get solidCollisionDetector() {
     if (!this._solidCollisionDetector)
@@ -522,7 +511,6 @@ class BoardComponent extends AbstractTreeComponentParser {
     return true
   }
 
-  // ZZZ
   get collidingAgents() {
     const agents = this.agents
     const collidingAgents = []
@@ -556,11 +544,20 @@ class BoardComponent extends AbstractTreeComponentParser {
   draw(str) {
     const lines = str.split("\n")
     const output = []
+    let agentWidth
+    let agentHeight
     for (let index = 0; index < lines.length; index++) {
       const words = lines[index].split(" ")
       for (let wordIndex = 0; wordIndex < words.length; wordIndex++) {
-        const word = words[wordIndex]
-        if (word !== "") output.push(`${word} ${this.makePositionHash({ y: index, x: wordIndex })}`)
+        const agentSymbol = words[wordIndex]
+        if (agentSymbol && !agentWidth) {
+          // Draw assumes everything being drawn is a square with sides N.
+          agentWidth = this.getAgentHeightAndWidth(agentSymbol).agentWidth
+          agentHeight = agentWidth
+        }
+
+        if (agentSymbol !== "")
+          output.push(`${agentSymbol} ${this.makePositionHash({ y: index * agentHeight, x: wordIndex * agentHeight })}`)
       }
     }
     return output.join("\n")
