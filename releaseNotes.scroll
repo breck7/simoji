@@ -4,6 +4,11 @@ startColumns
 
 * Here's a list of the notable changes in Simoji.
 
+# 3.0.0 4-12-2023
+* A big rewrite to a new grid system.
+- 🎉 new collision engine and coordinate system. agents can change size and move in any direction (unit vectors over cardinality).
+- ⚠️ breaking: "neighbors" concept is gone. game of life demos removed. use old version to use those.
+
 # 2.0.0 07-30-2021
 - 🎉 fill command
 - 🎉 kickIt behaves a little smarter

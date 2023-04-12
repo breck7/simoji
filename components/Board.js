@@ -283,7 +283,7 @@ class BoardComponent extends AbstractTreeComponentParser {
       x: x ? parseInt(x) : 0,
       y: y ? parseInt(y) : 0,
       fillSymbol,
-      spacing,
+      spacing: spacing || 0,
       agentHeight,
       agentWidth
     }
