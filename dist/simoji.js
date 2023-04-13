@@ -1703,94 +1703,6 @@ window.EditorHandleComponent = EditorHandleComponent
 
 
 
-const ExampleSims = new TreeNode()
-
-// prettier-ignore
-
-window.ExampleSims = ExampleSims
-
-
-
-
-
-
-
-
-
-const Categories = new TreeNode(`🦠 Epidemiology
- virus
- covid19
-🌲 Forests
- fire
- fireAdvanced
-⚽️ Sports
- soccer
- pong
- basketball
-💰 Business
- startupIdeas
-🦋 Biology
- moths
-🕹 Games
- zombies`)
-
-class ExampleMenuComponent extends AbstractContextMenuComponent {
-  getContextMenuBodyStumpCode() {
-    const icon = this.getWord(1)
-    const category = Categories.getNode(icon)
-
-    return category
-      .map(node => {
-        const name = node.firstWord
-        const program = ExampleSims.getNode(name)
-        const icon = program.childrenToString().match(/(\p{Extended_Pictographic}+)/u)[1]
-        const properName = Utils.ucfirst(name)
-        return `a ${icon}  &nbsp; ${properName}
- clickCommand loadExampleCommand ${name}
- class ExampleButton`
-      })
-      .join("\n")
-  }
-
-  // Align these to below and to the left of the clicked button
-  top = 28
-  get left() {
-    const evt = this.root.getMouseEvent()
-    return evt.clientX - evt.offsetX
-  }
-}
-
-class ExamplesComponent extends AbstractTreeComponentParser {
-  toStumpCode() {
-    const categories = Categories.map(category => {
-      const icon = category.firstWord
-      const name = category.content
-      const firstFile = category.nodeAt(0).firstWord
-      return ` a ${icon}
-  href index.html#example%20${firstFile}
-  title ${name}
-  clickCommand openCategoryCommand ${icon}`
-    }).join("\n")
-    return `div
- class ${ExamplesComponent.name}
-${categories}`
-  }
-
-  async openCategoryCommand(icon) {
-    const root = this.root
-    const category = Categories.getNode(icon)
-    const firstFile = category.nodeAt(0).firstWord
-    this.root.toggleAndRender(`${ExampleMenuComponent.name} ${icon}`)
-  }
-}
-
-window.ExamplesComponent = ExamplesComponent
-
-window.ExampleMenuComponent = ExampleMenuComponent
-
-
-
-
 class GridComponent extends AbstractTreeComponentParser {
   gridClickCommand(x, y) {
     return this.parent.insertAgentAtCommand(x, y)
@@ -1881,6 +1793,73 @@ class HelpModalComponent extends AbstractModalTreeComponent {
 }
 
 window.HelpModalComponent = HelpModalComponent
+
+
+
+
+
+
+
+
+// 🦠 Epidemiology
+//  virus
+//  covid19
+// 🌲 Forests
+//  fire
+//  fireAdvanced
+// ⚽️ Sports
+//  soccer
+//  pong
+//  basketball
+// 💰 Business
+//  startupIdeas
+// 🦋 Biology
+//  moths
+// 🕹 Games
+//  zombies
+
+class OpenMenuDropDownComponent extends AbstractContextMenuComponent {
+  getContextMenuBodyStumpCode() {
+    const fileSystem = this.root.fileSystem
+    const files = fileSystem.list("/")
+
+    return Object.keys(files)
+      .map(name => {
+        const program = fileSystem.read(name)
+        const icon = `A` // program.childrenToString().match(/(\p{Extended_Pictographic}+)/u)[1]
+        const properName = Utils.ucfirst(name)
+        return `a ${icon}  &nbsp; ${properName}
+ clickCommand openFileCommand ${name}
+ class ExampleButton`
+      })
+      .join("\n")
+  }
+
+  // Align these to below and to the left of the clicked button
+  top = 28
+  get left() {
+    const evt = this.root.getMouseEvent()
+    return evt.clientX - evt.offsetX
+  }
+}
+
+class OpenMenuButtonComponent extends AbstractTreeComponentParser {
+  toStumpCode() {
+    return `div
+ class ${OpenMenuButtonComponent.name}
+ a 📂
+  title Open
+  clickCommand openCategoryCommand`
+  }
+
+  async openCategoryCommand() {
+    this.root.toggleAndRender(`${OpenMenuDropDownComponent.name}`)
+  }
+}
+
+window.OpenMenuButtonComponent = OpenMenuButtonComponent
+
+window.OpenMenuDropDownComponent = OpenMenuDropDownComponent
 
 
 
@@ -2020,7 +1999,6 @@ class SimEditorComponent extends AbstractTreeComponentParser {
     this._code = code
     const root = this.root
     root.pauseAllCommand()
-    // this._updateLocalStorage()
 
     this.program = new simojiParser(code)
     const errs = this.program.getAllErrors()
@@ -2055,12 +2033,8 @@ class SimEditorComponent extends AbstractTreeComponentParser {
 
     clearTimeout(this._timeout)
     this._timeout = setTimeout(() => {
-      this.loadFromEditor()
+      this.root.loadAndSaveCodeCommand(this._code)
     }, 200)
-  }
-
-  loadFromEditor() {
-    this.root.loadNewSim(this._code)
   }
 
   get simCode() {
@@ -2144,7 +2118,6 @@ window.SimEditorComponent = SimEditorComponent
 
 
 
-
 // prettier-ignore
 
 class githubTriangleComponent extends AbstractTreeComponentParser {
@@ -2192,13 +2165,13 @@ class SimojiApp extends AbstractTreeComponentParser {
       RightBarComponent,
       EditorHandleComponent,
       TitleComponent,
-      ExampleMenuComponent
+      OpenMenuDropDownComponent
     })
   }
 
   resetAllCommand() {
     const restart = this.isRunning
-    this.loadNewSim(this.simCode)
+    this.loadAndSaveCodeCommand(this.simCode)
     if (restart) this.startAllIntervals()
   }
 
@@ -2242,7 +2215,7 @@ class SimojiApp extends AbstractTreeComponentParser {
   }
 
   closeAllContextMenus() {
-    this.filter(node => node instanceof ExampleMenuComponent).forEach(node => node.unmountAndDestroy())
+    this.filter(node => node instanceof OpenMenuDropDownComponent).forEach(node => node.unmountAndDestroy())
   }
 
   _onCommandWillRun() {
@@ -2273,23 +2246,37 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
 
   onSourceCodeChange(newCode) {
     this.editor.setCodeMirrorValue(newCode.toString())
-    this.updateLocalStorage(newCode)
+    this.saveFileCommand(newCode)
   }
 
-  loadExampleCommand(name) {
+  initFileSystem(obj) {
+    this.fileSystem = new TreeFileSystem(obj)
+  }
+
+  openFile = ""
+
+  openFileCommand(filepath) {
     const restart = this.isRunning
-    const simCode = ExampleSims.getNode(name).childrenToString()
+    this.openFile = filepath
+    const simCode = this.fileSystem.read(filepath) //  ExampleSims.getNode(name).childrenToString()
     this.editor.setCodeMirrorValue(simCode)
-    this.loadNewSim(simCode)
+    this.loadAndSaveCodeCommand(simCode)
     if (restart) this.startAllIntervals()
     this.willowBrowser.setHash("")
+  }
+
+  saveFileCommand(code, filepath = this.openFile) {
+    this.fileSystem.write(filepath, code)
+    if (this.isNodeJs()) return // todo: tcf should shim this
+    localStorage.setItem(LocalStorageKeys.fileSystem, JSON.stringify(this.fileSystem._storage.inMemoryFiles)) // todo: create API for this.
+    console.log("Local storage updated...")
   }
 
   get simCode() {
     return this.editor.simCode
   }
 
-  loadNewSim(simCode) {
+  loadAndSaveCodeCommand(simCode) {
     this.stopAllIntervals()
     this.boards.forEach(board => board.unmountAndDestroy())
 
@@ -2298,19 +2285,13 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
 
     this.appendExperiments()
     this.renderAndGetRenderReport()
-    this.updateLocalStorage(simCode)
+    this.saveFileCommand(simCode)
   }
 
   // todo: cleanup
   pasteCodeCommand(simCode) {
     this.editor.setCodeMirrorValue(simCode)
-    this.loadNewSim(simCode)
-  }
-
-  updateLocalStorage(simCode) {
-    if (this.isNodeJs()) return // todo: tcf should shim this
-    localStorage.setItem(LocalStorageKeys.simoji, simCode)
-    console.log("Local storage updated...")
+    this.loadAndSaveCodeCommand(simCode)
   }
 
   dumpErrorsCommand() {
@@ -2362,7 +2343,7 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
     const previousTick = maxTick - 2
     this.pauseAllCommand()
     if (previousTick < 0) return
-    this.loadNewSim(this.simCode)
+    this.loadAndSaveCodeCommand(this.simCode)
     this.boards.forEach(board => board.skipToThisManyTicksIfNotPaused(previousTick))
     console.log(`Running to tick ${previousTick} from ${maxTick}`)
   }
@@ -2558,7 +2539,7 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
     })
 
     this.editor.setCodeMirrorValue(newCode.toString())
-    this.updateLocalStorage(newCode)
+    this.saveFileCommand(newCode)
   }
 
   async toggleHelpCommand() {
@@ -2623,7 +2604,7 @@ SIZES.TITLE_HEIGHT = 20
 SIZES.EDITOR_WIDTH = 250
 SIZES.RIGHT_BAR_WIDTH = 30
 
-SimojiApp.setupApp = (simojiCode, windowWidth = 1000, windowHeight = 1000) => {
+SimojiApp.setupApp = (fileSystem, filePath, windowWidth = 1000, windowHeight = 1000) => {
   const editorStartWidth =
     typeof localStorage !== "undefined"
       ? localStorage.getItem(LocalStorageKeys.editorStartWidth) ?? SIZES.EDITOR_WIDTH
@@ -2632,7 +2613,7 @@ SimojiApp.setupApp = (simojiCode, windowWidth = 1000, windowHeight = 1000) => {
 ${TopBarComponent.name}
  ${LogoComponent.name}
  ${ShareComponent.name}
- ${ExamplesComponent.name}
+ ${OpenMenuButtonComponent.name}
 ${BottomBarComponent.name}
  ${ResetButtonComponent.name}
  ${PlayButtonComponent.name}
@@ -2641,11 +2622,11 @@ ${RightBarComponent.name}
  ${AgentPaletteComponent.name}
 ${SimEditorComponent.name} ${editorStartWidth} ${SIZES.CHROME_HEIGHT}
  value
-  ${simojiCode.replace(/\n/g, "\n  ")}
 ${EditorHandleComponent.name}
 ${TitleComponent.name}`)
 
   const app = new SimojiApp(startState.toString())
+  app.initFileSystem(fileSystem, filePath)
   app.windowWidth = windowWidth
   app.windowHeight = windowHeight
   app.appendExperiments()
@@ -2693,7 +2674,7 @@ class TopBarComponent extends AbstractTreeComponentParser {
     return new TreeNode.ParserCombinator(undefined, {
       LogoComponent,
       ShareComponent,
-      ExamplesComponent
+      OpenMenuButtonComponent
     })
   }
 }
@@ -2735,7 +2716,7 @@ Keywords.question = "question"
 
 const LocalStorageKeys = {}
 
-LocalStorageKeys.simoji = "simoji"
+LocalStorageKeys.fileSystem = "fileSystem"
 LocalStorageKeys.editorStartWidth = "editorStartWidth"
 
 const UrlKeys = {}
@@ -2759,8 +2740,6 @@ window.UrlKeys = UrlKeys
 
 window.ParserTypes = ParserTypes
 
-
-const DEFAULT_SIM = "fire"
 
 
 
@@ -2791,30 +2770,34 @@ class BrowserGlue extends AbstractTreeComponentParser {
     const simojiCode = deepLink.getNode(UrlKeys.simoji)
 
     if (fromUrl) return this.fetchAndLoadSimCodeFromUrlCommand(fromUrl)
-    if (example) return this.getExample(example)
+    // if (example)
+    //   return ExampleSims.has(example)
+    //     ? ExampleSims.getNode(example).childrenToString()
+    //     : `comment Example '${example}' not found.`
     if (simojiCode) return simojiCode.childrenToString()
 
     const localStorageCode = this.getFromLocalStorage()
     if (localStorageCode) return localStorageCode
 
-    return this.getExample(DEFAULT_SIM)
+    return ""
+    // return ExampleSims.getNode("fire").childrenToString()
   }
 
   getExample(id) {
-    return ExampleSims.has(id) ? ExampleSims.getNode(id).childrenToString() : `comment Example '${id}' not found.`
+    return
   }
 
   async fetchSimGrammarAndExamplesAndInit() {
     const grammar = await fetch("dist/simoji.grammar")
     const grammarCode = await grammar.text()
 
-    const result = await fetch("examples")
+    const result = await fetch("files")
     return this.init(grammarCode, await result.text())
   }
 
-  async init(grammarCode, theExamples) {
+  async init(grammarCode, files) {
     window.simojiParser = new HandGrammarProgram(grammarCode).compileAndReturnRootParser()
-    ExampleSims.setChildren(theExamples)
+    // ExampleSims.setChildren(theExamples)
 
     const simCode = await this.fetchSimCode()
 

@@ -45,7 +45,6 @@ class SimEditorComponent extends AbstractTreeComponentParser {
     this._code = code
     const root = this.root
     root.pauseAllCommand()
-    // this._updateLocalStorage()
 
     this.program = new simojiParser(code)
     const errs = this.program.getAllErrors()
@@ -80,12 +79,8 @@ class SimEditorComponent extends AbstractTreeComponentParser {
 
     clearTimeout(this._timeout)
     this._timeout = setTimeout(() => {
-      this.loadFromEditor()
+      this.root.loadAndSaveCodeCommand(this._code)
     }, 200)
-  }
-
-  loadFromEditor() {
-    this.root.loadNewSim(this._code)
   }
 
   get simCode() {

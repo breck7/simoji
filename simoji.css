@@ -217,7 +217,7 @@ body {
 	border-radius: 3px;
 }
 
-.ExamplesComponent {
+.OpenMenuButtonComponent {
 	padding-left: 10px;
 	display: inline-block;
 }
@@ -226,13 +226,14 @@ body {
 	cursor: pointer;
 }
 
-.ExamplesComponent a {
+.OpenMenuButtonComponent a {
 	text-decoration: none;
 	display: inline-block;
 	text-align: center;
 	width: 30px;
+	cursor: pointer;
 }
-.ExamplesComponent a:hover,
+.OpenMenuButtonComponent a:hover,
 .LogoComponent:hover,
 .ExampleButton:hover {
 	background-color: rgba(255, 255, 255, 0.2);

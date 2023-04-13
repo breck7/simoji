@@ -1,6 +1,5 @@
 const { TreeNode } = require("jtree/products/TreeNode.js")
 const { HandGrammarProgram } = require("jtree/products/GrammarLanguage.js")
-const { ExampleSims } = require("./components/ExampleSims.js")
 const { AbstractTreeComponentParser } = require("jtree/products/TreeComponentFramework.node.js")
 const { LocalStorageKeys, UrlKeys } = require("./components/Types.js")
 
@@ -28,35 +27,38 @@ class BrowserGlue extends AbstractTreeComponentParser {
     const simojiCode = deepLink.getNode(UrlKeys.simoji)
 
     if (fromUrl) return this.fetchAndLoadSimCodeFromUrlCommand(fromUrl)
-    if (example) return this.getExample(example)
+    // if (example)
+    //   return ExampleSims.has(example)
+    //     ? ExampleSims.getNode(example).childrenToString()
+    //     : `comment Example '${example}' not found.`
     if (simojiCode) return simojiCode.childrenToString()
 
     const localStorageCode = this.getFromLocalStorage()
     if (localStorageCode) return localStorageCode
 
-    const DEFAULT_SIM = "fire"
-    return this.getExample(DEFAULT_SIM)
+    return ""
+    // return ExampleSims.getNode("fire").childrenToString()
   }
 
   getExample(id) {
-    return ExampleSims.has(id) ? ExampleSims.getNode(id).childrenToString() : `comment Example '${id}' not found.`
+    return
   }
 
   async fetchSimGrammarAndExamplesAndInit() {
     const grammar = await fetch("dist/simoji.grammar")
     const grammarCode = await grammar.text()
 
-    const result = await fetch("examples")
+    const result = await fetch("files")
     return this.init(grammarCode, await result.text())
   }
 
-  async init(grammarCode, theExamples) {
+  async init(grammarCode, files) {
     window.simojiParser = new HandGrammarProgram(grammarCode).compileAndReturnRootParser()
-    ExampleSims.setChildren(theExamples)
+    // ExampleSims.setChildren(theExamples)
 
-    const simCode = await this.fetchSimCode()
+    // const simCode = await this.fetchSimCode()
 
-    window.app = SimojiApp.setupApp(simCode, window.innerWidth, window.innerHeight)
+    window.app = SimojiApp.setupApp(JSON.parse(files), "", window.innerWidth, window.innerHeight)
     window.app.start()
     return window.app
   }

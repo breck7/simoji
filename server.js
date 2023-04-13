@@ -5,10 +5,17 @@ const express = require("express")
 const { Disk } = require("jtree/products/Disk.node.js")
 const { readFile } = require("fs")
 const { TypeScriptRewriter } = require("jtree/products/TypeScriptRewriter.js")
-const { getExamples } = require("./examples")
 const grammarParser = require("jtree/products/grammar.nodejs.js")
 
 class Server {
+  get files() {
+    const files = {}
+    Disk.getFiles(path.join(__dirname, "examples")).forEach(filepath => {
+      files[filepath] = Disk.read(filepath)
+    })
+    return files
+  }
+
   start(port = 80) {
     const app = express()
 
@@ -26,23 +33,13 @@ class Server {
       })
     })
 
-    app.get("/examples", (req, res) => {
-      res.send(getExamples())
-    })
+    app.get("/files", (req, res) => res.send(JSON.stringify(this.files, null, 2)))
 
-    app.get("/examples", (req, res) => {
-      res.send(getExamples())
-    })
-
-    app.get("/dist/simoji.grammar", (req, res) => {
-      res.send(this.grammar)
-    })
+    app.get("/dist/simoji.grammar", (req, res) => res.send(this.grammar))
 
     app.use(express.static(__dirname + "/"))
 
-    app.listen(port, () => {
-      console.log(`Running Simoji Dev Server. cmd+dblclick: http://localhost:${port}/dev.html`)
-    })
+    app.listen(port, () => console.log(`Running Simoji Dev Server. cmd+dblclick: http://localhost:${port}/dev.html`))
   }
 
   get grammar() {

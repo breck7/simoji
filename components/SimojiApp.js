@@ -5,7 +5,6 @@
 const { TreeNode } = require("jtree/products/TreeNode.js")
 const { yodash } = require("../yodash")
 
-const { ExampleSims } = require("./ExampleSims.js")
 const { TopBarComponent, LogoComponent } = require("./TopBar.js")
 const { ShareComponent } = require("./Share.js")
 const { ResetButtonComponent } = require("./ResetButton.js")
@@ -15,7 +14,7 @@ const { AgentPaletteComponent } = require("./AgentPalette.js")
 const { GridComponent } = require("./Grid.js")
 const { SimEditorComponent } = require("./SimEditor.js")
 const { HelpModalComponent } = require("./HelpModal.js")
-const { ExampleMenuComponent, ExamplesComponent } = require("./Examples.js")
+const { OpenMenuDropDownComponent, OpenMenuButtonComponent } = require("./OpenMenu.js")
 const { BoardComponent } = require("./Board.js")
 const { BottomBarComponent } = require("./BottomBar.js")
 const { RightBarComponent } = require("./RightBar.js")
@@ -71,15 +70,13 @@ class SimojiApp extends AbstractTreeComponentParser {
       RightBarComponent,
       EditorHandleComponent,
       TitleComponent,
-      ExampleMenuComponent
+      OpenMenuDropDownComponent
     })
   }
 
-  fileSystem = new TreeFileSystem({})
-
   resetAllCommand() {
     const restart = this.isRunning
-    this.loadNewSim(this.simCode)
+    this.loadAndSaveCodeCommand(this.simCode)
     if (restart) this.startAllIntervals()
   }
 
@@ -123,7 +120,7 @@ class SimojiApp extends AbstractTreeComponentParser {
   }
 
   closeAllContextMenus() {
-    this.filter(node => node instanceof ExampleMenuComponent).forEach(node => node.unmountAndDestroy())
+    this.filter(node => node instanceof OpenMenuDropDownComponent).forEach(node => node.unmountAndDestroy())
   }
 
   _onCommandWillRun() {
@@ -154,23 +151,42 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
 
   onSourceCodeChange(newCode) {
     this.editor.setCodeMirrorValue(newCode.toString())
-    this.updateLocalStorage(newCode)
+    this.saveFileCommand(newCode)
   }
 
-  loadExampleCommand(name) {
+  initFileSystem(obj) {
+    this.fileSystem = new TreeFileSystem(obj)
+  }
+
+  openFile = ""
+
+  openFileCommand(filepath) {
     const restart = this.isRunning
-    const simCode = ExampleSims.getNode(name).childrenToString()
+    this.openFile = filepath
+    const simCode = this.fileSystem.read(filepath) //  ExampleSims.getNode(name).childrenToString()
     this.editor.setCodeMirrorValue(simCode)
-    this.loadNewSim(simCode)
+    this.loadAndSaveCodeCommand(simCode)
     if (restart) this.startAllIntervals()
     this.willowBrowser.setHash("")
+  }
+
+  saveFileCommand(code, filepath = this.openFile) {
+    this.fileSystem.write(filepath, code)
+    if (this.isNodeJs()) return // todo: tcf should shim this
+    localStorage.setItem(LocalStorageKeys.fileSystem, JSON.stringify(this.fileSystem._storage.inMemoryFiles)) // todo: create API for this.
+    console.log("Local storage updated...")
   }
 
   get simCode() {
     return this.editor.simCode
   }
 
-  loadNewSim(simCode) {
+  get simCodeAfterImports() {
+    if (this.openFile) return this.fileSystem.evaluateImports(this.openFile).afterImportPass
+    return ""
+  }
+
+  loadAndSaveCodeCommand(simCode) {
     this.stopAllIntervals()
     this.boards.forEach(board => board.unmountAndDestroy())
 
@@ -179,19 +195,13 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
 
     this.appendExperiments()
     this.renderAndGetRenderReport()
-    this.updateLocalStorage(simCode)
+    this.saveFileCommand(simCode)
   }
 
   // todo: cleanup
   pasteCodeCommand(simCode) {
     this.editor.setCodeMirrorValue(simCode)
-    this.loadNewSim(simCode)
-  }
-
-  updateLocalStorage(simCode) {
-    if (this.isNodeJs()) return // todo: tcf should shim this
-    localStorage.setItem(LocalStorageKeys.simoji, simCode)
-    console.log("Local storage updated...")
+    this.loadAndSaveCodeCommand(simCode)
   }
 
   dumpErrorsCommand() {
@@ -208,7 +218,7 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
   }
 
   get mainExperiment() {
-    return new simojiParser(this.simCode)
+    return new simojiParser(this.simCodeAfterImports)
   }
 
   get simojiPrograms() {
@@ -243,7 +253,7 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
     const previousTick = maxTick - 2
     this.pauseAllCommand()
     if (previousTick < 0) return
-    this.loadNewSim(this.simCode)
+    this.loadAndSaveCodeCommand(this.simCode)
     this.boards.forEach(board => board.skipToThisManyTicksIfNotPaused(previousTick))
     console.log(`Running to tick ${previousTick} from ${maxTick}`)
   }
@@ -439,7 +449,7 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
     })
 
     this.editor.setCodeMirrorValue(newCode.toString())
-    this.updateLocalStorage(newCode)
+    this.saveFileCommand(newCode)
   }
 
   async toggleHelpCommand() {
@@ -504,7 +514,7 @@ SIZES.TITLE_HEIGHT = 20
 SIZES.EDITOR_WIDTH = 250
 SIZES.RIGHT_BAR_WIDTH = 30
 
-SimojiApp.setupApp = (simojiCode, windowWidth = 1000, windowHeight = 1000) => {
+SimojiApp.setupApp = (fileSystem, filePath, windowWidth = 1000, windowHeight = 1000) => {
   const editorStartWidth =
     typeof localStorage !== "undefined"
       ? localStorage.getItem(LocalStorageKeys.editorStartWidth) ?? SIZES.EDITOR_WIDTH
@@ -513,7 +523,7 @@ SimojiApp.setupApp = (simojiCode, windowWidth = 1000, windowHeight = 1000) => {
 ${TopBarComponent.name}
  ${LogoComponent.name}
  ${ShareComponent.name}
- ${ExamplesComponent.name}
+ ${OpenMenuButtonComponent.name}
 ${BottomBarComponent.name}
  ${ResetButtonComponent.name}
  ${PlayButtonComponent.name}
@@ -522,11 +532,11 @@ ${RightBarComponent.name}
  ${AgentPaletteComponent.name}
 ${SimEditorComponent.name} ${editorStartWidth} ${SIZES.CHROME_HEIGHT}
  value
-  ${simojiCode.replace(/\n/g, "\n  ")}
 ${EditorHandleComponent.name}
 ${TitleComponent.name}`)
 
   const app = new SimojiApp(startState.toString())
+  app.initFileSystem(fileSystem, filePath)
   app.windowWidth = windowWidth
   app.windowHeight = windowHeight
   app.appendExperiments()

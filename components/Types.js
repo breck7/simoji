@@ -17,7 +17,7 @@ Keywords.question = "question"
 
 const LocalStorageKeys = {}
 
-LocalStorageKeys.simoji = "simoji"
+LocalStorageKeys.fileSystem = "fileSystem"
 LocalStorageKeys.editorStartWidth = "editorStartWidth"
 
 const UrlKeys = {}
