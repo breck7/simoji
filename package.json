@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "jquery": "^3.6.0",
-    "jtree": "^74.0.0",
+    "jtree": "^74.2.0",
     "lodash": "^4.17.21",
     "mathjs": "^9.4.4",
     "minimist": "^1.2.5",

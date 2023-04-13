@@ -1,4 +1,3 @@
-const DEFAULT_SIM = "fire"
 const { TreeNode } = require("jtree/products/TreeNode.js")
 const { HandGrammarProgram } = require("jtree/products/GrammarLanguage.js")
 const { ExampleSims } = require("./components/ExampleSims.js")
@@ -35,6 +34,7 @@ class BrowserGlue extends AbstractTreeComponentParser {
     const localStorageCode = this.getFromLocalStorage()
     if (localStorageCode) return localStorageCode
 
+    const DEFAULT_SIM = "fire"
     return this.getExample(DEFAULT_SIM)
   }
 

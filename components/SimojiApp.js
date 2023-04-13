@@ -1,5 +1,6 @@
 // prettier-ignore
 /*NODE_JS_ONLY*/ const { AbstractTreeComponentParser, TreeComponentFrameworkDebuggerComponent } = require("jtree/products/TreeComponentFramework.node.js")
+/*NODE_JS_ONLY*/ const { TreeFileSystem } = require("jtree/products/TreeFileSystem.js")
 
 const { TreeNode } = require("jtree/products/TreeNode.js")
 const { yodash } = require("../yodash")
@@ -73,6 +74,8 @@ class SimojiApp extends AbstractTreeComponentParser {
       ExampleMenuComponent
     })
   }
+
+  fileSystem = new TreeFileSystem({})
 
   resetAllCommand() {
     const restart = this.isRunning
