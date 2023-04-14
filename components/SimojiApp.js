@@ -154,10 +154,21 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
     this.saveFileCommand(newCode)
   }
 
-  initFileSystem(obj) {
-    this.fileSystem = new TreeFileSystem(obj)
+  initFileSystem(obj) {}
+
+  async fetchFiles() {
+    const result = await fetch(`files?dir=${this.currentDirectory}`)
+    const jsonFiles = await result.text()
+    this.fileSystem = new TreeFileSystem(JSON.parse(jsonFiles))
   }
 
+  newFileCommand() {
+    const newFilePath = this.currentDirectory + "untitled.simoji"
+    this.fileSystem.write(newFilePath, "") // do
+    this.openFileCommand(newFilePath)
+  }
+
+  currentDirectory = ""
   openFile = ""
 
   openFileCommand(filepath) {
@@ -168,6 +179,29 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
     this.loadAndSaveCodeCommand(simCode)
     if (restart) this.startAllIntervals()
     this.willowBrowser.setHash("")
+    localStorage.setItem(LocalStorageKeys.openFile, this.openFile)
+  }
+
+  nextAndPrevious(arr, item) {
+    const current = arr.indexOf(item)
+    const nextIndex = current + 1
+    const previousIndex = current - 1
+    return {
+      previous: arr[previousIndex] ?? arr[arr.length - 1],
+      next: arr[nextIndex] ?? arr[0]
+    }
+  }
+
+  get allFiles() {
+    return this.fileSystem.list(this.currentDirectory)
+  }
+
+  openNextFileCommand() {
+    return this.openFileCommand(this.nextAndPrevious(this.allFiles, this.openFile).next)
+  }
+
+  openPreviousFileCommand() {
+    return this.openFileCommand(this.nextAndPrevious(this.allFiles, this.openFile).previous)
   }
 
   saveFileCommand(code, filepath = this.openFile) {
@@ -287,6 +321,8 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
     })
 
     this._makeDocumentCopyableAndCuttable()
+    const openFile = localStorage.getItem(LocalStorageKeys.openFile)
+    if (openFile) this.openFileCommand(openFile)
   }
 
   _makeDocumentCopyableAndCuttable() {
@@ -487,6 +523,8 @@ ${styleNode ? styleNode.toString().replace("style", BoardStyleComponent.name) : 
       left: () => this.moveSelection(-1, 0),
       escape: () => this.clearSelectionCommand(),
       "command+a": () => this.selectAllCommand(),
+      pagedown: () => this.openNextFileCommand(),
+      pageup: () => this.openPreviousFileCommand(),
       "?": () => this.toggleHelpCommand(),
       ",": () => this.goBackOneTickCommand(),
       ".": () => this.advanceOneTickCommand(),
@@ -514,7 +552,7 @@ SIZES.TITLE_HEIGHT = 20
 SIZES.EDITOR_WIDTH = 250
 SIZES.RIGHT_BAR_WIDTH = 30
 
-SimojiApp.setupApp = (fileSystem, filePath, windowWidth = 1000, windowHeight = 1000) => {
+SimojiApp.setupApp = async (windowWidth = 1000, windowHeight = 1000) => {
   const editorStartWidth =
     typeof localStorage !== "undefined"
       ? localStorage.getItem(LocalStorageKeys.editorStartWidth) ?? SIZES.EDITOR_WIDTH
@@ -536,7 +574,7 @@ ${EditorHandleComponent.name}
 ${TitleComponent.name}`)
 
   const app = new SimojiApp(startState.toString())
-  app.initFileSystem(fileSystem, filePath)
+  await app.fetchFiles()
   app.windowWidth = windowWidth
   app.windowHeight = windowHeight
   app.appendExperiments()

@@ -108,6 +108,8 @@ pipeTable
  o|Open Reports
  c|Export CSV data
  d|Toggle Debugger
+ pagedown|Next file
+ pageup|Previous file
  Arrows|Move selection
  Backspace|Delete selection
 

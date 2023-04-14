@@ -48,17 +48,16 @@ class BrowserGlue extends AbstractTreeComponentParser {
     const grammar = await fetch("dist/simoji.grammar")
     const grammarCode = await grammar.text()
 
-    const result = await fetch("files")
-    return this.init(grammarCode, await result.text())
+    return this.init(grammarCode)
   }
 
-  async init(grammarCode, files) {
+  async init(grammarCode) {
     window.simojiParser = new HandGrammarProgram(grammarCode).compileAndReturnRootParser()
     // ExampleSims.setChildren(theExamples)
 
     // const simCode = await this.fetchSimCode()
 
-    window.app = SimojiApp.setupApp(JSON.parse(files), "", window.innerWidth, window.innerHeight)
+    window.app = await SimojiApp.setupApp(window.innerWidth, window.innerHeight)
     window.app.start()
     return window.app
   }

@@ -11,7 +11,7 @@ simojiParser
  extensions simoji
  description A Tree Language that compiles to a TreeComponentFramework app.
  root
- inScope abstractIgnoreParser abstractSetupParser abstractInjectCommandParser onTickParser onExtinctParser classDefinitionParser experimentParser settingDefinitionParser
+ inScope abstractIgnoreParser abstractSetupParser abstractInjectCommandParser onTickParser onExtinctParser classDefinitionParser experimentParser settingDefinitionParser importParser
  catchAllParser agentDefinitionParser
  compilesTo javascript
  example

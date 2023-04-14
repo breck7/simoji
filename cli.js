@@ -35,7 +35,7 @@ class SimojiCli {
     if (!Disk.exists(fullPath)) return this.log(`❌ file '${fullPath}' not found.`)
     this.log(`\n⏳ Running '${fullPath}'...\n`)
     const code = Disk.read(filename)
-    const app = SimojiApp.setupApp(code)
+    const app = SimojiApp.setupApp()
     app.verbose = false
     await app.runUntilPause()
   }

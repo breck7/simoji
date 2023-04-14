@@ -34,13 +34,13 @@ testTree.simGrammarErrors = areEqual => {
 }
 
 testTree.SimojiApp = areEqual => {
-  const app = SimojiApp.setupApp("")
+  const app = SimojiApp.setupApp()
   areEqual(!!app, true)
 }
 
 testTree.loadNewSim = async areEqual => {
   // Arrange
-  const app = SimojiApp.setupApp("")
+  const app = SimojiApp.setupApp()
   app.verbose = false
   await app.start()
 

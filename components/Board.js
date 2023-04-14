@@ -127,7 +127,7 @@ class BoardComponent extends AbstractTreeComponentParser {
     this.renderAndGetRenderReport()
     this.clearCollisionDetector()
 
-    const allCode = new TreeNode(root.simCode)
+    const allCode = new TreeNode(root.simCodeA)
     let targetNode = root.boards.length === 1 ? allCode : allCode.findNodes("experiment")[this.boardIndex]
 
     if (this.tick) targetNode = targetNode.appendLine(`atTime ${this.tick}`)
@@ -283,7 +283,7 @@ class BoardComponent extends AbstractTreeComponentParser {
       x: x ? parseInt(x) : 0,
       y: y ? parseInt(y) : 0,
       fillSymbol,
-      spacing: spacing || 0,
+      spacing: spacing ? parseInt(spacing) : 0,
       agentHeight,
       agentWidth
     }

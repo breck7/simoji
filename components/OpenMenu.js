@@ -24,12 +24,13 @@ const { AbstractTreeComponentParser } = require("jtree/products/TreeComponentFra
 class OpenMenuDropDownComponent extends AbstractContextMenuComponent {
   getContextMenuBodyStumpCode() {
     const fileSystem = this.root.fileSystem
-    const files = fileSystem.list("/Users/breck/simoji/examples/")
+    const files = this.root.allFiles
 
     return Object.values(files)
       .map(name => {
         const program = fileSystem.read(name)
-        const icon = new TreeNode(program).childrenToString().match(/(\p{Extended_Pictographic}+)/u)[1]
+        const picto = new TreeNode(program).childrenToString().match(/(\p{Extended_Pictographic}+)/u)
+        const icon = picto ? picto[1] : "?"
         const properName = Utils.ucfirst(name)
         return `a ${icon}  &nbsp; ${properName}
  clickCommand openFileCommand ${name}
@@ -50,12 +51,19 @@ class OpenMenuButtonComponent extends AbstractTreeComponentParser {
   toStumpCode() {
     return `div
  class ${OpenMenuButtonComponent.name}
+ a 📄
+  title New
+  clickCommand newFileCommand
  a 📂
   title Open
-  clickCommand openCategoryCommand`
+  clickCommand openOpenMenuCommand`
   }
 
-  async openCategoryCommand() {
+  async newFileCommand() {
+    this.root.newFileCommand()
+  }
+
+  async openOpenMenuCommand() {
     this.root.toggleAndRender(`${OpenMenuDropDownComponent.name}`)
   }
 }

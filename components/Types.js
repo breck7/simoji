@@ -18,6 +18,7 @@ Keywords.question = "question"
 const LocalStorageKeys = {}
 
 LocalStorageKeys.fileSystem = "fileSystem"
+LocalStorageKeys.openFile = "openFile"
 LocalStorageKeys.editorStartWidth = "editorStartWidth"
 
 const UrlKeys = {}

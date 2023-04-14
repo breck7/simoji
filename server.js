@@ -8,11 +8,11 @@ const { TypeScriptRewriter } = require("jtree/products/TypeScriptRewriter.js")
 const grammarParser = require("jtree/products/grammar.nodejs.js")
 
 class Server {
-  get files() {
+  getFiles(folder) {
     const files = {}
-    Disk.getFiles(path.join(__dirname, "examples")).forEach(filepath => {
-      files[filepath] = Disk.read(filepath)
-    })
+    Disk.getFiles(folder)
+      .filter(file => file.endsWith(".simoji"))
+      .forEach(filepath => (files[filepath] = Disk.read(filepath)))
     return files
   }
 
@@ -33,7 +33,9 @@ class Server {
       })
     })
 
-    app.get("/files", (req, res) => res.send(JSON.stringify(this.files, null, 2)))
+    app.get("/files", (req, res) =>
+      res.send(JSON.stringify(this.getFiles(req.query.dir || path.join(__dirname, "examples")), null, 2))
+    )
 
     app.get("/dist/simoji.grammar", (req, res) => res.send(this.grammar))
 
