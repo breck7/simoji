@@ -95,7 +95,7 @@ code
 # Tree Notation
 * Simoji the language is a Tree Language. There are no visible syntax characters. Indentation is used for parent/child relationships. Here is the grammar.
  https://treenotation.org Tree Language
- https://jtree.treenotation.org/designer#url%20https%3A%2F%2Fsimoji.pub%2Fdist%2Fsimoji.grammar grammar
+ https://jtree.treenotation.org/designer#url%20https%3A%2F%2Fsimoji.treenotation.org%2Fdist%2Fsimoji.grammar grammar
 
 # Keyboard shortcuts
 pipeTable
@@ -115,7 +115,7 @@ pipeTable
 * At the top of the page you should see a link that you can copy and paste to share your sim. When you update your simulation code that link will update.
 
 ## Loading a Simulation from a URL
-* You can load any simulation from a publicly accessible URL by prefixing it with: `https://simoji.pub/#url `. For example: https://simoji.pub/#url%20https://simoji.pub/examples/eatTheBacon.simoji
+* You can load any simulation from a publicly accessible URL by prefixing it with: `https://simoji.treenotation.org/#url `. For example: https://simoji.treenotation.org/#url%20https://simoji.treenotation.org/examples/eatTheBacon.simoji
 
 # Getting Involved
 * The source code for Simoji and all development happens on Github.
