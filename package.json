@@ -1,6 +1,6 @@
 {
   "name": "simoji",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "Design your own simulations using Emojis",
   "main": "Simoji.js",
   "directories": {

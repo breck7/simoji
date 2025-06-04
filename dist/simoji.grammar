@@ -366,6 +366,10 @@ commentAliasParser
  description Alternate alias for a comment.
  crux #
  extends commentParser
+slashCommentParser
+ description Alternate alias for a comment.
+ crux //
+ extends commentParser
 blankLineParser
  extends abstractIgnoreParser
  description Blank lines compile do nothing.
@@ -378,13 +382,14 @@ insertParser
  cruxFromId
 insertAtParser
  extends insertParser
- description Insert at X Y
+ description Insert _ at X Y
  cells keywordCell emojiCell positionCell positionCell
  cruxFromId
 insertClusterParser
  extends insertParser
  cruxFromId
  catchAllCellType integerCell
+ description Insert # of _ at [x y].
 fillParser
  description Fill all blank cells with this agent.
  extends abstractInjectCommandParser
@@ -434,6 +439,19 @@ onDeathParser
  cruxFromId
  inScope abstractCommandParser
  description Define what happens when this agent runs out of health.
+abstractOnEdgeParser
+ extends abstractEventParser
+ cruxFromId
+ inScope abstractCommandParser
+ description Instructions when agent hits edge.
+onLeftEdgeParser
+ extends abstractOnEdgeParser
+onRightEdgeParser
+ extends abstractOnEdgeParser
+onTopEdgeParser
+ extends abstractOnEdgeParser
+onBottomEdgeParser
+ extends abstractOnEdgeParser
 onTickParser
  extends abstractEventParser
  cruxFromId
