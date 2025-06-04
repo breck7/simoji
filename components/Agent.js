@@ -21,16 +21,17 @@ class Agent extends TreeNode {
   get direction() {
     if (this.angle) {
       const vectors = {
-        North: [0, -1],
-        East: [1, 0],
-        South: [0, 1],
-        West: [-1, 0],
-        Northeast: [Math.cos(Math.PI / 4), Math.sin((Math.PI * 3) / 4)],
-        Southeast: [Math.cos((Math.PI * 3) / 4), Math.sin(Math.PI / 4)],
-        Southwest: [-Math.cos((Math.PI * 3) / 4), Math.sin(Math.PI * (5 / 8))],
-        Northwest: [-Math.cos(Math.PI * (5 / 8)), Math.sin((Math.PI * -3) / 4)]
+        north: [0, -1],
+        east: [1, 0],
+        south: [0, 1],
+        west: [-1, 0],
+        northeast: [-Math.cos(Math.PI * (5 / 8)), Math.sin((Math.PI * -3) / 4)],
+        southeast: [-Math.cos((Math.PI * 3) / 4), Math.sin(Math.PI * (5 / 8))],
+        southwest: [Math.cos((Math.PI * 3) / 4), Math.sin(Math.PI / 4)],
+        northwest: [Math.cos(Math.PI * (5 / 8)), Math.sin((Math.PI * -3) / 4)]
       }
-      this._direction = vectors[this.angle]
+      const dir = vectors[this.angle.toLowerCase()]
+      this._direction = { x: dir[0], y: dir[1] }
       this.angle = ""
     }
     return this._direction
