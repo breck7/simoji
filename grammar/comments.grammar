@@ -9,3 +9,7 @@ commentAliasParser
  description Alternate alias for a comment.
  crux #
  extends commentParser
+slashCommentParser
+ description Alternate alias for a comment.
+ crux //
+ extends commentParser

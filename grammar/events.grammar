@@ -20,6 +20,19 @@ onDeathParser
  cruxFromId
  inScope abstractCommandParser
  description Define what happens when this agent runs out of health.
+abstractOnEdgeParser
+ extends abstractEventParser
+ cruxFromId
+ inScope abstractCommandParser
+ description Instructions when agent hits edge.
+onLeftEdgeParser
+ extends abstractOnEdgeParser
+onRightEdgeParser
+ extends abstractOnEdgeParser
+onTopEdgeParser
+ extends abstractOnEdgeParser
+onBottomEdgeParser
+ extends abstractOnEdgeParser
 onTickParser
  extends abstractEventParser
  cruxFromId

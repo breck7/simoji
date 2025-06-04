@@ -12,13 +12,14 @@ insertParser
  cruxFromId
 insertAtParser
  extends insertParser
- description Insert at X Y
+ description Insert _ at X Y
  cells keywordCell emojiCell positionCell positionCell
  cruxFromId
 insertClusterParser
  extends insertParser
  cruxFromId
  catchAllCellType integerCell
+ description Insert # of _ at [x y].
 
 fillParser
  description Fill all blank cells with this agent.

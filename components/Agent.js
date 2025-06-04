@@ -104,14 +104,16 @@ class Agent extends TreeNode {
 
     const { direction, speed } = this
 
-    this.top = Math.max(this.top + direction.y * speed, 0)
-    this.left = Math.max(this.left + direction.x * speed, 0)
+    this.top = this.top + direction.y * speed
+    this.left = this.left + direction.x * speed
 
     if (this.holding) {
       this.holding.forEach(node => {
         node.setPosition({ x: this.x, y: this.y })
       })
     }
+
+    if (this.hitEdge) this._executeCommandBlocks(this.hitEdge)
   }
 
   speed = 1
@@ -140,8 +142,14 @@ class Agent extends TreeNode {
   }
 
   set top(value) {
-    if (value > this.maxDown) value = this.maxDown
-    if (value < 0) value = 0
+    if (value > this.maxDown) {
+      value = this.maxDown
+      this.hitEdge = "onBottomEdge"
+    }
+    if (value < 0) {
+      value = 0
+      this.hitEdge = "onTopEdge"
+    }
     this.setPosition({
       y: value,
       x: this.left
@@ -195,9 +203,15 @@ class Agent extends TreeNode {
   }
 
   set left(value) {
-    if (value > this.maxRight) value = this.maxRight
+    if (value > this.maxRight) {
+      value = this.maxRight
+      this.hitEdge = "onRightEdge"
+    }
 
-    if (value < 0) value = 0
+    if (value < 0) {
+      value = 0
+      this.hitEdge = "onLeftEdge"
+    }
     this.setPosition({
       y: this.top,
       x: value
